@@ -1,0 +1,48 @@
+# Dữ liệu khách hàng và dữ liệu theo đơn: KHÔNG đưa lên repo
+AI_Work/
+Thang-*/
+*_ALL.dxf
+26-*.dxf
+*.dwg
+*.nc
+*_依頼.xlsx
+*.bak
+
+# Bản vẽ khách / PDF đơn hàng
+*.pdf
+review/
+specs/
+parts/
+blind/
+blind_table*.md
+order_context.json
+exp.csv
+
+# Script sinh DXF theo từng đơn (chứa kích thước chi tiết của khách)
+gen_5*.ps1
+gen_5*.py
+
+# Rác sinh ra khi chạy
+__pycache__/
+*.pyc
+*.log
+*.tmp
+~$*
+Thumbs.db
+.DS_Store
+
+# Thông tin cá nhân / bí mật
+.env
+*.key
+*.pem
+credentials*
+*token*
+sync.json
+sync.json.bak
+last_import.txt
+selftest_result.txt
+imported/
+
+# Chặn DXF (dữ liệu khách/thành phẩm); chỉ cho phép Template mẫu
+*.dxf
+!templates/Template.dxf

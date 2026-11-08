@@ -1,0 +1,5 @@
+# Không tự đổi xuống dòng: DXF, SKILL.md và NC phải giữ nguyên từng byte
+* -text
+*.dxf binary
+*.xlsx binary
+*.skill binary

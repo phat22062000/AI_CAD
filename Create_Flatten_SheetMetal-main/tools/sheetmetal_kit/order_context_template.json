@@ -1,0 +1,13 @@
+{
+ "order": "<số đơn>",
+ "customer": "<mã khách> <tên>",
+ "material_group": "<SS|SUS|AL|CU> + ghi chú quy định riêng của khách (DS_Khach_Hang)",
+ "J_rule": "Chữ J viết tay cạnh mã vạch = gia công nội bộ -> giãn theo bảng; không J -> giãn tay viết",
+ "stretch_table_90deg": {"t1.6": 2.64},
+ "rules_confirmed": ["các quy tắc người dùng đã chốt áp cho đơn này"],
+ "parts": [
+  {"code": "26-0xxxxx", "page_file": "parts/0xxxxx/0xxxxx.pdf", "t": 1.6, "xy_request": "X x Y (chỉ đối chiếu)",
+   "kind": "phang|uon|hop (+dxf)", "complex": false, "overlay": false, "group": "G1", "blind_level": "GỌN|ĐẦY ĐỦ"}
+ ],
+ "order_of_excel": ["0xxxxx"]
+}

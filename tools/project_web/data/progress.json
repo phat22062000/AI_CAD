@@ -1,0 +1,195 @@
+{
+ "jobs": {},
+ "agents": {
+  "521106-24_main": {
+   "order": "521106-24",
+   "kind": "main",
+   "name": "Agent chính · làm tiếp",
+   "state": "done",
+   "phase": "Xong",
+   "mood": "think",
+   "act": "Đang suy nghĩ",
+   "model": "claude-opus-5-5",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-07T05:19:39Z",
+   "job": "20261107121939_521106-24_tiep",
+   "finishedAt": "2026-11-07T05:22:34Z",
+   "note": null,
+   "heartbeatAt": "2026-11-07T11:44:29Z",
+   "actAt": "2026-11-07T05:22:45Z",
+   "effort": "high",
+   "history": [
+    {
+     "startedAt": "2026-11-07T04:11:55Z",
+     "finishedAt": "2026-11-07T04:22:45Z",
+     "job": "20261107111155_521106-24"
+    }
+   ]
+  }
+ },
+ "orders": {
+  "521106-24": {
+   "order": "521106-24",
+   "customer": 851,
+   "material": "SPHCP t6",
+   "receivedAt": "2026-11-07T04:13:14Z",
+   "partOrder": [
+    "066371",
+    "066372",
+    "066373",
+    "066374",
+    "066375",
+    "066376",
+    "066377",
+    "066378",
+    "066379"
+   ],
+   "allFile": "521106-24_ALL.dxf",
+   "mergedAt": "2026-11-07T05:22:34Z"
+  },
+  "521106-26": {
+   "order": "521106-26",
+   "customer": 851,
+   "material": "SPHCP t6",
+   "receivedAt": "2026-11-07T13:18:18Z",
+   "partOrder": [
+    "26-066398",
+    "26-066399",
+    "26-066400",
+    "26-066401",
+    "26-066402",
+    "26-066403",
+    "26-066407",
+    "26-066408",
+    "26-066412",
+    "26-066426"
+   ]
+  }
+ },
+ "parts": {
+  "521106-24_066371": {
+   "order": "521106-24",
+   "code": "066371",
+   "kind": "uon",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "blank": "90.22 x 38",
+   "finishedAt": "2026-11-07T04:22:44Z",
+   "flags": []
+  },
+  "521106-24_066372": {
+   "order": "521106-24",
+   "code": "066372",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "blank": "139 x 50",
+   "finishedAt": "2026-11-07T04:22:44Z",
+   "flags": []
+  },
+  "521106-24_066373": {
+   "order": "521106-24",
+   "code": "066373",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "blank": "139 x 50",
+   "finishedAt": "2026-11-07T04:22:44Z",
+   "flags": []
+  },
+  "521106-24_066374": {
+   "order": "521106-24",
+   "code": "066374",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "blank": "100 x 30",
+   "finishedAt": "2026-11-07T04:22:44Z",
+   "flags": []
+  },
+  "521106-24_066375": {
+   "order": "521106-24",
+   "code": "066375",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "blank": "100 x 30",
+   "finishedAt": "2026-11-07T04:22:44Z",
+   "flags": []
+  },
+  "521106-24_066376": {
+   "order": "521106-24",
+   "code": "066376",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "blank": "65 x 45",
+   "finishedAt": "2026-11-07T04:22:45Z",
+   "flags": "[1. Hàn tại cả 2 mặt tấm, chưa chắc mặt kegaki: đã vẽ mặt dưới (tấm A, theo mũi tên viết tay), mặt trên (tấm D) chưa vẽ]"
+  },
+  "521106-24_066377": {
+   "order": "521106-24",
+   "code": "066377",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "blank": "65 x 45",
+   "finishedAt": "2026-11-07T04:22:45Z",
+   "flags": "[1. Hàn tại cả 2 mặt tấm, chưa chắc mặt kegaki: đã vẽ mặt dưới (tấm A, theo mũi tên viết tay), mặt trên (tấm D) chưa vẽ]"
+  },
+  "521106-24_066378": {
+   "order": "521106-24",
+   "code": "066378",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "blank": "50 x 40",
+   "finishedAt": "2026-11-07T04:22:45Z",
+   "flags": []
+  },
+  "521106-24_066379": {
+   "order": "521106-24",
+   "code": "066379",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "blank": "20 x 16",
+   "finishedAt": "2026-11-07T04:22:45Z",
+   "flags": []
+  },
+  "521106-24_26-066376": {
+   "order": "521106-24",
+   "code": "26-066376",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-07T05:20:28Z",
+   "flags": [],
+   "blank": "65 x 45",
+   "finishedAt": "2026-11-07T05:22:34Z"
+  },
+  "521106-24_26-066377": {
+   "order": "521106-24",
+   "code": "26-066377",
+   "kind": "phang",
+   "agent": "521106-24_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-07T05:20:28Z",
+   "flags": [],
+   "blank": "65 x 45",
+   "finishedAt": "2026-11-07T05:22:34Z"
+  }
+ }
+}

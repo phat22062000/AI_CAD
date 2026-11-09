@@ -85,7 +85,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 ### 4.3 Suy phôi từ hình chiếu khi không có DXF phẳng
 - Không thu hẹp bề rộng ngay sau đường uốn: giữ bề rộng tới khi hình chiếu bằng thực sự thu lại. Cổ hẹp chỉ là đoạn ngắn trong vùng uốn kế tiếp.
 - Chỗ nối vách–tấm (cổ hẹp giữa hai tấm uốn) có khe thoát bo R1 ở các bậc, đầu vách cắt ngay trong vùng uốn ; không vẽ góc vuông đơn giản.
-- Đường uốn chạy hết bề rộng phần phẳng ở cả hai bên.
+- Đường uốn chạy hết bề rộng chỗ uốn thật (không vượt bề rộng cánh hẹp hơn).
 - Độ tin cậy thấp: đưa thẻ xác nhận hình dạng cho người dùng trước khi giao, ghi rõ phần suy từ hình chiếu (bề rộng chân/cổ, vị trí đầu vách, khe thoát); số không có trên bản vẽ thì báo thiếu và Flag 3 (mục 0).
 - Phôi uốn nhiều mặt dựng theo 3 bước: (1) bóc tách từng mặt thành hình riêng theo kích thước ngoài; (2) thêm giãn: ở mỗi mối nối, mặt sau chồng lên mặt trước một đoạn bằng giãn; (3) ghép lại, trim nét thừa bên trong cho biên liền mạch, đổi nét uốn thành DASHED.
 - Ở bước (1), biên dạng ngoài của từng mặt phải dò đúng từng đoạn nét trên hình chiếu và chân dim của chính mặt đó, kể cả phần không nối với vách. Không kéo mép theo kích thước ngoài của phần có vách, không tự áp một độ lùi cố định.
@@ -104,6 +104,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   - Phôi = ngoài hiệu chỉnh + ngoài hiệu chỉnh - giãn (giãn do người dùng cung cấp theo từng yêu cầu, không tự tra theo góc). Chưa có giãn hoặc không dựng được hiệu chỉnh thì hỏi và Flag 16.
   - Góc > 90°: dùng kích thước danh nghĩa (kích thước ngoài + kích thước ngoài - độ giãn).
 - Đường uốn: mỗi chỗ uốn 2 LINE DASHED (không vẽ 1 đường giữa). Đường 1 cách mép phôi bên này = ngoài cánh bên này; đường 2 cách mép bên kia = ngoài cánh bên kia; khoảng giữa = giãn. Ví dụ L 37 + 60, giãn 5.2, phôi 91.8: đường tại 37 và 31.8. Nhiều chỗ uốn (chữ U...): mỗi cặp đặt tại (vị trí giữa ± giãn/2), vị trí giữa = ngoài cánh - giãn/2 tính từ mép xa.
+  - Độ dài cặp DASHED = bề rộng chỗ uốn thật, tức đoạn có vật liệu liền qua chỗ uốn (bề rộng của cánh hẹp hơn). Cả 2 đường cùng đầu mút. Phần cánh rộng hơn nhô ra ngoài bề rộng này không vẽ đường uốn, dù vẫn nằm trong phôi.
 - Nét đứt ở hình bằng (平面図) của chi tiết uốn cách mép ngoài đúng t (KHÔNG phải giãn/2); kích thước ghi từ nét đứt tính từ đúng đường đó. Quy đổi điểm trên phần phẳng: u (trên phôi, từ mép tự do cánh đầu) = y (trên hình bằng, từ mặt ngoài cánh đầu) + (ngoài cánh - giãn). Ví dụ 26-060232 (t3.2, mũ 13 + 102 + 13, giãn 5.5): u = y + 7.5; nét đứt cánh xa ở y = 98.8. Lỗ trên cánh vẫn đo từ mép tự do cánh.
 
 ## 6. Hộp, vách và đường rạch góc (Green 62 = 3)
@@ -159,7 +160,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - CHỈ kegaki phần tiếp xúc thật giữa hai chi tiết. Không chắc phần nào tiếp xúc thì xem thêm hình 3D (đâu chồng lên đâu, mặt nào áp mặt nào) trước khi quyết định vẽ hay bỏ. Dấu hiệu có vùng chồng: một chi tiết ghi cùng lúc tổng dài và phần nhô ra (hiệu số là phần chồng dưới chi tiết khác).
 - Chi tiết hàn chỉ được bỏ kegaki khi MỌI cạnh của vết (footprint) đều trùng mép ngoài tấm nhận (định vị được theo mép). Còn bất kỳ cạnh vết nào nằm bên trong tấm (đầu mút ống/thanh, mặt xa của ống/thanh, mép tấm hàn) thì VẼ các cạnh đó; cạnh trùng mép tấm thì bỏ. Ống/thanh vuông không cắt laser vẫn tạo vết kegaki trên tấm laser nhận hàn. Ví dụ 26-065615 (khách 851): ống 30 sát mép đầu trái tấm nhưng đầu ống nằm cách mép trên tấm 26.8, phải vẽ 2 LINE (x = 30 và y = 38.2); lần đầu bỏ kegaki là sai.
 - Tấm hàn chạm mặt nhận chỉ bằng một cạnh (tấm ngang đặt lên mặt nghiêng, tựa trên tấm gia cường): vẽ ĐÚNG đường chạm thật, không suy vết từ độ dày tấm. Tấm chỉ chạm tại một cạnh thì chỉ 1 LINE (x từ đầu tới cuối tấm); tấm gia cường/gân hàn bằng cạnh dài thì khung kín bề dày x chiều dài tiếp xúc.
-- Chỉ vẽ đoạn nằm trong phôi: đoạn trùng mép phôi hoặc trùng đường uốn DASHED thì bỏ.
+- Chỉ vẽ đoạn nằm trong phôi: đoạn trùng mép phôi hoặc trùng đường uốn DASHED thì bỏ. Đường uốn cũng chỉ vẽ trong bề rộng chỗ uốn, không kéo theo bề rộng cánh nhô ra.
 - Ống tròn hàn lên tấm: vết phủ đủ đường kính (2 đường ở 2 mép ống), không chỉ đường tâm.
 - Mặt vẽ là mặt kegaki (ưu tiên hơn quy tắc mặt ngoài/hình chiếu đứng); hình chiếu đứng cho thấy mặt đối diện thì lật trái–phải (không đổi chiều dọc). 本図/対称: hình dạng và kegaki của 対称 là ảnh gương của 本図.
 

@@ -49,6 +49,11 @@ def signature(path):
             for k in range(0, 21):
                 a = math.radians(e.dxf.start_angle + sweep * k / 20)
                 grow(c.x + r * math.cos(a), c.y + r * math.sin(a))
+            # điểm cực trị (0/90/180/270 độ) nằm trong cung: nếu thiếu, khung bao bị hụt khi cung đi qua đỉnh ngang/đứng
+            for q in (0, 90, 180, 270):
+                if (q - e.dxf.start_angle) % 360 <= sweep:
+                    a = math.radians(q)
+                    grow(c.x + r * math.cos(a), c.y + r * math.sin(a))
         elif t == 'POINT':
             points[col] += 1
         elif t in ('TEXT', 'MTEXT'):

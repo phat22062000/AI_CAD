@@ -40,7 +40,7 @@ Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về 
 | Lỗ | φ < lỗ nhỏ nhất theo vật liệu/độ dày (nên là POINT, trừ quy định khách như 810) | CẢNH BÁO |
 | Lỗ mồi | φ trùng bảng lỗ mồi taro (M3 2.5, M4 3.3, M5 4.2, M6 5, M8 6.8...): in danh sách từng hình; ghi chú tay 下穴 trong ảnh PDF thì đọc tay (dòng 'Nguồn' bên dưới chỉ bắt 下穴 là chữ in) | THÔNG TIN |
 | POINT lỗ | POINT không phải J/LJ: chỉ đúng khi lỗ gốc (kể cả lỗ mồi) < lỗ nhỏ nhất hoặc có ghi chú tay ピアス khoanh riêng quanh lỗ; tem PIERCING đầu trang không đủ; lỗ ren mồi ≥ lỗ nhỏ nhất phải là CIRCLE (lỗi 521030-12). Đối chiếu ảnh PDF từng POINT | CẢNH BÁO |
-| Uốn | mỗi chỗ uốn 2 LINE DASHED song song, cách nhau = giãn; in ra giãn đo được | CẢNH BÁO |
+| Uốn | mỗi chỗ uốn 2 LINE DASHED song song, cách nhau = giãn; in ra giãn đo được; 2 đường cùng độ dài, cùng đầu mút, không dài hơn bề rộng chỗ uốn thật (đường kéo qua phần cánh nhô ra ngoài bề rộng này là sai) | CẢNH BÁO |
 | Rạch Green | mỗi rạch 3 entity, cung R0.5; góc lõm 90° sát đường uốn chưa có rạch | CẢNH BÁO |
 | Rạch Green (số đo) | LINE chéo 45°: điểm đầu cách mép khoét = Piercing ngoài theo vật liệu/độ dày (`pierce_out`) | LỖI |
 | | LINE rạch thẳng: sâu t + 0.2 tính từ góc khoét | CẢNH BÁO |

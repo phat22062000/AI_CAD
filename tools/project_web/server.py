@@ -32,6 +32,7 @@ ORDER_RE = re.compile(r'^(\d{6}-\d{2})')
 DATE_RE = re.compile(r'^(\d{2})-(\d{2})-(\d{4})$')
 CODE_RE = re.compile(r'^\d{2}-\d{6}$')
 LEGACY_RE = re.compile(r'^(\d+)T-?(\d+)F$', re.I)
+PACK_RE = re.compile(r'^Gui(?:_\d+)?[\\/]', re.I)      # DXF đã chuyển vào Gui (đợt 1), Gui_2 (đợt 2)...
 NS = '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
 lock = threading.Lock()
 
@@ -202,7 +203,8 @@ def build_order(order, info, prog):
             mt = os.path.getmtime(p)
         except OSError:
             continue
-        tlast = max(tlast, mt)
+        if not PACK_RE.match(rel):      # file trong Gui/Gui_N do đóng gói tạo ra, không tính là agent đang làm
+            tlast = max(tlast, mt)
         stem, ext = os.path.splitext(name)
         if ext.lower() == '.pdf' and stem == order:
             pdf = rel; tin.append(mt)
@@ -244,6 +246,9 @@ def build_order(order, info, prog):
         for c in a.get('codes') or []:
             if c not in codes:
                 codes.append(c)
+    # DXF lẻ chỉ tính là Output khi tên file chứa mã của đơn (vd 26-066286.dxf); DXF đầu vào của khách (vd 2.DXF) bỏ qua
+    parts = [(rel, mt) for rel, mt in parts
+             if any(c in rel or c.split('-')[-1] in os.path.basename(rel) for c in codes)]
 
     now = time.time()
     running = any(a.get('state') == 'running' and not lost(a, now) for a in p_agents.values())
@@ -255,12 +260,15 @@ def build_order(order, info, prog):
         st = pp.get('status')
         manual = bool(pp.get('manual'))
         # file DXF của mã: DXF lẻ có tên chứa mã (đầy đủ hoặc 6 số cuối); không có thì mã nằm trong file <số đơn>_ALL.dxf
-        d_rel = next((rel for rel, _ in parts if c in rel or c.split('-')[-1] in os.path.basename(rel)), None)
+        cands = [rel for rel, _ in parts if c in rel or c.split('-')[-1] in os.path.basename(rel)]
+        top = next((r for r in cands if not PACK_RE.match(r)), None)        # DXF còn ở thư mục đơn (chưa đóng gói)
+        packed = any(PACK_RE.match(r) for r in cands) or bool(pp.get('packedAt'))   # đã đóng gói ít nhất một đợt (kể cả khi bạn đã dời thư mục Gui đi)
+        d_rel = top or (cands[0] if cands else None)
         d_kind = 'part' if d_rel else ('all' if all_dxf else None)
         d_rel = d_rel or (all_dxf[0] if all_dxf else None)
         if manual:
             s = 'tay'                      # người dùng tự làm mã này, không chờ agent
-        elif st == 'built' and not d_rel:
+        elif st == 'built' and not d_rel and not pp.get('packedAt'):
             s = 'thieu'                    # agent báo xong nhưng KHÔNG thấy file DXF nào trong thư mục đơn
         elif st == 'built':
             s = 'cho' if pp.get('flags') else 'xong'
@@ -278,6 +286,9 @@ def build_order(order, info, prog):
         code_rows.append({'code': c, 'state': s, 'pstatus': st, 'level': pp.get('level'),
                           'dxf': os.path.join(info['dir'], d_rel) if d_rel else None, 'dxfKind': d_kind,
                           'manual': manual, 'manualAt': pp.get('manualAt'),
+                          'packed': packed,
+                          # sẵn sàng đóng gói = mã đã xong (không Flag, không tự làm) và file 26-xxxxxx.dxf đang nằm ở thư mục đơn
+                          'ready': s == 'xong' and not manual and top is not None and top.lower() == (c + '.dxf').lower(),
                           'kind': pp.get('kind'), 'blank': pp.get('blank'),
                           'agent': pp.get('agent'), 'startedAt': pp.get('startedAt'),
                           'finishedAt': pp.get('finishedAt'), 'flags': pp.get('flags') or [],
@@ -300,9 +311,7 @@ def build_order(order, info, prog):
 
     started = p_order.get('receivedAt') or min((a.get('startedAt') for a in p_agents.values() if a.get('startedAt')), default=None)
     finished = p_order.get('mergedAt') or (iso(all_dxf[1]) if all_dxf else None)
-    est = False
-    if not started and tin:
-        started, est = iso(min(tin)), True
+    est = False        # giờ bắt đầu chỉ lấy từ lúc agent chạy (Giao việc); không ước tính theo giờ lưu file đầu vào
     n_done = sum(1 for r in code_rows if r['state'] in ('xong', 'tay'))
     if not codes and parts:
         n_done = len(parts)
@@ -329,6 +338,9 @@ def build_order(order, info, prog):
         'total': len(codes) or len(parts),
         'done': n_done,
         'partFiles': len(parts),
+        'running': running,
+        'packReady': sum(1 for r in code_rows if r['ready']),
+        'packed': sum(1 for r in code_rows if r['packed']),
         'hasAll': bool(all_dxf),
         'pdf': bool(pdf),
         'startedAt': started,
@@ -363,7 +375,11 @@ def snapshot(force=False):
         found = scan_orders()
         for o in prog.get('orders', {}):       # đơn chỉ có trong tiến độ agent
             if o not in found and ORDER_RE.match(o):
-                found[o] = {'dir': WORK, 'loose': True}
+                # thư mục đơn đã bị xoá/chuyển đi: chỉ hiện nếu còn agent, mã hoặc việc đang gắn với đơn (để không còn đơn "ma")
+                if any(a.get('order') == o for a in prog.get('agents', {}).values()) \
+                        or any(k.startswith(o + '_') for k in prog.get('parts', {})) \
+                        or any(j.get('order') == o for j in prog.get('jobs', {}).values()):
+                    found[o] = {'dir': WORK, 'loose': True}
         orders = [build_order(o, i, prog) for o, i in found.items()]
         orders.sort(key=lambda x: (x['date'], x['order']), reverse=True)
         now = time.time()
@@ -484,7 +500,7 @@ def add_job(path, subagents=0, note='', model='', plan=None):
                 raise ValueError('Đơn này đã có trong hàng đợi.')
         jid = datetime.now().strftime('%Y%m%d%H%M%S') + (('_' + order) if order else '')
         jobs[jid] = {'path': p, 'order': order, 'subagents': n, 'model': model, 'note': (note or '')[:500],
-                     'pdf': npdf, 'xlsx': nxls, 'status': 'moi', 'at': now_iso()}
+                     'pdf': npdf, 'xlsx': nxls, 'status': 'moi', 'at': now_iso(), 'ui': True}
         if plan is not None:
             jobs[jid]['plan'] = plan
         save_json(PROGRESS, prog)
@@ -520,7 +536,7 @@ def add_followup(order, answers, model=''):
                 raise ValueError('Đơn này đã có việc làm tiếp đang chờ hoặc đang chạy.')
         jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_' + order + '_tiep'
         jobs[jid] = {'kind': 'tiep', 'path': p, 'order': order, 'subagents': 0, 'model': model, 'note': '', 'answers': answers,
-                     'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso()}
+                     'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
         save_json(PROGRESS, prog)
         _cache['t'] = 0
         return dict(jobs[jid], id=jid)
@@ -639,20 +655,26 @@ def delete_variant(order, dest):
 
 
 def package_order(order, overwrite=False):
-    """Đóng gói đơn đã xong: thư mục Gui (DXF từng mã, không có file ALL) + file Excel 納品書 đã điền số đơn và kích thước phôi."""
+    """Đóng gói các mã ĐÃ XONG của đơn (không cần xong cả đơn): thư mục Gui (đợt 1) hoặc Gui_2, Gui_3... (các đợt sau),
+    mỗi đợt gồm DXF từng mã (không có file ALL) + file Excel 納品書 chỉ chứa các mã của đợt đó. Mã chưa xong/có Flag/tự làm bị bỏ qua."""
     o = next((x for x in snapshot(True)['orders'] if x['order'] == order), None)
     info = scan_orders().get(order)
     if not o or not info or info['loose']:
         raise ValueError('Không thấy thư mục đơn để đóng gói.')
-    if o['state'] != 'xong':
-        raise ValueError('Chỉ đóng gói được khi đơn đã xong.')
-    import package
-    manual = [c['code'] for c in o['codes'] if c.get('manual')]
-    codes = [c['code'] for c in o['codes'] if not c.get('manual')]
+    if o.get('running'):
+        raise ValueError('Agent đang chạy đơn này. Chờ agent dừng rồi đóng gói (tránh chuyển file khi agent còn ghi/gộp ALL).')
+    codes = [c['code'] for c in o['codes'] if c.get('ready')]
     if not codes:
-        raise ValueError('Đơn không có mã nào có file DXF để đóng gói.')
-    r = package.package(order, info['dir'], codes, overwrite=bool(overwrite))
-    r['manual'] = manual
+        if o.get('packed'):
+            raise ValueError('Không có mã nào mới để đóng gói: các mã đã xong đều đã được đóng gói ở đợt trước.')
+        raise ValueError('Chưa có mã nào xong (không Flag) có file DXF trong thư mục đơn để đóng gói.')
+    import package
+    r = package.package(order, info['dir'], codes)
+    t = now_iso()
+    for c in codes:         # nhớ mã đã đóng gói: bạn dời thư mục Gui đi (gửi khách xong) thì mã vẫn tính là xong, không báo thiếu DXF
+        merge_progress('parts', f'{order}_{c}', {'packedAt': t, 'packedIn': os.path.basename(r['gui'])})
+    r['manual'] = [c['code'] for c in o['codes'] if c.get('manual')]
+    r['pending'] = [c['code'] for c in o['codes'] if not c.get('ready') and not c.get('packed') and not c.get('manual')]
     return r
 
 
@@ -719,6 +741,10 @@ def merge_progress(coll, doc_id, fields):
         raise ValueError('collection phải là orders | agents | parts | jobs')
     if not re.match(r'^[\w\-\.]+$', doc_id or ''):
         raise ValueError('id không hợp lệ')
+    if coll == 'jobs':
+        # chỉ nút Giao việc / Làm tiếp trên trang mới được tạo việc cho runner chạy
+        if fields.get('status') == 'moi' or 'ui' in fields:
+            raise ValueError('Không được tạo/đặt việc chờ chạy qua API tiến độ; chỉ nút Giao việc trên trang.')
     with lock:
         prog = load_json(PROGRESS, {})
         doc = prog.setdefault(coll, {}).setdefault(doc_id, {})

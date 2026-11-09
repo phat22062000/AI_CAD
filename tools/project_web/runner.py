@@ -390,7 +390,7 @@ def _loop():
             if claude and len(procs) < max(1, int(config().get('max_parallel') or 1)):
                 with S.lock:
                     prog = S.load_json(S.PROGRESS, {})
-                    todo = sorted((j.get('at', ''), k) for k, j in prog.get('jobs', {}).items() if j.get('status') == 'moi')
+                    todo = sorted((j.get('at', ''), k) for k, j in prog.get('jobs', {}).items() if j.get('status') == 'moi' and j.get('ui') is True)   # chỉ việc do nút Giao việc / Làm tiếp tạo
                     if todo:
                         jid = todo[0][1]
                         job = prog['jobs'][jid]

@@ -259,7 +259,7 @@ function orderDrawer(o){
       <td class="mono">${esc(c.code)}</td>
       <td class="t2">${c.thick != null ? c.thick + 't' : '—'}</td>
       <td class="t2 mono">${esc(c.size || '—')}</td>
-      <td>${chip(c.state, ST[c.state])}</td>
+      <td>${chip(c.state, ST[c.state])}${c.packed ? ' <span class="t3">đã đóng gói</span>' : ''}</td>
     </tr>`).join('');
   // Flag ghi ở dưới cùng: mỗi dòng gồm tên mã + nội dung Flag; mỗi mã có ô để bạn trả lời Flag cho agent làm tiếp
   const fu = (S.data.jobs || []).filter(j => j.kind === 'tiep' && j.order === o.order).sort((x, y) => (y.at || '').localeCompare(x.at || ''))[0];
@@ -278,9 +278,13 @@ function orderDrawer(o){
     : fu.status === 'xong' ? 'Lần làm tiếp gần nhất đã xong' + (fu.result ? ': ' + fu.result : '.')
     : 'Lần làm tiếp gần nhất bị lỗi' + (fu.result ? ': ' + fu.result : '.');
   const pm = S.packMsg[o.order];
+  // đóng gói được khi có ít nhất 1 mã đã xong (không cần xong cả đơn); mã chưa xong bỏ qua, gửi khách nhiều đợt: đợt 1 vào Gui, đợt sau Gui_2, Gui_3...
+  const nReady = o.packReady || 0, nPacked = o.packed || 0, nWait = o.codes.length - nReady - nPacked;
+  const packOff = nReady < 1 || o.running;
+  const packWhy = o.running ? 'Agent đang chạy đơn này' : nPacked && nReady < 1 ? 'Các mã đã xong đều đã được đóng gói' : 'Chưa có mã nào xong để đóng gói';
   const packHtml = `<h3>Đóng gói</h3><div class="fl-send" style="margin-top:0">
-      <button class="btn btn-pri" data-pack="${esc(o.order)}" ${o.state === 'xong' ? '' : 'disabled'} title="${o.state === 'xong' ? '' : 'Chỉ đóng gói được khi đơn đã xong'}"><svg class="i"><use href="#i-folder"/></svg>Đóng gói</button>
-      <span class="t3">${o.state === 'xong' ? 'CHUYỂN DXF từng mã (không có file ALL) vào thư mục Gui (không còn ở thư mục đơn) và điền file Excel 納品書 (số đơn, kích thước phôi).' : 'Mở khi đơn đã xong.'}</span></div>
+      <button class="btn btn-pri" data-pack="${esc(o.order)}" ${packOff ? 'disabled' : ''} title="${packOff ? esc(packWhy) : ''}"><svg class="i"><use href="#i-folder"/></svg>Đóng gói${nReady ? ' ' + nReady + ' mã đã xong' : ''}</button>
+      <span class="t3">${packOff ? esc(packWhy) + '. Mở khi có ít nhất 1 mã đã xong.' : 'CHUYỂN DXF của ' + nReady + ' mã đã xong (không có file ALL) vào thư mục Gui' + (nPacked ? ' kế tiếp (Gui_2, Gui_3... không ghi đè đợt trước)' : '') + ' và điền file Excel 納品書 (số đơn, kích thước phôi) chỉ gồm các mã của đợt này.' + (nWait > 0 ? ' ' + nWait + ' mã chưa xong sẽ bỏ qua.' : '')}</span></div>
     ${pm ? `<p class="hint ${pm.err ? 'err' : 'ok'}">${esc(pm.text)}${pm.path ? ` <button class="ib" data-copy="${esc(pm.path)}" title="Copy đường dẫn thư mục Gui"><svg class="i"><use href="#i-folder"/></svg></button>` : ''}</p>` : ''}`;
   const archHtml = (o.state === 'xong' || o.state === 'cho') ? `<h3>Phương án</h3><div class="fl-send" style="margin-top:0">
       <button class="btn btn-sec" data-arch="${esc(o.order)}">Lưu phương án và làm lại</button>
@@ -566,24 +570,15 @@ document.addEventListener('click', e => {
   if (b.dataset.copy != null) { navigator.clipboard?.writeText(b.dataset.copy).then(() => toast('Đã copy: ' + b.dataset.copy), () => toast(b.dataset.copy)); return; }
   if (b.closest('#o-stats')) { S.oFilter = b.dataset.f; S.oLimit = 60; return renderProgress(); }
   if (b.id === 'o-more') { S.oLimit += 60; return renderProgress(); }
-  if (b.dataset.pack) {   // Đóng gói: thư mục Gui + file Excel
+  if (b.dataset.pack) {   // Đóng gói các mã đã xong: thư mục Gui (đợt 1) hoặc Gui_N (đợt sau) + file Excel
     const order = b.dataset.pack;
-    const run = overwrite => {
-      b.disabled = true; S.packMsg[order] = {text: 'Đang đóng gói (điền Excel mất vài giây)...'}; renderDrawer();
-      api('/api/package', {order, overwrite}).then(r => {
-        const x = r.result;
-        S.packMsg[order] = {path: x.gui, text: 'Đã chuyển ' + x.moved + ' file DXF và tạo file Excel trong ' + x.gui + '.' + (x.manual.length ? ' Mã tự làm chưa có trong Gui: ' + x.manual.join(', ') + '.' : '')};
-        toast('Đã đóng gói'); renderDrawer();
-      }, e2 => {
-        if (e2.message === 'GUI_TON_TAI') {
-          delete S.packMsg[order]; renderDrawer();
-          if (confirm('Thư mục Gui của đơn ' + order + ' đã có.\n\nGhi đè sẽ xoá toàn bộ thư mục Gui cũ (kể cả file Excel bạn đã sửa tay) và tạo lại từ các file DXF đang có trong thư mục đơn, rồi CHUYỂN chúng vào Gui. Ghi đè?')) return run(true);
-          return;
-        }
-        S.packMsg[order] = {err: true, text: e2.message}; renderDrawer();
-      });
-    };
-    return run(false);
+    b.disabled = true; S.packMsg[order] = {text: 'Đang đóng gói (điền Excel mất vài giây)...'}; renderDrawer();
+    api('/api/package', {order}).then(r => {
+      const x = r.result;
+      S.packMsg[order] = {path: x.gui, text: 'Đợt ' + x.batch + ': đã chuyển ' + x.moved + ' file DXF và tạo file Excel trong ' + x.gui + '.' + (x.pending.length ? ' Chưa xong, bỏ qua: ' + x.pending.join(', ') + '.' : '') + (x.manual.length ? ' Mã tự làm chưa có trong Gui: ' + x.manual.join(', ') + '.' : '')};
+      toast('Đã đóng gói đợt ' + x.batch); load(true);
+    }, e2 => { S.packMsg[order] = {err: true, text: e2.message}; load(true); });
+    return;
   }
   if (b.dataset.cdel) {   // xoá một phương án đã lưu khỏi bảng So sánh
     const dest = b.dataset.cdel, order = b.dataset.corder;

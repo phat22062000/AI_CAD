@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-"""package.py - "Đóng gói" đơn đã xong thành thư mục Gui để gửi đi.
+"""package.py - "Đóng gói" các mã đã xong của đơn thành thư mục Gui để gửi đi (có thể gửi nhiều đợt cho cùng một đơn).
 
-Cấu trúc đầu ra (đúng mẫu người dùng đã lưu ở 521106-24):
-  <thư mục đơn>\\Gui\\<đơn>\\<đơn>.xls             file Excel CAD作業納品書 đã điền số đơn và kích thước phôi từng mã
-  <thư mục đơn>\\Gui\\<đơn>\\<đơn>\\26-xxxxxx.dxf    chỉ các file DXF của từng mã (KHÔNG có file ALL)
+Cấu trúc đầu ra của MỖI ĐỢT (đúng mẫu người dùng đã lưu ở 521106-24):
+  <thư mục đơn>\\Gui\\<đơn>\\<đơn>.xls             file Excel CAD作業納品書 đã điền số đơn và kích thước phôi các mã của đợt này
+  <thư mục đơn>\\Gui\\<đơn>\\<đơn>\\26-xxxxxx.dxf    chỉ các file DXF của các mã đợt này (KHÔNG có file ALL)
+Đợt 1 vào Gui, đợt 2 vào Gui_2, đợt 3 vào Gui_3... (mỗi đợt tự đủ, không ghi đè đợt trước; file Excel chỉ liệt kê mã của đợt đó).
 CHUYỂN các file DXF vào Gui (sau khi đóng gói không còn ở thư mục đơn); file chỉ bị xoá khỏi thư mục đơn khi bản trong Gui đã đủ và cùng dung lượng.
 Kích thước phôi lấy từ chính file DXF (khung bao của hình), X = chiều ngang, Y = chiều cao.
 File Excel điền bằng Microsoft Excel chạy ẩn (gui_fill.ps1) trên mẫu templates\\Gui_mau.xls.
@@ -36,18 +37,25 @@ def blank_size(path):
     return round(s['w'], 2), round(s['h'], 2)
 
 
-def package(order, order_dir, codes, overwrite=False):
-    """codes = danh sách mã theo thứ tự Excel. Trả dict kết quả; ném ValueError('GUI_TON_TAI') khi Gui đã có mà chưa cho ghi đè."""
+def next_gui_dir(order_dir):
+    """Đợt 1 -> Gui; các đợt sau -> Gui_2, Gui_3... (không bao giờ ghi đè đợt trước). Trả (đường dẫn, số đợt)."""
     gui = os.path.join(order_dir, 'Gui')
+    if not os.path.exists(gui):
+        return gui, 1
+    n = 2
+    while os.path.exists(os.path.join(order_dir, 'Gui_%d' % n)):
+        n += 1
+    return os.path.join(order_dir, 'Gui_%d' % n), n
+
+
+def package(order, order_dir, codes):
+    """codes = các mã ĐÃ XONG cần đóng gói đợt này, theo thứ tự Excel. Mã chưa có trong danh sách thì không đụng tới.
+    Ném ValueError khi thiếu file DXF của một mã trong codes."""
+    gui, batch = next_gui_dir(order_dir)
     files = {m.group(1): f for f in os.listdir(order_dir) if (m := CODE_FILE.match(f))}
     missing = [c for c in codes if c not in files]
     if missing:
-        inner = os.path.join(gui, order, order)
-        if os.path.isdir(inner) and all(os.path.isfile(os.path.join(inner, c + '.dxf')) for c in codes):
-            raise ValueError('Đơn này đã được đóng gói: các file DXF đã được chuyển vào ' + gui + '. Muốn đóng gói lại thì đưa các file DXF ra thư mục đơn rồi bấm lại.')
-        raise ValueError('Thiếu file DXF của mã: ' + ', '.join(missing) + '. Đóng gói chỉ chạy khi mọi mã đều có file DXF trong thư mục đơn.')
-    if os.path.isdir(gui) and not overwrite:
-        raise ValueError('GUI_TON_TAI')
+        raise ValueError('Thiếu file DXF của mã: ' + ', '.join(missing) + ' trong thư mục đơn (có thể đã được đóng gói ở đợt trước).')
     if not os.path.isfile(TEMPLATE):
         raise ValueError('Thiếu file mẫu Excel: ' + TEMPLATE)
     rows = []
@@ -74,8 +82,8 @@ def package(order, order_dir, codes, overwrite=False):
             time.sleep(3)
         if r.returncode != 0 or not os.path.isfile(xls):
             raise ValueError('Không điền được file Excel (cần Microsoft Excel): ' + (r.stderr or r.stdout or '').strip()[:300])
-        if os.path.isdir(gui):
-            shutil.rmtree(gui)
+        if os.path.exists(gui):      # hiếm: thư mục này vừa được tạo trong lúc đang đóng gói -> dừng, không ghi đè
+            raise ValueError('Thư mục ' + gui + ' vừa xuất hiện, hãy bấm Đóng gói lại.')
         shutil.move(stage, gui)
     finally:
         shutil.rmtree(tmp_root, ignore_errors=True)
@@ -87,4 +95,4 @@ def package(order, order_dir, codes, overwrite=False):
         if os.path.isfile(dst) and os.path.isfile(src) and os.path.getsize(dst) == os.path.getsize(src):
             os.remove(src)
             moved += 1
-    return {'gui': gui, 'excel': os.path.join(gui, order, order + '.xls'), 'files': len(codes), 'moved': moved, 'rows': rows}
+    return {'gui': gui, 'batch': batch, 'excel': os.path.join(gui, order, order + '.xls'), 'files': len(codes), 'moved': moved, 'rows': rows}

@@ -1,27 +1,32 @@
 {
  "jobs": {
-  "20261109114944_521109-04_tiep": {
-   "kind": "tiep",
-   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\09-11-2026\\521109-04",
-   "order": "521109-04",
+  "20261109161125_521109-22": {
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\09-11-2026\\521109-22",
+   "order": "521109-22",
    "subagents": 0,
    "model": "sonnet",
    "note": "",
-   "answers": {
-    "26-066285": "độ giãn 96.2° là 3.31"
-   },
-   "pdf": 0,
-   "xlsx": 0,
+   "pdf": 1,
+   "xlsx": 1,
    "status": "xong",
-   "at": "2026-11-09T04:49:44Z",
+   "at": "2026-11-09T09:11:25Z",
    "ui": true,
-   "nhanAt": "2026-11-09T04:49:44Z",
+   "plan": {
+    "agents": {
+     "main": "sonnet"
+    },
+    "codes": {
+     "26-066808": "main",
+     "26-066809": "main"
+    }
+   },
+   "nhanAt": "2026-11-09T09:11:25Z",
    "by": "auto",
-   "workdir": "Thang-11\\09-11-2026\\521109-04",
+   "workdir": "Thang-11\\09-11-2026\\521109-22",
    "prep": {
-    "seconds": 10.8,
-    "pages": 5,
-    "layout": "bản vẽ cụm: 5 trang cho 4 mã",
+    "seconds": 7.4,
+    "pages": 3,
+    "layout": "bản vẽ cụm: 3 trang cho 2 mã",
     "skill_kb": {
      "phang": 26.7,
      "uon": 31.9,
@@ -30,22 +35,22 @@
     },
     "errors": []
    },
-   "result": "Vẽ lại 26-066285 với độ giãn 3.31 (phôi 110 x 58.39, bỏ Flag), đã gộp lại 521109-04_ALL.dxf",
+   "result": "Đã vẽ 2 mã 26-066808 (237.8 x 164.5) và 26-066809 (279.5 x 146.4), chỉ biên ngoài theo chỉ thị OUTLINE ONLY, không Flag; đã gộp 521109-22_ALL.dxf.",
    "usage": {
-    "costUSD": 0.4613,
-    "seconds": 122,
-    "input": 27,
-    "output": 10093,
-    "thinking": 3371,
-    "cacheRead": 765690,
-    "cacheWrite": 70947,
-    "denials": 1,
+    "costUSD": 1.0736,
+    "seconds": 285,
+    "input": 63,
+    "output": 35956,
+    "thinking": 21427,
+    "cacheRead": 2869620,
+    "cacheWrite": 106744,
+    "denials": 0,
     "models": [
      "claude-sonnet-5-5"
     ],
-    "calls_main": 14,
+    "calls_main": 48,
     "calls_sub": 0,
-    "images": 0
+    "images": 13
    }
   }
  },
@@ -161,6 +166,80 @@
      "job": "20261109100538_521109-06"
     }
    ]
+  },
+  "521109-15_main": {
+   "order": "521109-15",
+   "kind": "main",
+   "name": "Agent chính · làm tiếp",
+   "state": "done",
+   "phase": "Khởi động",
+   "mood": "sleep",
+   "act": "",
+   "model": "sonnet-5-5",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-09T06:36:36Z",
+   "job": "20261109133633_521109-15_tiep",
+   "finishedAt": "2026-11-09T06:39:34Z",
+   "note": null,
+   "heartbeatAt": "2026-11-09T06:39:34Z",
+   "actAt": "2026-11-09T06:39:26Z",
+   "effort": "high",
+   "current": "26-066562",
+   "history": [
+    {
+     "startedAt": "2026-11-09T06:24:38Z",
+     "finishedAt": "2026-11-09T06:30:48Z",
+     "job": "20261109132437_521109-15"
+    }
+   ]
+  },
+  "521109-27_main": {
+   "order": "521109-27",
+   "kind": "main",
+   "name": "Agent chính",
+   "state": "done",
+   "phase": "Xong",
+   "mood": "work",
+   "act": "Bash: py -X utf8 \"C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\report.py\" parts 5211",
+   "model": "sonnet-5.5",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-09T08:49:31Z",
+   "job": "20261109154930_521109-27_tiep",
+   "finishedAt": "2026-11-09T08:50:49Z",
+   "note": null,
+   "heartbeatAt": "2026-11-09T08:50:49Z",
+   "actAt": "2026-11-09T08:50:48Z",
+   "current": "26-066902",
+   "effort": "high",
+   "history": [
+    {
+     "startedAt": "2026-11-09T08:46:12Z",
+     "finishedAt": "2026-11-09T08:48:32Z",
+     "job": "20261109154610_521109-27"
+    }
+   ]
+  },
+  "521109-22_main": {
+   "order": "521109-22",
+   "kind": "main",
+   "name": "Agent chính",
+   "state": "done",
+   "phase": "Xong",
+   "mood": "work",
+   "act": "Bash: py -X utf8 \"C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\report.py\" orders 521",
+   "model": "sonnet",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-09T09:11:25Z",
+   "job": "20261109161125_521109-22",
+   "finishedAt": "2026-11-09T09:16:13Z",
+   "note": null,
+   "heartbeatAt": "2026-11-09T09:16:13Z",
+   "actAt": "2026-11-09T09:16:12Z",
+   "current": "26-066808",
+   "effort": "high"
   }
  },
  "orders": {
@@ -215,6 +294,36 @@
   "521109-06": {
    "allFile": "521109-06_ALL.dxf",
    "mergedAt": "2026-11-09T03:26:58Z"
+  },
+  "521109-15": {
+   "order": "521109-15",
+   "customer": "有限会社西村工業所",
+   "material": "SS400",
+   "receivedAt": "2026-11-09T06:25:18Z",
+   "partOrder": [
+    "26-066562",
+    "26-066563",
+    "26-065825",
+    "26-065826"
+   ],
+   "allFile": "521109-15_ALL.dxf",
+   "mergedAt": "2026-11-09T06:30:47Z"
+  },
+  "521109-27": {
+   "allFile": "521109-27_ALL.dxf",
+   "mergedAt": "2026-11-09T08:50:49Z"
+  },
+  "521109-22": {
+   "order": "521109-22",
+   "customer": "株式会社ロテック",
+   "material": "SPHCP(酸洗)",
+   "receivedAt": "2026-11-09T09:11:57Z",
+   "partOrder": [
+    "26-066808",
+    "26-066809"
+   ],
+   "allFile": "521109-22_ALL.dxf",
+   "mergedAt": "2026-11-09T09:16:12Z"
   }
  },
  "parts": {
@@ -427,7 +536,9 @@
    "act": "Dựng DXF 26-066546",
    "actAt": "2026-11-09T02:35:44Z",
    "blank": "894.5 x 300",
-   "finishedAt": "2026-11-09T02:35:45Z"
+   "finishedAt": "2026-11-09T02:35:45Z",
+   "manual": true,
+   "manualAt": "2026-11-09T07:11:39Z"
   },
   "521109-04_26-066285": {
    "order": "521109-04",
@@ -571,6 +682,132 @@
    "blank": "236 x 100",
    "finishedAt": "2026-11-09T03:16:47Z",
    "packedAt": "2026-11-09T03:41:33Z",
+   "packedIn": "Gui"
+  },
+  "521109-15_26-066562": {
+   "order": "521109-15",
+   "code": "26-066562",
+   "agent": "521109-15_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-09T06:38:12Z",
+   "flags": [],
+   "kind": "phang",
+   "mood": "look",
+   "act": "Kiểm render",
+   "actAt": "2026-11-09T06:27:37Z",
+   "blank": "426.22 x 68.21",
+   "finishedAt": "2026-11-09T06:38:32Z",
+   "packedAt": "2026-11-09T06:55:02Z",
+   "packedIn": "Gui"
+  },
+  "521109-15_26-066563": {
+   "order": "521109-15",
+   "code": "26-066563",
+   "agent": "521109-15_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-09T06:38:32Z",
+   "flags": [],
+   "kind": "phang",
+   "blank": "426.22 x 68.21",
+   "finishedAt": "2026-11-09T06:38:33Z",
+   "packedAt": "2026-11-09T06:55:02Z",
+   "packedIn": "Gui"
+  },
+  "521109-15_26-065825": {
+   "order": "521109-15",
+   "code": "26-065825",
+   "agent": "521109-15_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-09T06:27:52Z",
+   "flags": [],
+   "kind": "uon",
+   "mood": "write",
+   "act": "Write: 26-065825.dxf",
+   "actAt": "2026-11-09T06:29:12Z",
+   "blank": "659.28 x 250",
+   "finishedAt": "2026-11-09T06:30:16Z",
+   "packedAt": "2026-11-09T06:55:02Z",
+   "packedIn": "Gui"
+  },
+  "521109-15_26-065826": {
+   "order": "521109-15",
+   "code": "26-065826",
+   "agent": "521109-15_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-09T06:30:16Z",
+   "flags": [],
+   "kind": "uon",
+   "blank": "290.4 x 60",
+   "finishedAt": "2026-11-09T06:30:23Z",
+   "packedAt": "2026-11-09T06:55:02Z",
+   "packedIn": "Gui"
+  },
+  "521109-27_26-066889": {
+   "order": "521109-27",
+   "code": "26-066889",
+   "agent": "521109-27_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-09T08:46:34Z",
+   "flags": [],
+   "mood": "write",
+   "act": "Done: 26-066889.dxf",
+   "actAt": "2026-11-09T08:47:39Z",
+   "blank": "505 x 370",
+   "finishedAt": "2026-11-09T08:47:39Z",
+   "packedAt": "2026-11-09T08:53:52Z",
+   "packedIn": "Gui"
+  },
+  "521109-27_26-066902": {
+   "order": "521109-27",
+   "code": "26-066902",
+   "agent": "521109-27_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-09T08:50:13Z",
+   "flags": [],
+   "mood": "write",
+   "act": "Done: 26-066902.dxf",
+   "actAt": "2026-11-09T08:50:49Z",
+   "blank": "230 x 165",
+   "finishedAt": "2026-11-09T08:50:49Z",
+   "packedAt": "2026-11-09T08:53:52Z",
+   "packedIn": "Gui"
+  },
+  "521109-22_26-066808": {
+   "order": "521109-22",
+   "code": "26-066808",
+   "agent": "521109-22_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-09T09:11:57Z",
+   "flags": [],
+   "mood": "write",
+   "act": "Write: 26-066808.dxf",
+   "actAt": "2026-11-09T09:14:42Z",
+   "blank": "237.8 x 164.5",
+   "finishedAt": "2026-11-09T09:14:42Z",
+   "packedAt": "2026-11-09T09:16:52Z",
+   "packedIn": "Gui"
+  },
+  "521109-22_26-066809": {
+   "order": "521109-22",
+   "code": "26-066809",
+   "agent": "521109-22_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-09T09:14:42Z",
+   "flags": [],
+   "mood": "write",
+   "act": "Write: 26-066809.dxf",
+   "actAt": "2026-11-09T09:16:08Z",
+   "blank": "279.5 x 146.4",
+   "finishedAt": "2026-11-09T09:16:08Z",
+   "packedAt": "2026-11-09T09:16:52Z",
    "packedIn": "Gui"
   }
  }

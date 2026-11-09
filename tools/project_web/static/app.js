@@ -87,7 +87,7 @@ function renderProgress(){
       <span class="mono">${esc(j.order || '—')}</span>
       <span class="t2">${j.kind === 'tiep' ? 'làm tiếp ' + Object.keys(j.answers || {}).length + ' mã' : (j.plan ? Object.entries(j.plan.agents || {}).map(([a, m]) => (a === 'main' ? 'Chính' : a) + ' ' + m).join(', ') : (j.subagents ? j.subagents + ' subagent' : 'agent chính') + (j.model ? ' · ' + j.model : ''))}</span>
       <span class="p" title="${esc(j.path)}">${esc(j.result || j.path)}</span>
-      <span class="t3" style="font-size:12px">${hm(j.at)}</span>
+      <span class="mono qt">${hm(j.at)}</span>
       ${j.status !== 'nhan' ? `<button class="ib" data-deljob="${esc(j.id)}" title="Xoá khỏi hàng đợi"><svg class="i"><use href="#i-x"/></svg></button>`
         : j.by === 'auto' ? `<button class="btn btn-sec sm" data-canceljob="${esc(j.id)}" title="Dừng agent đang chạy việc này">Dừng</button>` : ''}
     </div>`).join(''));
@@ -253,7 +253,7 @@ function orderDrawer(o){
   const tm = orderTime(o);
   const pct = o.total ? Math.round(o.done / o.total * 100) : (o.hasAll ? 100 : 0);
   const job = (S.data.jobs || []).find(j => j.order === o.order && j.result);
-  const dir = (S.data.work || 'AI_Work') + (o.path ? '\\' + o.path : '');
+  const dir = (S.data.workPath || S.data.work || 'AI_Work') + (o.path ? '\\' + o.path : '');
   const kv = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
   const codes = o.codes.map(c => `<tr>
       <td class="mono">${esc(c.code)}</td>
@@ -710,7 +710,7 @@ function renderCompare(){
 function openManual(order, code){
   const o = S.data.orders.find(x => x.order === order), c = o && o.codes.find(x => x.code === code);
   if (!c) return;
-  const dir = (S.data.work || 'AI_Work') + (o.path ? '\\' + o.path : '');
+  const dir = (S.data.workPath || S.data.work || 'AI_Work') + (o.path ? '\\' + o.path : '');
   S.manual = {order, code};
   const el = $('#pl');
   el.innerHTML = `<div class="pl-h"><span class="jid">${esc(code)}</span><span class="t2">đơn ${esc(order)}</span><span class="sp"></span>

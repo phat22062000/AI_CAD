@@ -397,7 +397,7 @@ def snapshot(force=False):
         rn = sys.modules.get('runner')
         data = {'orders': orders, 'agents': agents, 'jobs': jobs[:50], 'generatedAt': now_iso(),
                 'runner': rn.status() if rn else {'cli': False},
-                'work': os.path.basename(WORK), 'progressFile': os.path.exists(PROGRESS)}
+                'work': os.path.basename(WORK), 'workPath': WORK, 'progressFile': os.path.exists(PROGRESS)}
         _cache.update(t=time.time(), data=data)
         return data
 

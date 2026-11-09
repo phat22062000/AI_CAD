@@ -57,11 +57,11 @@
       <button class="btn btn-pri lg" type="submit"><svg class="i"><use href="#i-check"/></svg>Giao việc</button>
     </form>
     <p class="hint" id="job-hint">Đơn được đưa vào hàng đợi; nói với agent "Xử lý hàng đợi" để agent nhận và chạy.</p>
-    <div class="queue" id="jobs"></div>
     <div class="stats" id="o-stats"></div>
 
     <div class="pw-cols">
       <div class="pw-main">
+        <div class="side-q"><h2 style="margin:0 0 8px"><svg class="i"><use href="#i-clock"/></svg>Thông báo</h2><div class="queue" id="jobs"></div></div>
         <h2><svg class="i"><use href="#i-bot"/></svg>Agent đang chạy <span class="n" id="a-n"></span></h2>
         <div id="running"></div>
         <div class="jt-legend" id="jt-legend" aria-label="Biểu cảm robot" hidden></div>

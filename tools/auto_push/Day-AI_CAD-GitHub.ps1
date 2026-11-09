@@ -12,7 +12,7 @@ $remote = (git remote get-url origin 2>&1)
 if($remote -notmatch 'phat22062000/AI_CAD'){ Log "DUNG: remote origin khong dung repo AI_CAD: $remote"; exit 1 }
 git add -A 2>&1 | ForEach-Object { Log "$_" }
 # Chot an toan: GitHub tu choi file >100MB
-$big = @(git diff --cached --name-only | Where-Object { $_ -and (Test-Path -LiteralPath $_) -and ((Get-Item -LiteralPath $_).Length -gt 95MB) })
+$big = @(git -c core.quotepath=false diff --cached --name-only | Where-Object { $_ -and (Test-Path -LiteralPath $_) -and ((Get-Item -LiteralPath $_).Length -gt 95MB) })
 if($big.Count -gt 0){ git reset -q; Log ('DUNG: file >95MB: ' + ($big -join ', ')); exit 1 }
 $staged = @(git diff --cached --name-only)
 if($staged.Count -eq 0){ Log 'Khong co thay doi, bo qua commit.' }

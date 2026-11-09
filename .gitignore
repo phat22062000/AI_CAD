@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+
+tools/auto_push/day_ai_cad.log

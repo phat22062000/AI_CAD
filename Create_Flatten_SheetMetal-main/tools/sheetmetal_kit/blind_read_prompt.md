@@ -7,7 +7,7 @@ Chuẩn bị: copy RIÊNG file PDF vào một thư mục trống (ví dụ /tmp/
 ---
 Bạn là người đọc bản vẽ cơ khí kim loại tấm. Đọc ĐỘC LẬP file scan <PDF>. KHÔNG đọc file nào khác ngoài PDF này và thư mục chứa nó; KHÔNG tìm file DXF.
 
-Cách làm: render từng trang 200 dpi bằng `python3 -I <KIT>/pdfpage.py render <PDF> <png> --deskew` (thêm `--rot 90` nếu trang xoay; kiểm tra chữ đọc thẳng, ngược thì xoay thêm 180°); cắt từng hình chiếu và phóng to để đọc số (`pdfpage.py crop ... --zoom 2`). Tiết kiệm token: chỉ mở (Read) ảnh đã cắt hoặc đã thu nhỏ (`pdfpage.py small`, cạnh dài ≤ 1200 px), không mở cả trang 200 dpi; mỗi vùng chỉ mở lại khi cần phóng thêm. Chạy Python bằng `python3 -I`. Chữ viết tay cạnh mã vạch ghi tên chi tiết (A, B, C, A+B, 本図, 対称, 個数, J). Trang đầu là bảng CAD依頼書: chỉ liếc qua, KHÔNG dùng làm nguồn kích thước.
+Cách làm: render từng trang 200 dpi bằng `python3 -I <KIT>/pdfpage.py render <PDF> <png> --deskew` (thêm `--rot 90` nếu trang xoay; kiểm tra chữ đọc thẳng, ngược thì xoay thêm 180°); cắt từng hình chiếu và phóng to để đọc số (`pdfpage.py crop ... --zoom 2`). Tiết kiệm token: chỉ mở (Read) ảnh đã cắt hoặc đã thu nhỏ (`pdfpage.py small`, cạnh dài ≤ 1200 px), không mở cả trang 200 dpi; mỗi vùng chỉ mở lại khi cần phóng thêm. Chạy Python bằng `python3 -I`. Chữ viết tay cạnh mã vạch ghi tên chi tiết (A, B, C, A+B, 本図, 対称, 個数, J). Trang đầu là bảng CAD依頼書: chỉ liếc qua, KHÔNG dùng làm nguồn kích thước. Đọc cả vùng quanh mã vạch, khung tên và lề, không chỉ vùng hình chiếu.
 
 Mức đọc <MỨC>:
 - GỌN (tấm đơn giản: chữ nhật/đa giác ít đỉnh có lỗ, chữ L/U một mặt cắt rõ): lập bảng một lượt theo mục 1-4; đo pixel 1 vị trí lỗ mỗi hình chiếu; chỉ làm lượt 2 cho mục còn "không chắc" hoặc chuỗi không cộng đủ tổng. Gặp chuỗi lệch, cặp gương, ghi chú tay khó đọc thì chuyển sang ĐẦY ĐỦ cho chi tiết đó.
@@ -22,7 +22,7 @@ Lập bảng cho TỪNG hình chiếu của từng trang, từng chi tiết:
    Chuỗi không cộng đủ tổng: KHÔNG dùng tổng để chốt; phóng to đầu/cuối từng mũi tên, đo pixel từng khoảng, ghi cả hai cách đọc và số đo. Cặp gương: đọc và đo riêng từng tấm.
 3. Lỗ: φ hoặc ren, số lượng, vị trí tâm tính từ hai mép tấm (nêu mép nào), rãnh, vát C, bo R.
    Chỗ uốn: ghi mỗi đường gióng đi qua góc trong hay ngoài (phóng ≥ 300 dpi). Mọi dấu/tem chữ và ghi chú tay: ghi nguyên văn, vị trí, mũi tên chỉ vào đâu (lỗ, cạnh, toàn tấm) và nghĩa đọc được; không bỏ qua dấu nào dù thấy vô nghĩa. Việc diễn giải theo quy tắc để bên kiểm xử lý, không tự kết luận.
-4. Ghi chú tay và ghi chú in (độ giãn, KEGAKI, J, 本図/対称, ヨ, tem PIERCING...).
+4. Ghi chú tay và ghi chú in (độ giãn, KEGAKI, J, 本図/対称, ヨ, tem PIERCING...). Liệt kê MỌI chữ tay trên trang kể cả khi không gần hình; mỗi hình tay phụ (rãnh, lỗ, vát) ghi đủ kích thước và đặc điểm.
 5. Không được dừng ở "không chắc" khi còn cách xác minh. Với mỗi số chưa chắc phải làm đủ: (a) phóng ≥ 400 dpi, đổi độ tương phản nếu mờ; (b) đo pixel chân dim với tỉ lệ px/mm từ một kích thước chắc chắn trong cùng hình; (c) đối chiếu ít nhất 2 hình chiếu độc lập; (d) với chữ viết tay, thử từng cách đọc và chọn cách khớp ngữ cảnh trên bản vẽ. Chỉ sau đó mới được ghi "không chắc", kèm: đã thử gì, các cách đọc với số đo mỗi cách, cách nào khớp hơn, ảnh hưởng tới đâu. KHÔNG đoán, KHÔNG làm tròn.
 Đo pixel (tỉ lệ px/mm suy từ một kích thước đã biết trong cùng hình) để kiểm tối thiểu 1 vị trí lỗ mỗi hình chiếu; ghi số đo cạnh số đọc.
 

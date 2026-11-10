@@ -2,7 +2,7 @@
 name: "dxf-check"
 description: "Kiểm DXF đầu ra (26-xxxxxx.dxf, file ALL) sau dxf-sheetmetal: chỉ kiểm hình dạng, không kiểm Template; báo cáo chỉ nêu lỗi sai."
 metadata:
-  version: "2026.11.05-1"
+  version: "2026.11.10-1"
 ---
 
 Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về máy người dùng), hoặc khi người dùng yêu cầu kiểm một file DXF đã có. Tiêu chí lấy từ `dxf-sheetmetal` (mục 2–12), `Quy_Tac_Laser.md`, `Ghi_Chu_Loi_Tao_DXF.md` (`knowledge/Context_Laser/`). **Chỉ kiểm hình dạng, không kiểm cấu trúc Template** (file lưu từ CAD có header/owner khác Template là bình thường, không báo); muốn so Template thì thêm `--template`.
@@ -66,14 +66,14 @@ Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về 
 
 ## 4. Danh mục so với kỳ vọng từ nguồn (script chỉ đối chiếu chữ in; kích thước, ghi chú tay, hình: so với `blind_table.md` và ảnh PDF)
 - Mặt vẽ: loại hình chiếu (hình dưới không mặc định là hình bằng), mặt nhìn thấy, mép trước, ưu tiên kegaki > 表 > mặt ngoài uốn > hình chiếu chính (uốn ngược chiều) > hình chiếu đứng; tấm tách từ bản vẽ lắp đã lật ra mặt ngoài.
-- Tấm uốn: file vẽ mặt ngoài, hình chiếu trên bản vẽ có thể nhìn từ phía đối diện. Xác định mặt vẽ trước, rồi mới báo LỖI vị trí theo hướng trên/dưới (Y). Hướng chỉ suy từ việc hai hình thẳng hàng thì ghi CẢNH BÁO, không ghi LỖI.
+- Tấm uốn: file vẽ mặt ngoài, hình chiếu trên bản vẽ có thể nhìn từ phía đối diện. Xác định mặt vẽ trước, rồi mới báo LỖI vị trí theo hướng trên/dưới (Y). Hướng chỉ suy từ việc hai hình thẳng hàng thì ghi CẢNH BÁO, không ghi LỖI. Hình tay dưới/trên hình chiếu đứng theo 三角法 (hình dưới = nhìn từ dưới). Check tự xác định loại hình và mặt vẽ từ vị trí hình, không bỏ qua với lý do đọc mù không kiểm được mặt ngoài.
 - Cặp gương: lỗ, kegaki, cánh ngắn của bản 対称 đúng là ảnh gương (script chỉ báo phép biến hình, không biết bên nào đúng).
 - Biên: mỗi đoạn biên ứng với một số/nét trên bản vẽ hoặc DXF khách; không tự thêm đoạn; tấm đặt trong hộp phải dò từng đoạn mép ở hình bằng (064175 có lưỡi 84 x 1.5); số nhỏ trong chuỗi (5, 9, 10) đều đã gán.
 - Kích thước: tính theo chuỗi kích thước, không giả định số tròn/giữa/đối xứng (064040, 064045); dung sai vẽ giá trị giữa (55 +0.2/0 → 55.1); số trong ngoặc chỉ tham khảo; DXF khách theo đúng tỉ lệ khung tên.
 - Chuỗi không cộng đủ tổng, cặp gương: so từng tấm theo pixel, không suy tấm này từ tấm kia (065504: số 60 đo tới tâm lỗ, không phải tới mép ô khoét).
 - Chỗ uốn: phải biết mỗi kích thước là trong hay ngoài (blind_table ghi); là kích thước trong mà phôi chưa đổi sang ngoài là LỖI; không xác định được thì cảnh báo.
 - Tra bảng giãn: đúng khoảng chiều dài uốn của mã trước khi lấy số.
-- Độ giãn: nguồn đúng (tay viết > bảng Asahi/AICOKU 646 cho 90°; góc khác 90° do người dùng cho); vị trí 2 đường uốn tính từ 2 mép; tổng phôi = ngoài + ngoài - giãn.
+- Độ giãn: nguồn đúng (tay viết > bảng Asahi/AICOKU 646 cho 90°; góc khác 90° do người dùng cho); vị trí 2 đường uốn tính từ 2 mép; tổng phôi = ngoài + ngoài - giãn. Giãn lấy từ công thức/K/nội suy bảng 90° cho góc ≠ 90° mà không có số tay hay số người dùng cho là SAI độ giãn dài (mục 5.4). Khách có quy định riêng (ví dụ ×2 một phía) thì đối chiếu theo quy định đó.
 - Màu POINT: có dấu THROUGH HOLE/đột xuyên hoặc khách quy định piercing xuyên mà POINT trắng là LỖI (Sai màu PIERCING).
 - Lỗ: bảng lỗ → tấm, đếm theo từng ghi chú n-φ/n-M; lỗ taro vẽ lỗ mồi (M6 → φ5, M8 → φ6.8) trừ khi có ghi chú tay 下穴/lỗ mồi (thắng bảng): với MỖI dòng THÔNG TIN 'lỗ trùng lỗ mồi' của script, tìm ghi chú tay cạnh nhóm lỗ đó trong PDF và đối chiếu φ đã vẽ; lỗ bị gạch không vẽ; bản vẽ có chỉ thị tay phần laser thì chỉ vẽ phần được chỉ thị.
 - R/C: cộng n-Rx ở mọi hình chiếu, từng cung khớp ghi chú (062832 R12 không phải R5); "n-C" lệch hình đã Flag 9.

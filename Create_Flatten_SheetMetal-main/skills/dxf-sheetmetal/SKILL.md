@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.04-1"
+  version: "2026.11.10-1"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -15,7 +15,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 1. Đọc trang CAD依頼書 (render ≤ 100 dpi): mã yêu cầu, khách, vật liệu, độ dày, X/Y phôi (X/Y chỉ để đối chiếu, mục 2).
 2. Đọc toàn bộ `Quy_Tac_Laser.md`; trong `DS_Khach_Hang.md` chỉ đọc phần "Tra nhanh theo nhóm quy tắc" và dòng của đúng mã khách (tìm theo mã khách). Quy định riêng của khách thắng quy tắc chung.
 3. Thư mục đơn có DXF khách (3D*.DXF...): stage về, dựng hình từ DXF TRƯỚC rồi mới đối chiếu PDF (mục 4.2).
-4. Mỗi trang bản vẽ (tiết kiệm token): kiểm hướng trang trước (`pdftotext` hoặc ảnh ≤ 50 dpi); trang xoay 90° thì xoay ngay khi render, cắt vùng hình, render MỘT lần 200 dpi. Tìm ký hiệu ヨ khoanh tròn ở TỪNG trang. Xác định loại từng hình chiếu (mục 3); ghi lại mọi điểm thuộc Flag (mục 11.4) và mọi ghi chú R ở từng hình chiếu.
+4. Mỗi trang bản vẽ (tiết kiệm token): kiểm hướng trang trước (`pdftotext` hoặc ảnh ≤ 50 dpi); trang xoay 90° thì xoay ngay khi render, cắt vùng hình, render MỘT lần 200 dpi. Tìm ký hiệu ヨ khoanh tròn ở TỪNG trang. Xác định loại từng hình chiếu (mục 3); ghi lại mọi điểm thuộc Flag (mục 11.4) và mọi ghi chú R ở từng hình chiếu. Trước khi cắt vùng hình, xem TOÀN trang ≤ 70 dpi và liệt kê mọi chữ tay/ghi chú ngoài hình (quanh mã vạch, khung tên, lề, cạnh hình): vật liệu, độ dày, 伸び/giãn, số lượng, ヨ, J, ピアス. Vùng cắt phải gồm cả những chỗ đó; ghi chú nghiêng thì xoay thẳng, phóng ≥ 300 dpi rồi mới đọc.
 5. Mỗi mã: tìm đủ hình chiếu, lập các bảng ở mục 12; xác định góc uốn và độ giãn từng chỗ (mục 5). Dựng phôi trong hệ cục bộ (u dọc đường uốn, v vuông góc): biên (mục 4), uốn (5), hộp/rạch (6), lỗ (7), kegaki (9), bo góc (8, sau khi đủ biên, trước khi xoay); cuối cùng đặt hướng (mục 10).
 6. Xuất file riêng + file ALL kèm Flag (mục 11), kiểm tra theo mục 12.
 7. Báo cáo: danh sách file, kích thước phôi, các bảng mục 12, kích thước tính qua chuỗi (nêu vị trí nào) và kích thước thiếu, mọi chỗ lệch DXF–PDF, kegaki đã vẽ, lỗ đã bỏ, chỗ hạ R, mã thiếu bản vẽ, các Flag.
@@ -43,7 +43,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 
 ## 3. Hình chiếu và mặt vẽ (BẮT BUỘC)
 - Mọi hình chiếu đều được tuân theo phương pháp góc chiếu thứ ba.
-- 三角法: so với hình chiếu đứng, hình TRÊN = hình bằng (nhìn từ trên); hình DƯỚI = hình nhìn từ dưới lên; hình TRÁI = chiếu trái; hình PHẢI = chiếu phải. KHÔNG mặc định hình dưới là hình bằng. Xác định lại ở TỪNG trang.
+- 三角法: so với hình chiếu đứng, hình TRÊN = hình bằng (nhìn từ trên); hình DƯỚI = hình nhìn từ dưới lên; hình TRÁI = chiếu trái; hình PHẢI = chiếu phải. KHÔNG mặc định hình dưới là hình bằng. Xác định lại ở TỪNG trang. Hình tay nằm cạnh hình chiếu đứng cũng theo 三角法: vị trí so với hình chiếu đứng quyết định loại hình (hình tay phía dưới = nhìn từ dưới), không mặc định là hình bằng. Hình từ dưới cho thấy mặt dưới; mặt dưới chỉ là mặt ngoài của chỗ uốn khi cánh còn lại hướng lên, cánh hướng xuống thì mặt dưới là mặt trong.
 - Trước/sau: cạnh gần hình chiếu đứng là phía TRƯỚC. Hình bằng: mép dưới = trước. Hình từ dưới: mép trên = trước. Chiếu phải: mép trái = trước. Chiếu trái: mép phải = trước. Hình xoay 90° thì xoay mép theo.
 - Mặt nhìn thấy: hình bằng → mặt trên; hình từ dưới → mặt dưới. Chữ L: mặt ngoài là phía góc ngoài của chỗ uốn trên hình chiếu đứng (cánh ngang trên, cánh đứng phải: mặt trên cánh ngang là mặt ngoài). Nét đứt là phía khuất (tấm B nét đứt trong hình từ dưới → B ở mặt đối diện).
 - Quy mọi vị trí về 3 trục thật (x dọc cánh, y trước–sau, z cao) rồi mới chiếu sang mặt vẽ; không lấy trên/dưới của hình làm trước/sau.
@@ -54,7 +54,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   3. Chi tiết uốn: mặt ngoài của phần uốn; hình chiếu đứng cho thấy mặt trong thì lật trái–phải (không đổi chiều dọc).
   4. Uốn ngược chiều (Z/Ω/mũ, 上曲げ + 下曲げ) không có mặt ngoài rõ, không có 表: vẽ theo hình chiếu chính (hình chiếu đứng) đúng như bản vẽ, không lật; trùng mặt với 展開図 của khách nếu có.
   5. Phẳng không uốn: giữ hướng hình chiếu đứng. Tấm tách từ bản vẽ lắp mà hình chiếu đứng là mặt trong thì lật trái–phải để ra mặt ngoài.
-  - Không chắc mặt nào là mặt ngoài: vẫn vẽ theo mặt đã chọn và Flag 11 (ghi mặt đã chọn).
+  - Không chắc mặt nào là mặt ngoài: vẫn vẽ theo mặt đã chọn và Flag 11 (ghi mặt đã chọn). Chỉ dùng Flag 11 sau khi đã lập bảng mặt vẽ (mục 12) và xác định từng hình tay là loại hình nào; không dùng Flag 11 để thay việc xác định loại hình.
 - Cặp gương (R/L, 本図/対称, A-1/A-2, hai trang cùng loại chi tiết): hình dạng và kegaki bản kia là ảnh gương; chỗ dễ lỗi nhất, kiểm kỹ hơn. Nhãn ở hình 3D → trái/phải ở hình chiếu đứng → cùng trái/phải ở hình từ dưới (chỉ đảo trước–sau). Vẽ mặt trên (mặt kegaki) từ hình từ dưới thì lật trước–sau. Ví dụ 26-064157 (A-1, trái, đế 100 x 50): mặt trên lỗ φ16 (16; 15), kegaki (70; 35), y tính từ mép trước; 064158 (A-2) là ảnh gương. Lỗi đã gặp: coi hình dưới là hình bằng nên ra ảnh gương (26-062206: cánh ngắn 35 phải sát mép trước, mở rộng 50 phía sau; 064157/158 bị đổi chỗ).
   - Mỗi tấm của cặp gương/đối xứng phải tự đọc và đo riêng điểm đầu–cuối từng kích thước và vị trí lỗ; KHÔNG chép toạ độ từ tấm kia. Chuỗi hai tấm có thể khác nhau (521102-23: 065503 lỗ X = 57,5 / 171,5, ô khoét 60 → 169; 065504 lỗ X = 60 / 174, ô khoét 62,5 → 171,5). Chỉ coi là ảnh gương khi đo từng tấm cho cùng kết quả.
 - Chỉ xoay 90°/180° chọn hướng (mục 10) SAU KHI mặt đã đúng; không dùng xoay để "sửa" khi chưa chắc mặt. Lật chỉ khi quy tắc mặt yêu cầu.
@@ -93,9 +93,9 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 ## 5. Uốn: độ giãn và đường uốn
 - Phôi = kích thước ngoài + kích thước ngoài - độ giãn. Độ giãn luôn dương: bản vẽ ghi "-0.48" thì hiểu là 0.48, vẫn trừ. Sau khi dựng, đối chiếu tổng dài/rộng với công thức.
 - Nguồn độ giãn, theo thứ tự:
-  1. Số ghi tay trên bản vẽ (ví dụ "37+60-5.2=91.8"); khác bảng vẫn dùng số tay và Flag 10.
+  1. Số ghi tay trên bản vẽ (ví dụ "37+60-5.2=91.8"); khác bảng vẫn dùng số tay và Flag 10. Khách có quy định giãn riêng trong file quy tắc khách thì áp dụng trước khi xét bảng, và phải tìm số tay tương ứng trên toàn trang.
   2. Bảng `Bang_Do_Gian_Asahi.xlsx` (khách 646 dùng `Bang_Do_Gian_AICOKU ALPHA.xlsx`) CHỈ cho chỗ uốn 90°.
-  3. Góc uốn khác 90° (kể cả > 90°, ví dụ 110°): KHÔNG dùng bảng, không lấy số 90°; độ giãn do người dùng cung cấp, chưa có thì hỏi.
+  3. Góc uốn khác 90° (kể cả > 90°, ví dụ 110°): KHÔNG dùng bảng, không lấy số 90°; độ giãn do người dùng cung cấp, chưa có thì hỏi. Không tự suy giãn bằng công thức, hệ số K hay nội suy từ bảng 90°. Trước khi kết luận thiếu giãn phải đã quét toàn trang tìm ghi chú tay (mục 1 bước 4); vẫn không có thì Flag 16 và hỏi, không vẽ số tạm.
 - Tra bảng: xác định khoảng chiều dài uốn của mã (hàng 曲げ長さ) trước, rồi mới đọc giãn ở cột tương ứng; ô độ dày không gộp có thể phủ nhiều cột.
 - Kích thước ở chỗ uốn: phóng to đầu đường gióng để xác định đi qua góc trong hay ngoài. Kích thước trong phải đổi sang ngoài trước khi tính phôi (ngoài = trong + t/tan(α/2) mỗi cánh, α là góc trong giữa hai cánh); không xác định được thì Flag 7.
 - Xác định góc uốn TỪNG chỗ từ hình chiếu cạnh (ví dụ ghi 70° lệch = uốn 110°). Góc ghi trên hình chưa chắc là góc uốn: góc giữa hai mặt tấm ở hình cạnh/mặt cắt là góc uốn; góc giữa hai cạnh biên của cánh ở hình bằng/hình nhìn thẳng cánh là góc biên dạng (ví dụ đầu cánh vát), không làm đổi góc uốn. Ví dụ 26-063561/62 (天板, SUS304 2B t1.5): 4 ghi chú 135° là góc đầu cánh vát, uốn 90°, giãn 2.64. Chưa chắc thì hỏi, không tự kết luận góc uốn khác 90°.
@@ -214,14 +214,14 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   17. Có bất kì lỗ tròn nào (tính cả lỗ mồi) trong tấm nhỏ hơn 1/2 độ dày của tấm đó.
   18. Kích thước có dung sai (trừ trường hợp dung sai dương và dung sai âm băng nhau).
   19. Gọc nhọn quá bé không thể laser R.
-- Không Flag chỉ thị riêng (ghi chú laser, chiều dài tay viết) hay lệch số trong ngoặc/CAD依頼書. Flag không thay việc phải hỏi; ghi cả trong báo cáo; không ghi ở file riêng.
+- Không Flag chỉ thị riêng (ghi chú laser, chiều dài tay viết) hay lệch số trong ngoặc/CAD依頼書. Flag không thay việc phải hỏi; ghi cả trong báo cáo; không ghi ở file riêng. Flag 5/6 chỉ dùng sau khi đã xoay thẳng, phóng ≥ 300 dpi và đọc lại ≥ 2 lần. Phần đọc được thì phải vẽ; chỉ phần chữ số thật sự không đọc ra mới để Flag. Không bỏ cả chi tiết (rãnh, lỗ, vát) chỉ vì ghi chú "không đọc rõ".
 - Dạng: đánh số 1., 2., 3... theo từng hình (số cuối = số Flag), không ghi chữ "Flag": `<số thứ tự>. <câu chuẩn> (<chi tiết: vị trí, số liệu>)`, ví dụ "1. Kích thước PDF và DXF khác nhau (lỗ 3xφ4: PDF φ4, DXF φ4.5)".
 - Hiển thị: TEXT cao 5, căn trái, X = X chữ mã (-150); dòng k (k = 0, 1...) tại Y = Y chữ mã - 12 - 7k; ≤ 40 ký tự/dòng, ngắt ở khoảng trắng; layer `0`, Magenta `62 = 6`. Style Standard (Arial, mục 11.2 bước 3; SHX `txt` cũ hiện "?"). Ký tự ngoài ASCII ghi `\U+XXXX` (hex hoa, NFC); file vẫn ghi cp932.
 - Kiểm tra: ezdxf `audit` 0 lỗi; render: dấu đúng, không đè hình.
 
 ## 12. Bảng kiểm trước khi giao (ghi vào báo cáo)
 - Mặt vẽ (từng mã, làm TRƯỚC khi xuất file): loại hình chiếu dùng; mặt nhìn thấy; mép trước nằm trên hay dưới; cánh/phần mở rộng sát mép nào; kết quả đối chiếu 2 hình; mặt vẽ cuối cùng (ngoài/trong/kegaki).
-- Gán kích thước (mục 4.1): mọi con số gần chi tiết đã được gán.
+- Gán kích thước (mục 4.1): mọi con số gần chi tiết đã được gán. Mọi ghi chú tay ngoài hình đã liệt kê (mục 1 bước 4) đều có nơi gán; mọi hình tay phụ (rãnh, lỗ, vát) đều có entity tương ứng trong file.
 - Đỉnh: bảng đỉnh của biên (sau xoay) đối chiếu từng đỉnh với hình chiếu gốc; bounding box trùng CAD依頼書 không chứng minh hình đúng.
 - Lỗ → tấm (mục 7): không tấm nào thừa/thiếu lỗ.
 - Lỗ mồi (mục 7): mỗi nhóm lỗ taro đã đối chiếu ghi chú tay 下穴/lỗ mồi trong PDF; ghi nguồn φ (bảng hay ghi chú tay) vào báo cáo.

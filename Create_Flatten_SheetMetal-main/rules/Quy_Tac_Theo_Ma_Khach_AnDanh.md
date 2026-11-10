@@ -62,7 +62,7 @@ Bản gốc: DS_khach_hang_yeu_cau_dac_biet.md. Khách không có trong danh sá
 | 825 | Theo quy định nội bộ, không cung cấp DXF; không nhận yêu cầu. Tạo file DWG. |
 | 829 | Có dữ liệu thì không cần đối chiếu bản vẽ; lấy dữ liệu làm cơ sở chính. |
 | 830 | Gia công đúng chỉ dẫn bản vẽ (kể cả bán kính R ở chu vi ngoài). |
-| 843 | Chiều dài bù uốn chỉ một phía nên ×2. A5052 dày 5: bù uốn 7.72 mm. |
+| 843 | Chiều dài bù uốn chỉ một phía nên ×2. A5052 dày 5: bù uốn 7.72 mm. Ghi tay 片伸び x: giãn chỗ uốn = 2 × x, kể cả góc ≠ 90°. |
 | 850 | Đôi khi lỗ nhỏ hơn ½ độ dày (cần xác nhận). Lỗ quá gần nhau: thêm R1 thành lỗ Daruma. Không "heso" = không có phần nối giữa các lỗ. |
 | 851 | Cho phép biến dạng lỗ do uốn. Vị trí hàn cần kegaki dù không chỉ thị. Tấm hàn nghiêng có hai kích thước: dùng kích thước ngắn hơn. |
 | 859 | Thép đặc chủng Nakajima (cũ). Trừ khi chỉ định, không bo R góc ngoài (giữ góc vuông). R có ký hiệu ※ có thể bỏ qua. Dày ≥ 19t cần xác nhận. Đôi khi lỗ nhỏ hơn ½ độ dày (cần xác nhận). |

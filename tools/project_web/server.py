@@ -32,6 +32,9 @@ ORDER_RE = re.compile(r'^(\d{6}-\d{2})')
 DATE_RE = re.compile(r'^(\d{2})-(\d{2})-(\d{4})$')
 CODE_RE = re.compile(r'^\d{2}-\d{6}$')
 LEGACY_RE = re.compile(r'^(\d+)T-?(\d+)F$', re.I)
+REF_DIR = 'Tham_Khao'     # <thư mục đơn>\Tham_Khao\<mã>\ = PDF/DXF tham khảo người dùng nạp cho agent làm tiếp (không phải Output, không tính vào đơn)
+REF_EXT = ('.pdf', '.dxf')
+REF_MAX = 25 * 1024 * 1024
 PACK_RE = re.compile(r'^Gui(?:_\d+)?[\\/]', re.I)      # DXF đã chuyển vào Gui (đợt 1), Gui_2 (đợt 2)...
 NS = '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
 lock = threading.Lock()
@@ -166,7 +169,8 @@ def order_files(order, info):
             if fn.startswith(order) and os.path.isfile(p):
                 out.append((fn, p))
     else:
-        for dp, _, fns in os.walk(info['dir']):
+        for dp, dns, fns in os.walk(info['dir']):
+            dns[:] = [d for d in dns if d != REF_DIR]
             for fn in fns:
                 out.append((os.path.relpath(os.path.join(dp, fn), info['dir']), os.path.join(dp, fn)))
     return out
@@ -187,6 +191,68 @@ def norm_flags(f):
     if isinstance(f, list):
         return [str(x) for x in f if str(x).strip()]
     return [str(f)]
+
+
+def _ref_path(info, code):
+    if not info or info.get('loose') or not CODE_RE.match(code or ''):
+        return None
+    return os.path.join(info['dir'], REF_DIR, code)
+
+
+def list_refs(info, code):
+    d = _ref_path(info, code)
+    try:
+        return sorted(f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))) if d and os.path.isdir(d) else []
+    except OSError:
+        return []
+
+
+def _safe_name(name):
+    n = os.path.basename(str(name or '').replace('\\', '/')).strip()
+    n = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', n)
+    return n[:100]
+
+
+def add_ref(order, code, name, b64):
+    """Người dùng nạp PDF/DXF tham khảo cho một mã: lưu vào <thư mục đơn>\\Tham_Khao\\<mã>\\ (không đụng file đầu vào/Output)."""
+    import base64
+    import binascii
+    info = scan_orders().get(order or '')
+    d = _ref_path(info, code)
+    if not d:
+        raise ValueError('Không tìm thấy thư mục đơn hoặc mã không hợp lệ.')
+    n = _safe_name(name)
+    if not n.lower().endswith(REF_EXT):
+        raise ValueError('Chỉ nhận file PDF hoặc DXF.')
+    try:
+        raw = base64.b64decode(b64 or '', validate=False)
+    except (binascii.Error, ValueError):
+        raise ValueError('Dữ liệu file không hợp lệ.')
+    if not raw or len(raw) > REF_MAX:
+        raise ValueError('File rỗng hoặc lớn hơn 25 MB.')
+    os.makedirs(d, exist_ok=True)
+    if n not in os.listdir(d) and len(os.listdir(d)) >= 10:
+        raise ValueError('Mỗi mã tối đa 10 file tham khảo, hãy xoá bớt.')
+    with open(os.path.join(d, n), 'wb') as f:
+        f.write(raw)
+    _cache['t'] = 0
+    return n
+
+
+def del_ref(order, code, name):
+    info = scan_orders().get(order or '')
+    d = _ref_path(info, code)
+    n = _safe_name(name)
+    fp = os.path.join(d, n) if d and n else None
+    if not fp or not os.path.isfile(fp):
+        raise ValueError('Không thấy file tham khảo này.')
+    os.remove(fp)
+    for dd in (d, os.path.dirname(d)):       # thư mục mã rồi thư mục Tham_Khao rỗng thì dọn luôn
+        try:
+            os.rmdir(dd)
+        except OSError:
+            break
+    _cache['t'] = 0
 
 
 def build_order(order, info, prog):
@@ -295,6 +361,10 @@ def build_order(order, info, prog):
                           'thick': r.get('thick'), 'material': r.get('material'),
                           'size': f"{r.get('x')} x {r.get('y')}" if r.get('x') is not None else None})
 
+    # file tham khảo người dùng đã nạp cho từng mã
+    for r in code_rows:
+        r['refs'] = list_refs(info, r['code'])
+
     # trạng thái đơn
     if running:
         state = 'dang'
@@ -373,26 +443,21 @@ def snapshot(force=False):
             return _cache['data']
         prog = load_json(PROGRESS, {})
         found = scan_orders()
-        for o in prog.get('orders', {}):       # đơn chỉ có trong tiến độ agent
-            if o not in found and ORDER_RE.match(o):
-                # thư mục đơn đã bị xoá/chuyển đi: chỉ hiện nếu còn agent, mã hoặc việc đang gắn với đơn (để không còn đơn "ma")
-                if any(a.get('order') == o for a in prog.get('agents', {}).values()) \
-                        or any(k.startswith(o + '_') for k in prog.get('parts', {})) \
-                        or any(j.get('order') == o for j in prog.get('jobs', {}).values()):
-                    found[o] = {'dir': WORK, 'loose': True}
+        # đơn không còn thư mục trong AI_Work (bị xoá/chuyển đi) thì không hiện: không đơn, không thẻ agent, không thông báo cũ (dữ liệu trong progress.json giữ nguyên)
         orders = [build_order(o, i, prog) for o, i in found.items()]
         orders.sort(key=lambda x: (x['date'], x['order']), reverse=True)
         now = time.time()
         agents = []
         for k, a in prog.get('agents', {}).items():
-            if a.get('demo'):
+            if a.get('demo') or (a.get('order') and a['order'] not in found):
                 continue
             a = dict(a, id=k)
             if a.get('state') == 'running' and lost(a, now):
                 a['lost'] = True
             agents.append(a)
         agents.sort(key=lambda a: (a.get('state') != 'running', a.get('startedAt') or ''), reverse=False)
-        jobs = [dict(j, id=k) for k, j in prog.get('jobs', {}).items()]
+        jobs = [dict(j, id=k) for k, j in prog.get('jobs', {}).items()
+                if not (j.get('order') and j['order'] not in found and j.get('status') not in ('moi', 'nhan'))]   # việc đang chờ/đang chạy luôn hiện (thư mục đơn có thể chưa chép vào AI_Work)
         jobs.sort(key=lambda j: j.get('at', ''), reverse=True)
         rn = sys.modules.get('runner')
         data = {'orders': orders, 'agents': agents, 'jobs': jobs[:50], 'generatedAt': now_iso(),
@@ -512,9 +577,7 @@ def add_followup(order, answers, model=''):
     """Người dùng trả lời Flag trong khung chi tiết đơn -> việc 'làm tiếp': chỉ vẽ lại các mã được trả lời."""
     if not isinstance(answers, dict):
         raise ValueError('Dữ liệu trả lời không hợp lệ.')
-    answers = {str(c).strip(): str(t).strip()[:1000] for c, t in answers.items() if str(t).strip()}
-    if not answers:
-        raise ValueError('Chưa nhập thông tin bổ sung cho mã nào.')
+    answers = {str(c).strip(): str(t).strip()[:1000] for c, t in answers.items()}     # mã chỉ có file tham khảo (không ghi chú) vẫn giữ, lọc bên dưới
     model = (model or '').strip().lower()
     if model not in ('', 'opus', 'sonnet'):
         raise ValueError('Model chỉ có Opus hoặc Sonnet.')
@@ -528,6 +591,13 @@ def add_followup(order, answers, model=''):
     p = os.path.join(WORK, o['path']) if o.get('path') else ''
     if not p or not os.path.isdir(p):
         raise ValueError('Không tìm thấy thư mục đơn trong AI_Work.')
+    refs = {}
+    for c in o['codes']:
+        if c['code'] in answers and c.get('refs'):
+            refs[c['code']] = [os.path.join(p, REF_DIR, c['code'], f) for f in c['refs']]
+    answers = {c: (t or '(không ghi chú, chỉ có file tham khảo đính kèm)') for c, t in answers.items() if t or c in refs}
+    if not answers:
+        raise ValueError('Chưa nhập thông tin bổ sung cho mã nào.')
     with lock:
         prog = load_json(PROGRESS, {})
         jobs = prog.setdefault('jobs', {})
@@ -536,7 +606,7 @@ def add_followup(order, answers, model=''):
                 raise ValueError('Đơn này đã có việc làm tiếp đang chờ hoặc đang chạy.')
         jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_' + order + '_tiep'
         jobs[jid] = {'kind': 'tiep', 'path': p, 'order': order, 'subagents': 0, 'model': model, 'note': '', 'answers': answers,
-                     'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
+                     'refs': refs, 'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
         save_json(PROGRESS, prog)
         _cache['t'] = 0
         return dict(jobs[jid], id=jid)
@@ -656,7 +726,8 @@ def delete_variant(order, dest):
 
 def package_order(order, overwrite=False):
     """Đóng gói các mã ĐÃ XONG của đơn (không cần xong cả đơn): thư mục Gui (đợt 1) hoặc Gui_2, Gui_3... (các đợt sau),
-    mỗi đợt gồm DXF từng mã (không có file ALL) + file Excel 納品書 chỉ chứa các mã của đợt đó. Mã chưa xong/có Flag/tự làm bị bỏ qua."""
+    mỗi đợt gồm DXF các mã đã xong (không có file ALL) + file Excel 納品書 điền TẤT CẢ mã của đơn (mã chưa xong tô xanh, trống kích thước).
+    Mã chưa xong/có Flag/tự làm không bị chuyển DXF."""
     o = next((x for x in snapshot(True)['orders'] if x['order'] == order), None)
     info = scan_orders().get(order)
     if not o or not info or info['loose']:
@@ -669,10 +740,18 @@ def package_order(order, overwrite=False):
             raise ValueError('Không có mã nào mới để đóng gói: các mã đã xong đều đã được đóng gói ở đợt trước.')
         raise ValueError('Chưa có mã nào xong (không Flag) có file DXF trong thư mục đơn để đóng gói.')
     import package
-    r = package.package(order, info['dir'], codes)
+    # file Excel điền TẤT CẢ mã của đơn: mã đã xong có kích thước, mã chưa xong tô xanh (kích thước mã đã gói ở đợt trước lấy từ tiến độ đã lưu)
+    all_codes = [c['code'] for c in o['codes']]
+    done = {c['code'] for c in o['codes'] if c.get('ready') or c.get('packed')}
+    parts_prog = load_json(PROGRESS, {}).get('parts', {})
+    known = {c: (pp['packedX'], pp['packedY']) for c in all_codes
+             if (pp := parts_prog.get(f'{order}_{c}')) and pp.get('packedX') is not None and pp.get('packedY') is not None}
+    r = package.package(order, info['dir'], codes, all_codes=all_codes, done=done, known=known)
     t = now_iso()
-    for c in codes:         # nhớ mã đã đóng gói: bạn dời thư mục Gui đi (gửi khách xong) thì mã vẫn tính là xong, không báo thiếu DXF
-        merge_progress('parts', f'{order}_{c}', {'packedAt': t, 'packedIn': os.path.basename(r['gui'])})
+    for c in codes:         # nhớ mã đã đóng gói + kích thước phôi: bạn dời thư mục Gui đi (gửi khách xong) thì mã vẫn tính là xong, đợt sau vẫn điền được kích thước
+        sz = r['sizes'].get(c)
+        merge_progress('parts', f'{order}_{c}', {'packedAt': t, 'packedIn': os.path.basename(r['gui']),
+                                                 'packedX': sz[0] if sz else None, 'packedY': sz[1] if sz else None})
     r['manual'] = [c['code'] for c in o['codes'] if c.get('manual')]
     r['pending'] = [c['code'] for c in o['codes'] if not c.get('ready') and not c.get('packed') and not c.get('manual')]
     return r
@@ -791,9 +870,9 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b)
 
-    def body(self):
+    def body(self, limit=1_000_000):
         n = int(self.headers.get('Content-Length') or 0)
-        if n > 1_000_000:
+        if n > limit:
             raise ValueError('quá lớn')
         return json.loads(self.rfile.read(n) or b'{}')
 
@@ -822,7 +901,7 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         path = urlparse(self.path).path
         try:
-            data = self.body()
+            data = self.body(40_000_000 if path == '/api/ref/upload' else 1_000_000)     # file tham khảo gửi dạng base64
             if path == '/api/review':
                 # {items:[{key:"<đơn>_<mã>", status:"dung"|"sai"|"cho", note?}], by?}
                 with lock:
@@ -855,6 +934,11 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json({'ok': True, 'preview': preview_job(data.get('path'))})
             if path == '/api/jobs':
                 return self.send_json({'ok': True, 'job': add_job(data.get('path'), data.get('subagents'), data.get('note'), data.get('model'), data.get('plan'))})
+            if path == '/api/ref/upload':
+                return self.send_json({'ok': True, 'name': add_ref(data.get('order'), data.get('code'), data.get('name'), data.get('data'))})
+            if path == '/api/ref/delete':
+                del_ref(data.get('order'), data.get('code'), data.get('name'))
+                return self.send_json({'ok': True})
             if path == '/api/jobs/followup':
                 return self.send_json({'ok': True, 'job': add_followup(data.get('order'), data.get('answers'), data.get('model'))})
             if path == '/api/jobs/cancel':

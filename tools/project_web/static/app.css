@@ -195,7 +195,7 @@ button.stat.on{background:var(--sunk);box-shadow:inset 0 -2px 0 var(--ink)}
 .rv-h .cnt{display:flex;gap:8px}
 .rv-h .cnt .chip{font-size:14px;padding:4px 12px;gap:7px}
 .rv-h .cnt .chip .dot{width:7px;height:7px}
-.rv-r{display:grid;grid-template-columns:130px minmax(0,1fr) 150px;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);font-size:14px;cursor:pointer}
+.rv-r{display:grid;grid-template-columns:190px minmax(0,1fr) 150px;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);font-size:14px;cursor:pointer}
 .rv-r:hover{background:var(--sunk)}
 .rv-r.picked{background:var(--sunk);box-shadow:inset 3px 0 0 var(--run)}
 .rv-r .mono{font-size:14px}
@@ -230,7 +230,8 @@ button.stat.on{background:var(--sunk);box-shadow:inset 0 -2px 0 var(--ink)}
 .pw-side .seg{flex:1 1 100%;overflow-x:auto}
 .pw-side .seg button{flex:1;justify-content:center;padding:4px 6px}
 .pw-side .drange{flex:1 1 100%}
-.pw-side .drange select{flex:1}
+.pw-side .drange select{flex:0 0 auto}
+.pw-side .drange select.ost{flex:1 1 auto;min-width:96px}
 .pw-side .field.sm{flex:1 1 100%;min-width:0}
 .pw-side .field.sm input{width:100%;min-width:0}
 .pw-side .table{max-height:calc(100vh - 230px);overflow:auto}
@@ -311,6 +312,14 @@ body.od-open{overflow:hidden}
 .jt-dc{display:contents}
 .jt-fold{transition:transform .2s}.job.folded .jt-fold{transform:rotate(-90deg)}
 .job-h .rb{margin:-4px 0}
+.job-h,.job>.path{cursor:pointer}
+.job-h:hover{background:var(--sunk)}
+.fl-ref{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ref-chip{display:inline-flex;align-items:center;gap:2px;max-width:100%;padding:2px 2px 2px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line-2);font:500 12px var(--mono);color:var(--tx)}
+.ref-chip .ell{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+.ref-chip .ib{width:20px;height:20px}
+label.btn.dis{opacity:.5;pointer-events:none}
+label.btn{cursor:pointer}
 .jt-tree{overflow-x:auto;padding:18px 16px 22px;border-top:1px solid var(--line);background:var(--sunk)}
 .jt-subs{display:flex;flex-wrap:wrap;justify-content:center;gap:30px 40px}
 .jt-col{position:relative;display:flex;flex-direction:column;align-items:center}

@@ -7,7 +7,7 @@ const LS = {get(k, d){try{const v = localStorage.getItem(k); return v == null ? 
 
 const ST = {chua:'Chưa làm', dang:'Đang làm', xong:'Đã xong', cho:'Đang chờ', tay:'Tự làm', thieu:'Thiếu file'};
 const RV = {cho:'Chờ check', dung:'Đúng', sai:'Sai'};
-const S = {data:null, reviews:{}, oFilter:'all', oDate:{d:'', m:'', y:''}, oQ:'', sel:null, rsel:null, rOpen:new Set(), drafts:{}, plan:null, manual:null, compare:{}, packMsg:{}, oLimit:60,
+const S = {data:null, reviews:{}, oFilter:'all', oDate:(() => {const t = new Date(), p = n => String(n).padStart(2, '0'); return {d:p(t.getDate()), m:p(t.getMonth() + 1), y:String(t.getFullYear())}})(), oQ:'', sel:null, rsel:null, rOpen:new Set(), drafts:{}, plan:null, manual:null, compare:{}, packMsg:{}, oLimit:60,
            rFilter:LS.get('pw-rf','cho'), rDate:{d:'', m:'', y:''}, rQ:'', cGroup:LS.get('pw-cg','ngay')};
 
 /* ---------- tiện ích ---------- */
@@ -104,6 +104,9 @@ function renderProgress(){
 
   // filters
   fillDate('#o-date', os.map(o => o.date), S.oDate);
+  const ost = $('#o-date .ost');      // ô lọc trạng thái đơn, dùng chung S.oFilter với 5 ô thống kê phía trên
+  if (!ost.options.length) ost.innerHTML = [['all', 'Trạng thái'], ['chua', ST.chua], ['dang', ST.dang], ['xong', ST.xong], ['cho', ST.cho]].map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+  ost.value = S.oFilter;
 
   const q = S.oQ.trim().toLowerCase();
   const list = os.filter(o => (S.oFilter === 'all' || o.state === S.oFilter) && inDate(o.date, S.oDate) &&
@@ -167,7 +170,7 @@ const folded = new Set();
 function runShell(r){
   const node = document.createElement('article');
   node.className = 'job'; node.dataset.id = r.id;
-  node.innerHTML = `<div class="job-h"><button class="ib jt-fold" data-act="fold" aria-label="Thu gọn / mở sơ đồ" title="Thu gọn / mở"><svg class="i" style="transform:rotate(90deg)"><use href="#i-chev"/></svg></button><span class="jt-dc" data-r="rb"></span><span class="jt-dc" data-r="head"></span></div>
+  node.innerHTML = `<div class="job-h" title="Bấm để mở chi tiết đơn"><button class="ib jt-fold" data-act="fold" aria-label="Thu gọn / mở sơ đồ" title="Thu gọn / mở"><svg class="i" style="transform:rotate(90deg)"><use href="#i-chev"/></svg></button><span class="jt-dc" data-r="rb"></span><span class="jt-dc" data-r="head"></span></div>
     <div class="path" data-r="path"></div><div data-r="body"></div>`;
   const q = k => node.querySelector(`[data-r="${k}"]`);
   return {node, rb:q('rb'), head:q('head'), path:q('path'), body:q('body'), tree:null};
@@ -267,8 +270,10 @@ function orderDrawer(o){
   const draft = S.drafts[o.order] || {};
   const flagged = o.codes.filter(c => c.flags.length);
   const flagHtml = flagged.length
-    ? flagged.map(c => `<div class="fl-c">${c.flags.map(f => `<div class="fl"><b class="mono">${esc(c.code)}</b><span>${esc(f)}</span></div>`).join('')}
+    ? flagged.map(c => `<div class="fl-c">${c.flags.map((f, i) => `<div class="fl"><b class="mono">${i ? '' : esc(c.code)}</b><span>${esc(f)}</span></div>`).join('')}
         <textarea class="fl-ans" data-c="${esc(c.code)}" rows="3" ${busy ? 'disabled' : ''} placeholder="Trả lời Flag của mã ${esc(c.code)} để agent vẽ lại (vd: mặt kegaki là mặt trên, vẽ thêm tấm D)">${esc(draft[c.code] || '')}</textarea>
+        <div class="fl-ref">${(c.refs || []).map(n => `<span class="ref-chip" title="${esc(n)}"><span class="ell">${esc(n)}</span><button class="ib" data-refdel="${esc(c.code)}" data-order="${esc(o.order)}" data-name="${esc(n)}" ${busy ? 'disabled' : ''} title="Xoá file này"><svg class="i"><use href="#i-x"/></svg></button></span>`).join('')}
+          <label class="btn btn-sec sm ${busy ? 'dis' : ''}" title="Nạp file PDF hoặc DXF tham khảo (tối đa 25 MB/file) để agent đọc khi làm tiếp mã này">Đính kèm PDF / DXF tham khảo<input type="file" class="ref-file" hidden multiple accept=".pdf,.dxf" data-c="${esc(c.code)}" data-order="${esc(o.order)}" ${busy ? 'disabled' : ''}></label></div>
         <div><button class="btn btn-sec sm" data-manual="${esc(c.code)}" data-order="${esc(o.order)}" title="Hoàn tất đơn không chờ mã này, bạn tự làm sau">Tôi tự làm mã này</button></div></div>`).join('')
     : o.flags.map(f => `<div class="fl"><span>${esc(f)}</span></div>`).join('');
   const nFlag = flagged.reduce((n, c) => n + c.flags.length, 0) || o.flags.length;
@@ -284,7 +289,7 @@ function orderDrawer(o){
   const packWhy = o.running ? 'Agent đang chạy đơn này' : nPacked && nReady < 1 ? 'Các mã đã xong đều đã được đóng gói' : 'Chưa có mã nào xong để đóng gói';
   const packHtml = `<h3>Đóng gói</h3><div class="fl-send" style="margin-top:0">
       <button class="btn btn-pri" data-pack="${esc(o.order)}" ${packOff ? 'disabled' : ''} title="${packOff ? esc(packWhy) : ''}"><svg class="i"><use href="#i-folder"/></svg>Đóng gói${nReady ? ' ' + nReady + ' mã đã xong' : ''}</button>
-      <span class="t3">${packOff ? esc(packWhy) + '. Mở khi có ít nhất 1 mã đã xong.' : 'CHUYỂN DXF của ' + nReady + ' mã đã xong (không có file ALL) vào thư mục Gui' + (nPacked ? ' kế tiếp (Gui_2, Gui_3... không ghi đè đợt trước)' : '') + ' và điền file Excel 納品書 (số đơn, kích thước phôi) chỉ gồm các mã của đợt này.' + (nWait > 0 ? ' ' + nWait + ' mã chưa xong sẽ bỏ qua.' : '')}</span></div>
+      <span class="t3">${packOff ? esc(packWhy) + '. Mở khi có ít nhất 1 mã đã xong.' : 'CHUYỂN DXF của ' + nReady + ' mã đã xong (không có file ALL) vào thư mục Gui' + (nPacked ? ' kế tiếp (Gui_2, Gui_3... không ghi đè đợt trước)' : '') + ' và điền file Excel 納品書 (số đơn, kích thước phôi) cho TẤT CẢ mã của đơn.' + (nWait > 0 ? ' ' + nWait + ' mã chưa xong: không chuyển DXF, trong Excel chỉ điền số thứ tự + mã và tô xanh.' : '')}</span></div>
     ${pm ? `<p class="hint ${pm.err ? 'err' : 'ok'}">${esc(pm.text)}${pm.path ? ` <button class="ib" data-copy="${esc(pm.path)}" title="Copy đường dẫn thư mục Gui"><svg class="i"><use href="#i-folder"/></svg></button>` : ''}</p>` : ''}`;
   const archHtml = (o.state === 'xong' || o.state === 'cho') ? `<h3>Phương án</h3><div class="fl-send" style="margin-top:0">
       <button class="btn btn-sec" data-arch="${esc(o.order)}">Lưu phương án và làm lại</button>
@@ -409,9 +414,9 @@ function fillDate(sel, dates, cur){
 // Một đơn đã xong: nếu đã có chấm từng mã thì dùng; nếu chưa và có file NTMF cũ thì dùng số liệu đó.
 function reviewOrders(){
   return S.data.orders.filter(o => o.state === 'xong' && o.codes.length).map(o => {
-    const rows = o.codes.filter(c => !c.manual).map(c => {
+    const rows = o.codes.map(c => {   // gồm cả mã người dùng tự làm (có thể AI làm sai nên mới tự làm) để tính vào đánh giá
       const r = S.reviews[o.order + '_' + c.code];
-      return {code:c.code, thick:c.thick, material:c.material, size:c.size, status:r ? r.status : 'cho', note:r ? r.note : '', by:r ? r.by : '', at:r ? r.at : ''};
+      return {code:c.code, manual:!!c.manual, thick:c.thick, material:c.material, size:c.size, status:r ? r.status : 'cho', note:r ? r.note : '', by:r ? r.by : '', at:r ? r.at : ''};
     });
     const perCode = rows.some(r => S.reviews[o.order + '_' + r.code]);
     const useLegacy = !perCode && !!o.legacy;
@@ -467,7 +472,7 @@ function reviewCard(x){
   </div>`;
   // 3 ô trạng thái chỉ để xem (không bấm được); bấm vào cả thanh mã để mở khung chi tiết bên phải, đổi Đúng/Sai trong khung đó
   const body = rows.map(r => `<div class="rv-r ${S.rsel && S.rsel.o === o.order && S.rsel.c === r.code ? 'picked' : ''}" data-o="${o.order}" data-c="${esc(r.code)}" title="${r.by ? 'Check bởi ' + esc(r.by) + ' · ' + hm(r.at) : 'Bấm để xem chi tiết'}">
-    <span class="mono">${esc(r.code)}</span>
+    <span class="mono">${esc(r.code)}${r.manual ? ' <span class="tag t-warn" style="margin-left:6px">TỰ LÀM</span>' : ''}</span>
     <span class="t3 ell">${[r.material, r.thick != null ? r.thick + 't' : '', r.size && r.size !== '0.0 x 0.0' ? r.size : ''].filter(Boolean).map(esc).join(' · ')}</span>
     <div class="pick3 ro" aria-label="Trạng thái check">
       ${r.status === 'dung' ? '<span class="dung on"><svg class="i"><use href="#i-check"/></svg>Đúng</span>'
@@ -550,6 +555,8 @@ document.addEventListener('click', e => {
   if (rh) { const id = rh.dataset.rv; S.rOpen.has(id) ? S.rOpen.delete(id) : S.rOpen.add(id); return renderReview(); }
   const rr = e.target.closest('.rv-r');
   if (rr && !e.target.closest('button')) return openCode(rr.dataset.o, rr.dataset.c);   // bấm thanh mã -> khung chi tiết bên phải
+  const jh = e.target.closest('.job-h, .job > .path');   // bấm đầu thẻ agent đang chạy -> mở chi tiết đơn (nút thu gọn / copy giữ chức năng riêng)
+  if (jh && !e.target.closest('button')) { const jb = jh.closest('.job'); if (jb && jb.dataset.id) { S.sel = jb.dataset.id; return renderProgress(); } }
   const b = e.target.closest('button, .tr.click');
   if (!b) return;
   if (b.classList.contains('dclr')) {
@@ -558,6 +565,10 @@ document.addEventListener('click', e => {
     return k === 'oDate' ? renderProgress() : renderReview();
   }
   if (b.dataset.act === 'fold') { const id = b.closest('.job').dataset.id; folded.has(id) ? folded.delete(id) : folded.add(id); return renderProgress(); }
+  if (b.dataset.refdel) {
+    api('/api/ref/delete', {order:b.dataset.order, code:b.dataset.refdel, name:b.dataset.name}).then(() => { toast('Đã xoá file tham khảo'); load(true); }, e2 => toast(e2.message));
+    return;
+  }
   if (b.dataset.canceljob) {
     if (!confirm('Dừng agent đang chạy việc này?')) return;
     api('/api/jobs/cancel', {id:b.dataset.canceljob}).then(() => { toast('Đã dừng'); load(true); }, e2 => toast(e2.message));
@@ -575,7 +586,7 @@ document.addEventListener('click', e => {
     b.disabled = true; S.packMsg[order] = {text: 'Đang đóng gói (điền Excel mất vài giây)...'}; renderDrawer();
     api('/api/package', {order}).then(r => {
       const x = r.result;
-      S.packMsg[order] = {path: x.gui, text: 'Đợt ' + x.batch + ': đã chuyển ' + x.moved + ' file DXF và tạo file Excel trong ' + x.gui + '.' + (x.pending.length ? ' Chưa xong, bỏ qua: ' + x.pending.join(', ') + '.' : '') + (x.manual.length ? ' Mã tự làm chưa có trong Gui: ' + x.manual.join(', ') + '.' : '')};
+      S.packMsg[order] = {path: x.gui, text: 'Đợt ' + x.batch + ': đã chuyển ' + x.moved + ' file DXF và tạo file Excel trong ' + x.gui + '.' + (x.pending.length ? ' Chưa xong (tô xanh trong Excel): ' + x.pending.join(', ') + '.' : '') + (x.manual.length ? ' Mã tự làm chưa có trong Gui: ' + x.manual.join(', ') + '.' : '')};
       toast('Đã đóng gói đợt ' + x.batch); load(true);
     }, e2 => { S.packMsg[order] = {err: true, text: e2.message}; load(true); });
     return;
@@ -598,7 +609,9 @@ document.addEventListener('click', e => {
   if (b.dataset.fu) {   // gửi các trả lời Flag cho agent làm tiếp
     const order = b.dataset.fu, answers = {};
     Object.entries(S.drafts[order] || {}).forEach(([c, t]) => { if (t.trim()) answers[c] = t.trim(); });
-    if (!Object.keys(answers).length) return toast('Chưa nhập trả lời cho mã nào');
+    const od = S.data.orders.find(x => x.order === order);
+    ((od && od.codes) || []).forEach(c => { if (c.flags.length && c.refs && c.refs.length && !(c.code in answers)) answers[c.code] = ''; });   // mã chỉ đính kèm file tham khảo, không ghi chú
+    if (!Object.keys(answers).length) return toast('Chưa nhập trả lời hoặc đính kèm file cho mã nào');
     b.disabled = true;
     const model = (document.querySelector('#od .fl-model') || {}).value || 'opus';
     LS.set('pw-model', model);
@@ -619,9 +632,25 @@ document.addEventListener('click', e => {
 // đóng khung chi tiết đơn: bấm nền mờ hoặc phím Esc
 $('#od-bg').addEventListener('click', closeDrawer);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && (S.sel || S.rsel)) closeDrawer(); });
-document.addEventListener('change', e => {
+document.addEventListener('change', async e => {
   const el = e.target;
+  if (el.classList && el.classList.contains('ref-file')) {   // nạp PDF/DXF tham khảo cho một mã (lưu vào <thư mục đơn>\Tham_Khao\<mã>)
+    const files = Array.from(el.files || []), order = el.dataset.order, code = el.dataset.c;
+    el.value = '';
+    for (const f of files) {
+      if (!/\.(pdf|dxf)$/i.test(f.name)) { toast('Bỏ qua ' + f.name + ': chỉ nhận PDF hoặc DXF'); continue; }
+      if (f.size > 25 * 1024 * 1024) { toast('Bỏ qua ' + f.name + ': lớn hơn 25 MB'); continue; }
+      try {
+        toast('Đang nạp ' + f.name + '...');
+        const data = await new Promise((ok, no) => { const rd = new FileReader(); rd.onload = () => ok(String(rd.result).split(',')[1] || ''); rd.onerror = () => no(new Error('Không đọc được file')); rd.readAsDataURL(f); });
+        await api('/api/ref/upload', {order, code, name:f.name, data});
+        toast('Đã nạp ' + f.name);
+      } catch (err) { toast(f.name + ': ' + err.message); }
+    }
+    return load(true);
+  }
   const dr = el.closest && el.closest('.drange');
+  if (el.classList && el.classList.contains('ost')) { S.oFilter = el.value || 'all'; S.oLimit = 60; return renderProgress(); }
   if (dr) {
     const k = dr.id === 'o-date' ? 'oDate' : 'rDate', [d, m, y] = dr.querySelectorAll('select');
     S[k] = {d:d.value, m:m.value, y:y.value};

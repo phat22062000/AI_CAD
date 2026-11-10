@@ -1,7 +1,8 @@
 ﻿# gui_fill.ps1 - điền file Excel mẫu "CAD作業納品書" (Gui) cho một đơn hàng bằng Excel (COM, chạy ẩn).
 # Dùng: powershell -NoProfile -ExecutionPolicy Bypass -File gui_fill.ps1 -Job <job.json>
-# job.json: {"template": "...xls", "out": "...xls", "order": "521106-24", "rows": [{"code": "26-066371", "x": 90.22, "y": 38}, ...]}
+# job.json: {"template": "...xls", "out": "...xls", "order": "521106-24", "rows": [{"code": "26-066371", "x": 90.22, "y": 38, "pending": false}, {"code": "26-066372", "x": null, "y": null, "pending": true}, ...]}
 # Làm: đổi tên sheet và ô B3 (注番) thành số đơn; ghi từng mã vào hàng 6 trở xuống (B = số thứ tự, C = mã, D = X, E = Y);
+#      mã chưa xong ("pending": true): chỉ ghi B và C, trống X/Y và người làm, tô nền xanh lá cả dòng B:R;
 #      thêm hoặc bớt hàng cho vừa số mã (dòng 合計 và vùng in tự co giãn theo); lưu thành .xls.
 param([Parameter(Mandatory = $true)][string]$Job)
 $ErrorActionPreference = 'Stop'
@@ -32,12 +33,19 @@ try {
     [void]$ws.Range("B6:E$(5 + $n)").ClearContents()
     for ($i = 0; $i -lt $n; $i++) {
         $row = 6 + $i
+        $pending = [bool]$rows[$i].pending
         $ws.Cells.Item($row, 2).Value2 = [double]($i + 1)
         $ws.Cells.Item($row, 3).Value2 = [string]$rows[$i].code
-        $ws.Cells.Item($row, 4).Value2 = [double]$rows[$i].x
-        $ws.Cells.Item($row, 5).Value2 = [double]$rows[$i].y
-        $ws.Cells.Item($row, 16).Value2 = $pName
-        $ws.Cells.Item($row, 17).Value2 = $qName
+        if ($pending) {
+            # mã chưa xong: chỉ số thứ tự + mã, để trống kích thước và tên người làm, tô xanh lá cả dòng (cột B đến R)
+            [void]$ws.Range($ws.Cells.Item($row, 16), $ws.Cells.Item($row, 17)).ClearContents()      # mẫu có thể đã ghi sẵn tên người làm
+            $ws.Range($ws.Cells.Item($row, 2), $ws.Cells.Item($row, 18)).Interior.Color = 5296274    # RGB(146,208,80)
+        } else {
+            if ($null -ne $rows[$i].x) { $ws.Cells.Item($row, 4).Value2 = [double]$rows[$i].x }
+            if ($null -ne $rows[$i].y) { $ws.Cells.Item($row, 5).Value2 = [double]$rows[$i].y }
+            $ws.Cells.Item($row, 16).Value2 = $pName
+            $ws.Cells.Item($row, 17).Value2 = $qName
+        }
     }
     $ws.Cells.Item(3, 2).Value2 = [string]$j.order        # 注番
     $ws.Name = [string]$j.order

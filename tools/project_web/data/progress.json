@@ -1,5 +1,389 @@
 {
- "jobs": {},
+ "jobs": {
+  "20261111103931_521111-01": {
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\11-11-2026\\521111-01",
+   "order": "521111-01",
+   "subagents": 1,
+   "model": "sonnet",
+   "note": "",
+   "pdf": 1,
+   "xlsx": 1,
+   "status": "xong",
+   "at": "2026-11-11T03:39:31Z",
+   "ui": true,
+   "plan": {
+    "agents": {
+     "S1": "sonnet",
+     "main": "sonnet"
+    },
+    "codes": {
+     "26-067001": "S1",
+     "26-067269": "S1",
+     "26-067270": "main",
+     "26-067271": "main",
+     "26-067272": "main",
+     "26-067273": "main",
+     "26-067279": "S1",
+     "26-067303": "S1"
+    }
+   },
+   "nhanAt": "2026-11-11T03:39:32Z",
+   "by": "auto",
+   "workdir": "Thang-11\\11-11-2026\\521111-01",
+   "prep": {
+    "seconds": 19.3,
+    "pages": 8,
+    "layout": "1 trang = 1 mã",
+    "skill_kb": {
+     "phang": 28.1,
+     "uon": 33.7,
+     "hop": 40.4,
+     "dxf": 30.2
+    },
+    "errors": []
+   },
+   "result": "Vẽ xong 8 mã và gộp 521111-01_ALL.dxf; 4 mã có Flag chờ xác nhận (067001, 067269, 067271, 067303)",
+   "usage": {
+    "costUSD": 4.2134,
+    "seconds": 44,
+    "input": 240,
+    "output": 148710,
+    "thinking": 100045,
+    "cacheRead": 14853420,
+    "cacheWrite": 398452,
+    "denials": 0,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "calls_main": 64,
+    "calls_sub": 101,
+    "images": 50
+   }
+  },
+  "20261111120019_521111-01_tiep": {
+   "kind": "tiep",
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\11-11-2026\\521111-01",
+   "order": "521111-01",
+   "subagents": 0,
+   "model": "sonnet",
+   "note": "",
+   "answers": {
+    "26-067303": "1. đối xứng quanh đường tâm ok\n2. Độ giãn 3.6 ok"
+   },
+   "refs": {},
+   "pdf": 0,
+   "xlsx": 0,
+   "status": "xong",
+   "at": "2026-11-11T05:00:19Z",
+   "ui": true,
+   "nhanAt": "2026-11-11T05:00:22Z",
+   "by": "auto",
+   "workdir": "Thang-11\\11-11-2026\\521111-01",
+   "prep": {
+    "seconds": 17.6,
+    "pages": 8,
+    "layout": "1 trang = 1 mã",
+    "skill_kb": {
+     "phang": 28.1,
+     "uon": 33.7,
+     "hop": 40.4,
+     "dxf": 30.2
+    },
+    "errors": []
+   },
+   "result": "Mã 26-067303: đã xác nhận đối xứng quanh đường tâm và độ giãn 3.6, giữ phôi 412.8 x 206.4, bỏ 2 Flag cũ, cập nhật 521111-01_ALL.dxf.",
+   "usage": {
+    "costUSD": 0.5894,
+    "seconds": 125,
+    "input": 34,
+    "output": 14811,
+    "thinking": 8070,
+    "cacheRead": 1092587,
+    "cacheWrite": 83001,
+    "denials": 1,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "calls_main": 23,
+    "calls_sub": 0,
+    "images": 5
+   }
+  },
+  "20261111132626_521110-12_tiep": {
+   "kind": "tiep",
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\10-11-2026\\521110-12",
+   "order": "521110-12",
+   "subagents": 0,
+   "model": "sonnet",
+   "note": "",
+   "answers": {
+    "26-067071": "2-∅7"
+   },
+   "refs": {},
+   "pdf": 0,
+   "xlsx": 0,
+   "status": "xong",
+   "at": "2026-11-11T06:26:26Z",
+   "ui": true,
+   "nhanAt": "2026-11-11T06:26:29Z",
+   "by": "auto",
+   "workdir": "Thang-11\\10-11-2026\\521110-12",
+   "prep": {
+    "seconds": 23.7,
+    "pages": 11,
+    "layout": "bản vẽ cụm: 11 trang cho 9 mã",
+    "skill_kb": {
+     "phang": 28.6,
+     "uon": 34.3,
+     "hop": 40.9,
+     "dxf": 30.7
+    },
+    "errors": []
+   },
+   "result": "Đã vẽ lại mã 26-067071: thêm 2 lỗ φ7 (cách đầu cánh 10, cách mép 10 và 30) theo thông tin bổ sung, gộp lại 521110-12_ALL.dxf, không còn Flag.",
+   "usage": {
+    "costUSD": 0.6401,
+    "seconds": 147,
+    "input": 40,
+    "output": 16637,
+    "thinking": 9621,
+    "cacheRead": 1264041,
+    "cacheWrite": 86810,
+    "denials": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "calls_main": 22,
+    "calls_sub": 0,
+    "images": 3
+   }
+  },
+  "20261111140604_521111-06": {
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\11-11-2026\\521111-06",
+   "order": "521111-06",
+   "subagents": 1,
+   "model": "sonnet",
+   "note": "",
+   "pdf": 1,
+   "xlsx": 1,
+   "status": "xong",
+   "at": "2026-11-11T07:06:04Z",
+   "ui": true,
+   "plan": {
+    "agents": {
+     "main": "sonnet",
+     "S1": "sonnet"
+    },
+    "codes": {
+     "26-067242": "main",
+     "26-067278": "main",
+     "26-067288": "main",
+     "26-067246": "main",
+     "26-067247": "main",
+     "26-067304": "main",
+     "26-066837": "S1",
+     "26-066838": "S1",
+     "26-066840": "S1",
+     "26-066842": "S1"
+    }
+   },
+   "nhanAt": "2026-11-11T07:06:07Z",
+   "by": "auto",
+   "workdir": "Thang-11\\11-11-2026\\521111-06",
+   "prep": {
+    "seconds": 26.9,
+    "pages": 12,
+    "layout": "bản vẽ cụm: 12 trang cho 10 mã",
+    "skill_kb": {
+     "phang": 28.6,
+     "uon": 34.3,
+     "hop": 40.9,
+     "dxf": 30.7
+    },
+    "errors": []
+   },
+   "result": "Đã vẽ 10/10 mã và gộp 521111-06_ALL.dxf; 6 mã có Flag (067242, 067246, 067247, 067304, 066838, 066840/066842 mặt #400), 067278, 067288 và 066837 không Flag.",
+   "usage": {
+    "costUSD": 4.3962,
+    "seconds": 924,
+    "input": 239,
+    "output": 132811,
+    "thinking": 79844,
+    "cacheRead": 16697844,
+    "cacheWrite": 408739,
+    "denials": 4,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "calls_main": 108,
+    "calls_sub": 76,
+    "images": 55
+   }
+  },
+  "20261111160932_521111-01_tiep": {
+   "kind": "tiep",
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\11-11-2026\\521111-01",
+   "order": "521111-01",
+   "subagents": 0,
+   "model": "sonnet",
+   "note": "",
+   "answers": {
+    "26-067270": "26-067270 - 26-067273 đều dùng chung file DXF của khách"
+   },
+   "refs": {},
+   "pdf": 0,
+   "xlsx": 0,
+   "status": "xong",
+   "at": "2026-11-11T09:09:32Z",
+   "ui": true,
+   "nhanAt": "2026-11-11T09:09:34Z",
+   "by": "auto",
+   "workdir": "Thang-11\\11-11-2026\\521111-01",
+   "prep": {
+    "seconds": 18.0,
+    "pages": 8,
+    "layout": "1 trang = 1 mã",
+    "skill_kb": {
+     "phang": 28.6,
+     "uon": 34.3,
+     "hop": 40.9,
+     "dxf": 30.7
+    },
+    "errors": []
+   },
+   "result": "Vẽ lại 26-067270 theo DXF khách 空気流量計BOX.dxf (1194 x 688.72, lỗ φ20 x4 và φ8 x2 khớp DXF), bỏ Flag thiếu DXF; ALL đã khớp, giữ nguyên các mã khác",
+   "usage": {
+    "costUSD": 1.0072,
+    "seconds": 244,
+    "input": 61,
+    "output": 28669,
+    "thinking": 15735,
+    "cacheRead": 2536456,
+    "cacheWrite": 116692,
+    "denials": 4,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "calls_main": 33,
+    "calls_sub": 0,
+    "images": 5
+   }
+  },
+  "20261111162645_521111-01_tiep": {
+   "kind": "tiep",
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\11-11-2026\\521111-01",
+   "order": "521111-01",
+   "subagents": 0,
+   "model": "sonnet",
+   "note": "",
+   "answers": {
+    "26-067271": "(không ghi chú, chỉ có file tham khảo đính kèm)",
+    "26-067272": "(không ghi chú, chỉ có file tham khảo đính kèm)",
+    "26-067273": "(không ghi chú, chỉ có file tham khảo đính kèm)"
+   },
+   "refs": {
+    "26-067271": [
+     "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\11-11-2026\\521111-01\\Tham_Khao\\26-067271\\空気流量計BOX.dxf"
+    ],
+    "26-067272": [
+     "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\11-11-2026\\521111-01\\Tham_Khao\\26-067272\\空気流量計BOX.dxf"
+    ],
+    "26-067273": [
+     "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\11-11-2026\\521111-01\\Tham_Khao\\26-067273\\空気流量計BOX.dxf"
+    ]
+   },
+   "pdf": 0,
+   "xlsx": 0,
+   "status": "xong",
+   "at": "2026-11-11T09:26:45Z",
+   "ui": true,
+   "nhanAt": "2026-11-11T09:26:48Z",
+   "by": "auto",
+   "workdir": "Thang-11\\11-11-2026\\521111-01",
+   "prep": {
+    "seconds": 17.8,
+    "pages": 8,
+    "layout": "1 trang = 1 mã",
+    "skill_kb": {
+     "phang": 28.6,
+     "uon": 34.3,
+     "hop": 40.9,
+     "dxf": 30.7
+    },
+    "errors": []
+   },
+   "result": "Doi chieu DXF khach 空気流量計BOX.dxf: 26-067271/067272 (300x200, 4xphi10 cach mep 30, R0.5) va 26-067273 (480x346.64, 2 cap uon giãn 3.68, 4xphi5 lo mồi M6, R5) khop PDF, khong con Flag; da bo Flag cu trong ALL",
+   "usage": {
+    "costUSD": 1.1097,
+    "seconds": 310,
+    "input": 74,
+    "output": 32531,
+    "thinking": 18796,
+    "cacheRead": 3317716,
+    "cacheWrite": 113113,
+    "denials": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "calls_main": 43,
+    "calls_sub": 0,
+    "images": 12
+   }
+  },
+  "20261111164851_521111-06_tiep": {
+   "kind": "tiep",
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\11-11-2026\\521111-06",
+   "order": "521111-06",
+   "subagents": 0,
+   "model": "sonnet",
+   "note": "",
+   "answers": {
+    "26-067242": "28 OK",
+    "26-067246": "7.4 OK",
+    "26-066838": "Tương tự với cột bên phải",
+    "26-066840": "Mặt mà mũi tên chỉ vào là mặt ngoài",
+    "26-066842": "Mặt mà mũi tên chỉ vào là mặt ngoài"
+   },
+   "refs": {},
+   "pdf": 0,
+   "xlsx": 0,
+   "status": "xong",
+   "at": "2026-11-11T09:48:51Z",
+   "ui": true,
+   "nhanAt": "2026-11-11T09:48:54Z",
+   "by": "auto",
+   "workdir": "Thang-11\\11-11-2026\\521111-06",
+   "prep": {
+    "seconds": 26.8,
+    "pages": 12,
+    "layout": "bản vẽ cụm: 12 trang cho 10 mã",
+    "skill_kb": {
+     "phang": 28.6,
+     "uon": 34.3,
+     "hop": 40.9,
+     "dxf": 30.7
+    },
+    "errors": []
+   },
+   "result": "Đã vẽ lại 5 mã (26-067242, 26-067246, 26-066838, 26-066840, 26-066842) theo thông tin bổ sung, xóa Flag cũ; 26-066838 thêm 4 lỗ dài cột trái; đã gộp lại 521111-06_ALL.dxf",
+   "usage": {
+    "costUSD": 0.8954,
+    "seconds": 232,
+    "input": 53,
+    "output": 28968,
+    "thinking": 14023,
+    "cacheRead": 2203801,
+    "cacheWrite": 96314,
+    "denials": 1,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "calls_main": 33,
+    "calls_sub": 0,
+    "images": 5
+   }
+  }
+ },
  "agents": {
   "521106-24_main": {
    "order": "521106-24",
@@ -296,29 +680,159 @@
   "521110-12_main": {
    "order": "521110-12",
    "kind": "main",
-   "name": "Agent chính · làm tiếp",
+   "name": "Agent chính",
    "state": "done",
-   "phase": "Khởi động",
-   "mood": "think",
-   "act": "Đang suy nghĩ",
-   "model": "sonnet-5-5",
+   "phase": "Xong",
+   "mood": "work",
+   "act": "Bash: py -X utf8 \"C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\report.py\" parts 5211",
+   "model": "sonnet",
    "user": "Phát",
    "slot": "1",
-   "startedAt": "2026-11-10T07:52:39Z",
-   "job": "20261110145027_521110-12_tiep",
-   "finishedAt": "2026-11-10T07:54:27Z",
+   "startedAt": "2026-11-11T06:26:29Z",
+   "job": "20261111132626_521110-12_tiep",
+   "finishedAt": "2026-11-11T06:29:16Z",
    "note": null,
-   "heartbeatAt": "2026-11-10T07:54:27Z",
-   "actAt": "2026-11-10T07:54:25Z",
+   "heartbeatAt": "2026-11-11T06:29:16Z",
+   "actAt": "2026-11-11T06:29:16Z",
    "effort": "high",
-   "current": "26-067098",
+   "current": null,
    "history": [
     {
      "startedAt": "2026-11-10T07:39:17Z",
      "finishedAt": "2026-11-10T07:52:27Z",
      "job": "20261110143916_521110-12"
+    },
+    {
+     "startedAt": "2026-11-10T07:52:39Z",
+     "finishedAt": "2026-11-10T07:54:27Z",
+     "job": "20261110145027_521110-12_tiep"
     }
    ]
+  },
+  "521111-01_main": {
+   "order": "521111-01",
+   "kind": "main",
+   "name": "Agent chính",
+   "state": "done",
+   "phase": "Xong lam tiep",
+   "mood": "work",
+   "act": "Bash: py -X utf8 \"C:\\Users\\DELL\\Desktop\\AI_CAD\\Create_Flatten_SheetMetal-main\\tools\\dx",
+   "model": "sonnet-5.5",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-11T09:26:48Z",
+   "job": "20261111162645_521111-01_tiep",
+   "finishedAt": "2026-11-11T09:32:10Z",
+   "note": null,
+   "heartbeatAt": "2026-11-11T09:32:10Z",
+   "actAt": "2026-11-11T09:32:08Z",
+   "effort": "high",
+   "current": "26-067271",
+   "history": [
+    {
+     "startedAt": "2026-11-11T03:39:32Z",
+     "finishedAt": "2026-11-11T03:54:17Z",
+     "job": "20261111103931_521111-01"
+    },
+    {
+     "startedAt": "2026-11-11T05:00:22Z",
+     "finishedAt": "2026-11-11T05:02:46Z",
+     "job": "20261111120019_521111-01_tiep"
+    },
+    {
+     "startedAt": "2026-11-11T09:09:34Z",
+     "finishedAt": "2026-11-11T09:13:53Z",
+     "job": "20261111160932_521111-01_tiep"
+    }
+   ]
+  },
+  "521111-01_S1": {
+   "order": "521111-01",
+   "kind": "sub",
+   "name": "Subagent 1",
+   "codes": [
+    "26-067001",
+    "26-067269",
+    "26-067279",
+    "26-067303"
+   ],
+   "done": [
+    "26-067001",
+    "26-067269",
+    "26-067279",
+    "26-067303"
+   ],
+   "current": null,
+   "state": "done",
+   "model": "sonnet",
+   "effort": "high",
+   "startedAt": "2026-11-11T03:40:32Z",
+   "heartbeatAt": "2026-11-11T03:53:40Z",
+   "mood": "write",
+   "act": "Xong nhóm S1",
+   "actAt": "2026-11-11T03:53:40Z",
+   "finishedAt": "2026-11-11T03:53:40Z"
+  },
+  "521111-06_main": {
+   "order": "521111-06",
+   "kind": "main",
+   "name": "Agent chính",
+   "state": "done",
+   "phase": "Xong",
+   "mood": "think",
+   "act": "Đang suy nghĩ",
+   "model": "sonnet",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-11T09:48:54Z",
+   "job": "20261111164851_521111-06_tiep",
+   "finishedAt": "2026-11-11T09:53:02Z",
+   "note": null,
+   "heartbeatAt": "2026-11-11T09:53:13Z",
+   "actAt": "2026-11-11T09:53:13Z",
+   "effort": "high",
+   "current": null,
+   "done": [
+    "26-067278",
+    "26-067288",
+    "26-067246",
+    "26-067247",
+    "26-067304"
+   ],
+   "history": [
+    {
+     "startedAt": "2026-11-11T07:06:07Z",
+     "finishedAt": "2026-11-11T07:21:54Z",
+     "job": "20261111140604_521111-06"
+    }
+   ]
+  },
+  "521111-06_S1": {
+   "order": "521111-06",
+   "kind": "sub",
+   "name": "Subagent 1",
+   "codes": [
+    "26-066837",
+    "26-066838",
+    "26-066840",
+    "26-066842"
+   ],
+   "done": [
+    "26-066837",
+    "26-066838",
+    "26-066840",
+    "26-066842"
+   ],
+   "current": null,
+   "state": "done",
+   "model": "sonnet",
+   "effort": "high",
+   "startedAt": "2026-11-11T07:07:08Z",
+   "heartbeatAt": "2026-11-11T07:16:07Z",
+   "mood": "write",
+   "act": "Dung DXF 26-066842",
+   "actAt": "2026-11-11T07:15:56Z",
+   "finishedAt": "2026-11-11T07:16:07Z"
   }
  },
  "orders": {
@@ -452,6 +966,44 @@
   "521110-12": {
    "allFile": "521110-12_ALL.dxf",
    "mergedAt": "2026-11-10T07:52:27Z"
+  },
+  "521111-01": {
+   "order": "521111-01",
+   "customer": "合資会社メイナン",
+   "material": "SPCC(磨き)",
+   "receivedAt": "2026-11-11T03:40:03Z",
+   "partOrder": [
+    "26-067001",
+    "26-067269",
+    "26-067270",
+    "26-067271",
+    "26-067272",
+    "26-067273",
+    "26-067279",
+    "26-067303"
+   ],
+   "allFile": "521111-01_ALL.dxf",
+   "mergedAt": "2026-11-11T09:32:10Z"
+  },
+  "521111-06": {
+   "order": "521111-06",
+   "customer": "株式会社ミスミ",
+   "material": "SPCC(磨き)",
+   "receivedAt": "2026-11-11T07:07:07Z",
+   "partOrder": [
+    "26-067242",
+    "26-067278",
+    "26-067288",
+    "26-067246",
+    "26-067247",
+    "26-067304",
+    "26-066837",
+    "26-066838",
+    "26-066840",
+    "26-066842"
+   ],
+   "allFile": "521111-06_ALL.dxf",
+   "mergedAt": "2026-11-11T09:53:02Z"
   }
  },
  "parts": {
@@ -1349,16 +1901,14 @@
    "agent": "521110-12_main",
    "status": "built",
    "level": 3,
-   "startedAt": "2026-11-10T07:45:54Z",
-   "flags": [
-    "1. Thiếu kích thước (2 lỗ trên cánh đứng, cách đầu cánh 10, cách mép 10 và 30: bản vẽ không ghi đường kính; chưa vẽ 2 lỗ này)"
-   ],
+   "startedAt": "2026-11-11T06:27:03Z",
+   "flags": [],
    "kind": "uon",
-   "mood": "write",
-   "act": "Write: 26-067071.dxf",
-   "actAt": "2026-11-10T07:48:19Z",
+   "mood": "work",
+   "act": "Check: dxf_check",
+   "actAt": "2026-11-11T06:29:12Z",
    "blank": "352.4 x 40",
-   "finishedAt": "2026-11-10T07:49:16Z"
+   "finishedAt": "2026-11-11T06:29:16Z"
   },
   "521110-12_26-067072": {
    "order": "521110-12",
@@ -1416,6 +1966,256 @@
    "packedIn": "Gui",
    "packedX": 80.0,
    "packedY": 24.0
+  },
+  "521111-01_26-067001": {
+   "order": "521111-01",
+   "code": "26-067001",
+   "kind": "phang",
+   "agent": "521111-01_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T03:40:40Z",
+   "flags": [
+    "1. Thiếu kích thước (2 lỗ φ10 ghi tay: chỉ có cao độ 20 tính từ mép tự do cánh 52, không có kích thước vị trí theo chiều dài 560 nên chưa vẽ 2 lỗ này)",
+    "2. Ghi chú tay không đọc rõ (ký hiệu khoanh tròn cạnh ghi chú 2-φ10)"
+   ],
+   "blank": "560 x 230.56",
+   "finishedAt": "2026-11-11T03:44:10Z"
+  },
+  "521111-01_26-067270": {
+   "order": "521111-01",
+   "code": "26-067270",
+   "kind": "uon",
+   "agent": "521111-01_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T09:13:19Z",
+   "flags": [],
+   "blank": "1194 x 688.72",
+   "finishedAt": "2026-11-11T09:13:26Z",
+   "mood": "write",
+   "act": "Ghi 26-067270.dxf",
+   "actAt": "2026-11-11T09:13:26Z"
+  },
+  "521111-01_26-067269": {
+   "order": "521111-01",
+   "code": "26-067269",
+   "kind": "phang",
+   "agent": "521111-01_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T03:44:10Z",
+   "flags": [
+    "1. Kích thước và hình dạng không khớp (hình vẽ cung khoét gần dòng 3 của bảng 寸法表: φ51, H22.5, H1 3; đã chọn dòng 4 theo khoanh tay ④: φ55, H19, H1 8.5; số 5 cạnh tâm cung không gán được)",
+    "2. Kích thước có dung sai (φD +0.2/0 của 2 cung khoét: vẽ theo giữa khoảng, φ55.1)"
+   ],
+   "blank": "160 x 70",
+   "finishedAt": "2026-11-11T03:47:22Z",
+   "manual": true,
+   "manualAt": "2026-11-11T08:56:05Z"
+  },
+  "521111-01_26-067271": {
+   "order": "521111-01",
+   "code": "26-067271",
+   "kind": "phang",
+   "agent": "521111-01_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T09:27:48Z",
+   "flags": [],
+   "blank": "300 x 200",
+   "finishedAt": "2026-11-11T09:31:53Z",
+   "mood": "write",
+   "act": "Ghi 26-067271.dxf",
+   "actAt": "2026-11-11T09:31:53Z",
+   "effort": "high"
+  },
+  "521111-01_26-067272": {
+   "order": "521111-01",
+   "code": "26-067272",
+   "kind": "phang",
+   "agent": "521111-01_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T09:31:53Z",
+   "flags": [],
+   "blank": "300 x 200",
+   "finishedAt": "2026-11-11T09:31:54Z",
+   "mood": "write",
+   "act": "Ghi 26-067272.dxf",
+   "actAt": "2026-11-11T09:31:54Z"
+  },
+  "521111-01_26-067273": {
+   "order": "521111-01",
+   "code": "26-067273",
+   "kind": "uon",
+   "agent": "521111-01_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T09:31:58Z",
+   "flags": [],
+   "blank": "480 x 346.64",
+   "finishedAt": "2026-11-11T09:31:59Z",
+   "mood": "write",
+   "act": "Ghi 26-067273.dxf",
+   "actAt": "2026-11-11T09:31:59Z"
+  },
+  "521111-01_26-067279": {
+   "order": "521111-01",
+   "code": "26-067279",
+   "kind": "uon",
+   "agent": "521111-01_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T03:47:23Z",
+   "flags": [],
+   "blank": "225.38 x 75",
+   "finishedAt": "2026-11-11T03:48:49Z",
+   "packedAt": "2026-11-11T05:06:18Z",
+   "packedIn": "Gui",
+   "packedX": 225.38,
+   "packedY": 75.0
+  },
+  "521111-01_26-067303": {
+   "order": "521111-01",
+   "code": "26-067303",
+   "kind": "uon",
+   "agent": "521111-01_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T05:00:46Z",
+   "flags": [],
+   "blank": "412.8 x 206.4",
+   "finishedAt": "2026-11-11T05:02:41Z",
+   "packedAt": "2026-11-11T05:06:18Z",
+   "packedIn": "Gui",
+   "packedX": 412.8,
+   "packedY": 206.4
+  },
+  "521111-06_26-066837": {
+   "order": "521111-06",
+   "code": "26-066837",
+   "kind": "uon",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T07:08:33Z",
+   "flags": [],
+   "blank": "715 x 76",
+   "finishedAt": "2026-11-11T07:12:15Z"
+  },
+  "521111-06_26-067242": {
+   "order": "521111-06",
+   "code": "26-067242",
+   "kind": "uon",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T09:49:40Z",
+   "flags": [],
+   "blank": "64.86 x 54",
+   "finishedAt": "2026-11-11T09:52:19Z"
+  },
+  "521111-06_26-067278": {
+   "order": "521111-06",
+   "code": "26-067278",
+   "kind": "uon",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T07:11:32Z",
+   "flags": [],
+   "blank": "365.38 x 60",
+   "finishedAt": "2026-11-11T07:12:49Z"
+  },
+  "521111-06_26-066838": {
+   "order": "521111-06",
+   "code": "26-066838",
+   "kind": "phang",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T09:52:25Z",
+   "flags": [],
+   "blank": "270 x 115",
+   "finishedAt": "2026-11-11T09:52:39Z"
+  },
+  "521111-06_26-067288": {
+   "order": "521111-06",
+   "code": "26-067288",
+   "kind": "uon",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T07:12:50Z",
+   "flags": [],
+   "blank": "295.38 x 60",
+   "finishedAt": "2026-11-11T07:13:23Z"
+  },
+  "521111-06_26-067246": {
+   "order": "521111-06",
+   "code": "26-067246",
+   "kind": "uon",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T09:52:20Z",
+   "flags": [],
+   "blank": "192.2 x 50",
+   "finishedAt": "2026-11-11T09:52:25Z"
+  },
+  "521111-06_26-066840": {
+   "order": "521111-06",
+   "code": "26-066840",
+   "kind": "phang",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T09:52:39Z",
+   "flags": [],
+   "blank": "260 x 23.5",
+   "finishedAt": "2026-11-11T09:52:40Z"
+  },
+  "521111-06_26-066842": {
+   "order": "521111-06",
+   "code": "26-066842",
+   "kind": "phang",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T09:52:40Z",
+   "flags": [],
+   "blank": "70 x 29",
+   "finishedAt": "2026-11-11T09:52:41Z"
+  },
+  "521111-06_26-067247": {
+   "order": "521111-06",
+   "code": "26-067247",
+   "kind": "phang",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T07:16:52Z",
+   "flags": [
+    "1. Thiếu kích thước (3 lỗ M6 cột phải x=130: bản vẽ chỉ ghi khoảng cách tới mép phải 10, không ghi vị trí theo phương dọc; chưa vẽ, cần bổ sung)"
+   ],
+   "blank": "140 x 80",
+   "finishedAt": "2026-11-11T07:17:33Z"
+  },
+  "521111-06_26-067304": {
+   "order": "521111-06",
+   "code": "26-067304",
+   "kind": "phang",
+   "agent": "521111-06_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-11T07:17:33Z",
+   "flags": [
+    "1. Thiếu kích thước (thân giữa hẹp hơn hai đầu trên hình bằng: bề rộng thân ghi φ8 bị gạch chéo và chiều dài đầu rộng không ghi; chưa vẽ bậc, tạm vẽ chữ nhật 9.5 suốt chiều dài)",
+    "2. Kích thước có dung sai (bề rộng đầu ghi 10 -0.2/-0.5, không đối xứng; ghi tay 9.5 nên dùng 9.5)"
+   ],
+   "blank": "230.88 x 9.5",
+   "finishedAt": "2026-11-11T07:21:00Z"
   }
  }
 }

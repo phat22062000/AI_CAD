@@ -2,7 +2,7 @@
 name: "dxf-check"
 description: "Kiểm DXF đầu ra (26-xxxxxx.dxf, file ALL) sau dxf-sheetmetal: chỉ kiểm hình dạng, không kiểm Template; báo cáo chỉ nêu lỗi sai."
 metadata:
-  version: "2026.11.10-1"
+  version: "2026.11.11-1"
 ---
 
 Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về máy người dùng), hoặc khi người dùng yêu cầu kiểm một file DXF đã có. Tiêu chí lấy từ `dxf-sheetmetal` (mục 2–12), `Quy_Tac_Laser.md`, `Ghi_Chu_Loi_Tao_DXF.md` (`knowledge/Context_Laser/`). **Chỉ kiểm hình dạng, không kiểm cấu trúc Template** (file lưu từ CAD có header/owner khác Template là bình thường, không báo); muốn so Template thì thêm `--template`.
@@ -18,6 +18,7 @@ Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về 
    - `--mirror A:B` cho mỗi cặp 本図/対称, R/L, A-1/A-2.
    - `--single THU_MUC` nếu có file riêng 26-xxxxxx.dxf (so hình trong ALL với file riêng).
 3a. Đơn nhiều chi tiết (mục 13 dxf-sheetmetal): đọc mù chạy song song theo nhóm ghi trong `order_context.json` (tấm ĐƠN GIẢN gộp 3–4 tấm một subagent, tấm PHỨC TẠP mỗi tấm một subagent, cặp gương chung một subagent),tối đa chỉ được phép chạy 3 subagent, mỗi nhóm một thư mục trống chỉ có PDF trang của nhóm. Prompt mới nhất: `/mnt/project-files/tools/sheetmetal_kit/blind_read_prompt.md`. Mức GỌN cho nhóm ĐƠN GIẢN (một lượt, đo pixel 1 lỗ mỗi hình, lượt 2 chỉ cho mục không chắc), ĐẦY ĐỦ cho PHỨC TẠP; gặp chuỗi lệch, cặp gương hoặc ghi chú tay khó đọc thì chuyển sang ĐẦY ĐỦ cho chi tiết đó. Không bỏ bước đọc mù, không gộp vào bước dựng.
+3b. Đầu vào: PDF có trang ghi "DATA" (khách có gửi DXF) mà thư mục đơn không có DXF khách tương ứng (tên không khớp email đính kèm, hoặc DXF là bản vẽ khác) thì mọi mã của trang đó phải có Flag 20 (dxf-sheetmetal mục 11.4); thiếu Flag là LỖI, chỉ báo, không tự sửa.
 4. Chạy: `python3 dxf_check.py <file> --expect exp.csv --src <thư mục đơn> --order 064301,064302 --mirror 064157:064158 --single <thư mục> --png preview.png`. Mã thoát 1 nếu có LỖI. Không có `--src` thì script lấy thư mục của file; không thấy PDF/DXF khách sẽ báo CẢNH BÁO 'chưa có kỳ vọng độc lập' (không được bỏ qua; chỉ bỏ khi đã có `blind_table.md` và đã so xong).
 5. Xử lý kết quả:
    - Phát hiện lỗi (LỖI của script hoặc mục SAI khi so nguồn) chỉ được BÁO LẠI cho người dùng, KHÔNG tự sửa file đầu ra, script sinh (`gen_<đơn>.py`) hay file đã commit về máy, và không xuất lại. Chỉ sửa sau khi người dùng cho phép rõ ràng cho lỗi đó (người dùng chốt 30/10/2026); phép sửa lỗi này không tự áp sang lỗi khác.
@@ -48,7 +49,7 @@ Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về 
 | Đặt hình | file riêng góc dưới trái (0,0); ALL: mép trái X = 0, cách nhau 200, hình cuối sát Y = 0; cạnh dài theo X; có cạnh thẳng áp cả Ox và Oy | LỖI/CẢNH BÁO |
 | J/LJ | phôi Oy ≤ 100 và Ox ≥ 1000: đủ POINT + TEXT J/LJ cao 10 trên mép trên tại 30, ..., L - 30 | LỖI |
 | Chữ mã (ALL) | đúng 1 TEXT 6 số mỗi hình, X = -150, Y = đáy + cao/2, cao 12, trắng, căn trái, style Standard; file riêng không có chữ mã/Flag | LỖI |
-| Flag (ALL) | cao 4, Magenta, X = -150, Y = Y mã - 12 - 7k; đánh số 1., 2. liên tục, không chữ "Flag"; ≤ 30 ký tự/dòng; ký tự ngoài ASCII dạng `\U+XXXX`; nội dung bắt đầu bằng 1 trong 12 câu chuẩn; không chạm hình dưới | LỖI/CẢNH BÁO |
+| Flag (ALL) | cao 4, Magenta, X = -150, Y = Y mã - 12 - 7k; đánh số 1., 2. liên tục, không chữ "Flag"; ≤ 30 ký tự/dòng; ký tự ngoài ASCII dạng `\U+XXXX`; nội dung bắt đầu bằng 1 trong 20 câu chuẩn; không chạm hình dưới | LỖI/CẢNH BÁO |
 | 依頼 | kích thước phôi so X/Y CAD依頼書 (chỉ tham khảo), thiếu mã | CẢNH BÁO/LỖI |
 | Nguồn (`--src`) | không có PDF/DXF khách; PDF không có lớp chữ (scan): phải có `blind_table.md` (bước 3) | CẢNH BÁO |
 | | lỗ vẽ có φ không nằm trong PDF/DXF khách/lỗ mồi M; PDF ghi n-φ mà hình thiếu hoặc lệch số lượng; 下穴φ trong PDF mà hình không có lỗ đó; 展開 PDF khác phôi | CẢNH BÁO |
@@ -81,7 +82,7 @@ Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về 
 - Kegaki: có ヨ khoanh tròn / ケガキ / khách 851 thì mọi tấm nhận hàn có kegaki; chi tiết hàn sát mép ngoài thì không kegaki (521029-08); ống tròn vạch đủ đường kính; kegaki vẽ trên đúng mặt; tấm nghi có kegaki mà không chắc phải có Flag 12.
 - Rạch Green: mọi góc lõm vách–tấm, hộp đã có rạch; điểm đầu cách mép khoét = Piercing ngoài, sâu t + 0.2.
 - Phôi uốn nhiều mặt: so biên dạng ngoài từng mặt với nét trên hình chiếu của mặt đó, không chỉ so kích thước tổng. Rạch Green có khi và chỉ khi mép tại góc lõm ngang bằng kích thước uốn ngoài; rạch thừa hay thiếu đều báo.
-- Flag: mọi điểm thuộc 12 trường hợp đã ghi, cũng có trong báo cáo; không Flag chỉ thị riêng hay lệch số trong ngoặc/依頼.
+- Flag: mọi điểm thuộc 20 trường hợp đã ghi, cũng có trong báo cáo; không Flag chỉ thị riêng hay lệch số trong ngoặc/依頼.
 - Thứ tự: đúng thứ tự trang PDF, mã bị gạch đã bỏ, không thiếu mã.
 
 ## 5. Các trường hợp tính là LỖI|

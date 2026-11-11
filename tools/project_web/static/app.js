@@ -5,7 +5,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const LS = {get(k, d){try{const v = localStorage.getItem(k); return v == null ? d : v}catch(e){return d}},
             set(k, v){try{localStorage.setItem(k, v)}catch(e){}}};
 
-const ST = {chua:'Chưa làm', dang:'Đang làm', xong:'Đã xong', cho:'Đang chờ', tay:'Tự làm', thieu:'Thiếu file'};
+const ST = {chua:'Chưa làm', dang:'Đang làm', xong:'Đã xong', cho:'Đang chờ khách trả lời', tay:'Tự làm', thieu:'Thiếu file'};
 const RV = {cho:'Chờ check', dung:'Đúng', sai:'Sai'};
 const S = {data:null, reviews:{}, oFilter:'all', oDate:(() => {const t = new Date(), p = n => String(n).padStart(2, '0'); return {d:p(t.getDate()), m:p(t.getMonth() + 1), y:String(t.getFullYear())}})(), oQ:'', sel:null, rsel:null, rOpen:new Set(), drafts:{}, plan:null, manual:null, compare:{}, packMsg:{}, oLimit:60,
            rFilter:LS.get('pw-rf','cho'), rDate:{d:'', m:'', y:''}, rQ:'', cGroup:LS.get('pw-cg','ngay')};
@@ -41,7 +41,7 @@ async function load(force){
     S.compare = cmp || {};
     // dữ liệu agent báo có thể sai định dạng (flags là chuỗi): chuẩn hoá về mảng để giao diện không bị lỗi
     const arr = v => Array.isArray(v) ? v.map(String) : (v ? [String(v)] : []);
-    (d.orders || []).forEach(o => { o.flags = arr(o.flags); o.agents = arr(o.agents); (o.codes || []).forEach(c => { c.flags = arr(c.flags); }); });
+    (d.orders || []).forEach(o => { o.flags = arr(o.flags); o.agents = arr(o.agents); (o.codes || []).forEach(c => { c.flagsRaw = arr(c.flags); c.flags = c.manual ? [] : c.flagsRaw; }); });   // mã người dùng tự làm: ẩn Flag trên giao diện (giữ flagsRaw để xem lại khi hoàn tác)
     S.data = d; S.reviews = rv;
     $('#err').hidden = true;
     $('#upd').textContent = 'Cập nhật ' + new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
@@ -67,6 +67,15 @@ function orderTime(o){
   if (o.state === 'xong' && o.finishedAt) return {txt:(o.timeEstimated ? '≈ ' : '') + dur(t(o.finishedAt) - s), tip:'Từ ' + hm(o.startedAt) + ' đến ' + hm(o.finishedAt) + (o.timeEstimated ? ' (ước tính theo thời gian file)' : '')};
   if (o.state === 'dang') return {txt:dur(Date.now() - s), tip:'Bắt đầu ' + hm(o.startedAt)};
   return {txt:'—', tip:o.lastFileAt ? 'File mới nhất ' + hm(o.lastFileAt) : ''};
+}
+
+// Lọc theo trạng thái (ô thống kê hoặc ô chọn): bỏ lọc ngày để hiện tất cả đơn cùng trạng thái; bấm lại ô đó hoặc "Tổng đơn" thì về như cũ
+function setOFilter(v){
+  v = v || 'all';
+  if (v === S.oFilter && v !== 'all') v = 'all';
+  if (v !== 'all' && S.oFilter === 'all') { S.oDatePrev = S.oDate; S.oDate = {d:'', m:'', y:''}; }
+  else if (v === 'all' && S.oDatePrev) { S.oDate = S.oDatePrev; S.oDatePrev = null; }
+  S.oFilter = v; S.oLimit = 60;
 }
 
 function renderProgress(){
@@ -146,10 +155,16 @@ function buildRuns(){
     const wk = a => ({name:a.name || a.id, model:a.model || '', effort:a.effort || '', codes:a.codes || [],
       state:a.state === 'running' && !a.lost ? 'RUN' : a.state === 'running' ? 'WAIT' : 'DONE',
       now:a.current ? [a.current] : (a.kind === 'main' ? (o.codes.filter(c => c.pstatus === 'running').sort((x, y) => (y.startedAt || '').localeCompare(x.startedAt || ''))[0] ? [o.codes.filter(c => c.pstatus === 'running').sort((x, y) => (y.startedAt || '').localeCompare(x.startedAt || ''))[0].code] : []) : []), mood:a.mood, act:a.act || (a.kind === 'main' ? a.phase : ''), act_at:secs(a.actAt || a.heartbeatAt)});
-    const assignment = subs.length ? {mode:'SUB', workers:subs.map(wk)}
+    // Đơn có subagent mà agent chính cũng tự vẽ mã (theo phân công): hiện thêm một làn "Agent chính" cùng các subagent
+    const jp = (S.data.jobs || []).filter(j => j.order === order && j.plan && j.kind !== 'tiep').sort((x, y) => (x.at || '').localeCompare(y.at || '')).pop();
+    const mainCodes = jp ? Object.entries(jp.plan.codes || {}).filter(([, who]) => who === 'main').map(([c]) => c) : [];
+    const mainW = subs.length && mainCodes.length ? [{...wk(main), name:'Agent chính', codes:mainCodes, isMain:true}] : [];
+    const assignment = subs.length ? {mode:'SUB', workers:mainW.concat(subs.map(wk))}
       : {mode:'SUB', workers:[{...wk(main), name:'Plan'}]};
     const started = ags.map(a => a.startedAt).filter(Boolean).sort()[0];
-    runs.push({id:order, job:order, kind:'RUN', status:live ? 'RUNNING' : 'DONE', user:main.user || o.user || '',
+    // đơn có mã PREVIEW (có Flag, chờ khách trả lời) hoặc đơn đang ở trạng thái 'cho' thì không phải XONG
+    const waiting = !live && (o.state === 'cho' || codes_status.some(c => c.status === 'PREVIEW'));
+    runs.push({id:order, job:order, kind:'RUN', status:live ? 'RUNNING' : 'DONE', waiting, user:main.user || o.user || '',
       started_at:started, ended_at:live ? null : new Date(last).toISOString(), slot:main.slot || '', usage:{model:main.model || '', effort:main.effort || ''},
       path:[o.path, o.customer, o.urgent].filter(Boolean).join('  '), codes_status, assignment, phase:main.phase || ''});
   });
@@ -158,10 +173,11 @@ function buildRuns(){
 const hhmm = ms => { if (ms == null || ms < 0) return '—'; const m = Math.floor(ms / 60000); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
 function runHead(r){
   const a = r.assignment, sub = a.workers[0].name !== 'Plan';
-  const w = a.workers[0];
+  const subW = a.workers.filter(x => !x.isMain), hasMain = a.workers.some(x => x.isMain);
+  const w = subW[0] || a.workers[0];
   const model = (w.model || r.usage.model || '').replace(/^claude-/, '');
-  return `<span class="jid">${esc(r.job)}</span>${r.status === 'RUNNING' ? '<span class="tag t-run">RUN</span>' : '<span class="tag t-ok">XONG</span>'}
-    ${sub ? `<span class="badge b-sub" title="Số subagent vẽ song song">SUB×${a.workers.length}${model ? ' · ' + esc(model) : ''}</span>` : ''}
+  return `<span class="jid">${esc(r.job)}</span>${r.status === 'RUNNING' ? '<span class="tag t-run">RUN</span>' : r.waiting ? '<span class="tag t-warn" title="Có mã PREVIEW: đang chờ khách trả lời, PREVIEW chuyển sang PASS thì đơn tự về Xong">ĐANG CHỜ KHÁCH TRẢ LỜI</span>' : '<span class="tag t-ok">XONG</span>'}
+    ${sub ? `<span class="badge b-sub" title="Số subagent vẽ song song">${hasMain ? 'Chính + ' : ''}SUB×${subW.length}${model ? ' · ' + esc(model) : ''}</span>` : ''}
     <span class="meta">${esc(r.user || 'Agent')}</span>
     <div class="act"><button class="ib" data-copy="${esc(r.path.split('  ')[0])}" title="Copy thư mục đơn"><svg class="i"><use href="#i-folder"/></svg></button></div>`;
 }
@@ -561,7 +577,7 @@ document.addEventListener('click', e => {
   if (!b) return;
   if (b.classList.contains('dclr')) {
     const dr = b.closest('.drange'), k = dr.id === 'o-date' ? 'oDate' : 'rDate';
-    S[k] = {d:'', m:'', y:''};
+    S[k] = {d:'', m:'', y:''}; if (k === 'oDate') S.oDatePrev = null;
     return k === 'oDate' ? renderProgress() : renderReview();
   }
   if (b.dataset.act === 'fold') { const id = b.closest('.job').dataset.id; folded.has(id) ? folded.delete(id) : folded.add(id); return renderProgress(); }
@@ -579,7 +595,7 @@ document.addEventListener('click', e => {
     return;
   }
   if (b.dataset.copy != null) { navigator.clipboard?.writeText(b.dataset.copy).then(() => toast('Đã copy: ' + b.dataset.copy), () => toast(b.dataset.copy)); return; }
-  if (b.closest('#o-stats')) { S.oFilter = b.dataset.f; S.oLimit = 60; return renderProgress(); }
+  if (b.closest('#o-stats')) { setOFilter(b.dataset.f); return renderProgress(); }
   if (b.id === 'o-more') { S.oLimit += 60; return renderProgress(); }
   if (b.dataset.pack) {   // Đóng gói các mã đã xong: thư mục Gui (đợt 1) hoặc Gui_N (đợt sau) + file Excel
     const order = b.dataset.pack;
@@ -650,10 +666,10 @@ document.addEventListener('change', async e => {
     return load(true);
   }
   const dr = el.closest && el.closest('.drange');
-  if (el.classList && el.classList.contains('ost')) { S.oFilter = el.value || 'all'; S.oLimit = 60; return renderProgress(); }
+  if (el.classList && el.classList.contains('ost')) { setOFilter(el.value); return renderProgress(); }
   if (dr) {
     const k = dr.id === 'o-date' ? 'oDate' : 'rDate', [d, m, y] = dr.querySelectorAll('select');
-    S[k] = {d:d.value, m:m.value, y:y.value};
+    S[k] = {d:d.value, m:m.value, y:y.value}; if (k === 'oDate') S.oDatePrev = null;
     return k === 'oDate' ? renderProgress() : renderReview();
   }
   if (el.classList.contains('cd-note')) {   // ghi chú của mã, lưu khi rời ô
@@ -746,7 +762,7 @@ function openManual(order, code){
       <button class="ib" data-mx title="Đóng (Esc)"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="pl-b">
       ${c.manual ? '<p class="hint ok">Mã này đang được đánh dấu "Người dùng tự làm".</p>' : ''}
-      ${c.flags.length ? `<h3>Flag của agent <span class="n">${c.flags.length}</span></h3><div class="od-flags">${c.flags.map(f => `<div class="fl"><span>${esc(f)}</span></div>`).join('')}</div>` : ''}
+      ${c.flagsRaw.length ? `<h3>Flag của agent <span class="n">${c.flagsRaw.length}</span></h3><div class="od-flags">${c.flagsRaw.map(f => `<div class="fl"><span>${esc(f)}</span></div>`).join('')}</div>` : ''}
       <p style="margin:14px 0 0;font-size:13.5px;line-height:1.6">${c.manual
         ? 'Bạn có thể hoàn tác để mã này quay lại trạng thái chờ agent.'
         : 'Hoàn tất đơn mà <b>không chờ</b> mã này. Mã <b>' + esc(code) + '</b> bạn tự làm và lưu vào thư mục đơn sau:<br><span class="mono">' + esc(dir) + '</span><br>Mã này không tính vào kết quả đánh giá AI.'}</p>

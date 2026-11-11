@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.10-1"
+  version: "2026.11.11-1"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -14,7 +14,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 ## 1. Quy trình
 1. Đọc trang CAD依頼書 (render ≤ 100 dpi): mã yêu cầu, khách, vật liệu, độ dày, X/Y phôi (X/Y chỉ để đối chiếu, mục 2).
 2. Đọc toàn bộ `Quy_Tac_Laser.md`; trong `DS_Khach_Hang.md` chỉ đọc phần "Tra nhanh theo nhóm quy tắc" và dòng của đúng mã khách (tìm theo mã khách). Quy định riêng của khách thắng quy tắc chung.
-3. Thư mục đơn có DXF khách (3D*.DXF...): stage về, dựng hình từ DXF TRƯỚC rồi mới đối chiếu PDF (mục 4.2).
+3. Thư mục đơn có DXF khách (3D*.DXF...): stage về, dựng hình từ DXF TRƯỚC rồi mới đối chiếu PDF (mục 4.2). Trang PDF có ô/chữ "DATA" (thường khung đỏ hoặc in đầu trang) nghĩa là khách có gửi DXF: nếu trang có email đính kèm tên file .dxf mà thư mục đơn không có DXF khách tương ứng (tên không khớp, hoặc nội dung là bản vẽ khác: số bản vẽ hoặc kích thước không khớp các mã của trang) thì Flag 20 cho mọi mã của trang đó (mục 11.4).
 4. Mỗi trang bản vẽ (tiết kiệm token): kiểm hướng trang trước (`pdftotext` hoặc ảnh ≤ 50 dpi); trang xoay 90° thì xoay ngay khi render, cắt vùng hình, render MỘT lần 200 dpi. Tìm ký hiệu ヨ khoanh tròn ở TỪNG trang. Xác định loại từng hình chiếu (mục 3); ghi lại mọi điểm thuộc Flag (mục 11.4) và mọi ghi chú R ở từng hình chiếu. Trước khi cắt vùng hình, xem TOÀN trang ≤ 70 dpi và liệt kê mọi chữ tay/ghi chú ngoài hình (quanh mã vạch, khung tên, lề, cạnh hình): vật liệu, độ dày, 伸び/giãn, số lượng, ヨ, J, ピアス. Vùng cắt phải gồm cả những chỗ đó; ghi chú nghiêng thì xoay thẳng, phóng ≥ 300 dpi rồi mới đọc.
 5. Mỗi mã: tìm đủ hình chiếu, lập các bảng ở mục 12; xác định góc uốn và độ giãn từng chỗ (mục 5). Dựng phôi trong hệ cục bộ (u dọc đường uốn, v vuông góc): biên (mục 4), uốn (5), hộp/rạch (6), lỗ (7), kegaki (9), bo góc (8, sau khi đủ biên, trước khi xoay); cuối cùng đặt hướng (mục 10).
 6. Xuất file riêng + file ALL kèm Flag (mục 11), kiểm tra theo mục 12.
@@ -214,6 +214,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   17. Có bất kì lỗ tròn nào (tính cả lỗ mồi) trong tấm nhỏ hơn 1/2 độ dày của tấm đó.
   18. Kích thước có dung sai (trừ trường hợp dung sai dương và dung sai âm băng nhau).
   19. Gọc nhọn quá bé không thể laser R.
+  20. Thiếu DXF khách (PDF có ghi DATA nhưng không có DXF khách): áp cho TẤT CẢ mã thuộc trang đó.Không dựng hình vội phải đợi DXF khách.
 - Không Flag chỉ thị riêng (ghi chú laser, chiều dài tay viết) hay lệch số trong ngoặc/CAD依頼書. Flag không thay việc phải hỏi; ghi cả trong báo cáo; không ghi ở file riêng. Flag 5/6 chỉ dùng sau khi đã xoay thẳng, phóng ≥ 300 dpi và đọc lại ≥ 2 lần. Phần đọc được thì phải vẽ; chỉ phần chữ số thật sự không đọc ra mới để Flag. Không bỏ cả chi tiết (rãnh, lỗ, vát) chỉ vì ghi chú "không đọc rõ".
 - Dạng: đánh số 1., 2., 3... theo từng hình (số cuối = số Flag), không ghi chữ "Flag": `<số thứ tự>. <câu chuẩn> (<chi tiết: vị trí, số liệu>)`, ví dụ "1. Kích thước PDF và DXF khác nhau (lỗ 3xφ4: PDF φ4, DXF φ4.5)".
 - Hiển thị: TEXT cao 5, căn trái, X = X chữ mã (-150); dòng k (k = 0, 1...) tại Y = Y chữ mã - 12 - 7k; ≤ 40 ký tự/dòng, ngắt ở khoảng trắng; layer `0`, Magenta `62 = 6`. Style Standard (Arial, mục 11.2 bước 3; SHX `txt` cũ hiện "?"). Ký tự ngoài ASCII ghi `\U+XXXX` (hex hoa, NFC); file vẫn ghi cp932.

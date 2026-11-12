@@ -37,9 +37,9 @@ $EXTMIN
   9
 $EXTMAX
  10
-160
+523.16
  20
-70
+820
  30
 -1.000000000000000E+20
   9
@@ -549,7 +549,7 @@ $SPLINESEGS
   9
 $HANDSEED
   5
-271
+2B0
   9
 $SURFTAB1
  70
@@ -1337,9 +1337,9 @@ AcDbViewportTableRecord
  21
 1.0
  12
-80
+186.58
  22
-35
+410
  13
 0.0
  23
@@ -1365,7 +1365,7 @@ AcDbViewportTableRecord
  37
 0.0
  40
-77
+902
  41
 2.340243902439024
  42
@@ -2963,15 +2963,15 @@ AcDbEntity
 100
 AcDbLine
  10
-3
+100
  20
-0
+820
  30
 0.0
  11
-157
+25
  21
-0
+820
  31
 0.0
   0
@@ -2987,15 +2987,15 @@ AcDbEntity
 100
 AcDbLine
  10
-157
+25
  20
-0
+820
  30
 0.0
  11
-160
+0
  21
-3
+795
  31
 0.0
   0
@@ -3011,15 +3011,15 @@ AcDbEntity
 100
 AcDbLine
  10
-160
+0
  20
-3
+795
  30
 0.0
  11
-160
+0
  21
-67
+732
  31
 0.0
   0
@@ -3035,15 +3035,15 @@ AcDbEntity
 100
 AcDbLine
  10
-160
+0
  20
-67
+732
  30
 0.0
  11
-157
+2
  21
-70
+730
  31
 0.0
   0
@@ -3059,15 +3059,15 @@ AcDbEntity
 100
 AcDbLine
  10
-3
+2
  20
-70
+730
  30
 0.0
  11
-0
+123
  21
-67
+730
  31
 0.0
   0
@@ -3083,15 +3083,15 @@ AcDbEntity
 100
 AcDbLine
  10
-0
+123
  20
-67
+730
  30
 0.0
  11
-0
+125
  21
-3
+732
  31
 0.0
   0
@@ -3107,15 +3107,15 @@ AcDbEntity
 100
 AcDbLine
  10
-0
+125
  20
-3
+732
  30
 0.0
  11
-3
+125
  21
-0
+795
  31
 0.0
   0
@@ -3131,19 +3131,19 @@ AcDbEntity
 100
 AcDbLine
  10
-3
+125
  20
-70
+795
  30
 0.0
  11
-3.79403694
+100
  21
-70
+820
  31
 0.0
   0
-LINE
+CIRCLE
   5
 265
 330
@@ -3153,21 +3153,17 @@ AcDbEntity
   8
 0
 100
-AcDbLine
+AcDbCircle
  10
-56.20596306
+117.5
  20
-70
+750
  30
 0.0
- 11
-103.79403694
- 21
-70
- 31
-0.0
+ 40
+3
   0
-LINE
+CIRCLE
   5
 266
 330
@@ -3177,21 +3173,17 @@ AcDbEntity
   8
 0
 100
-AcDbLine
+AcDbCircle
  10
-156.20596306
+7.5
  20
-70
+750
  30
 0.0
- 11
-157
- 21
-70
- 31
-0.0
+ 40
+3
   0
-ARC
+CIRCLE
   5
 267
 330
@@ -3203,21 +3195,15 @@ AcDbEntity
 100
 AcDbCircle
  10
-30
+117.5
  20
-78.5
+774
  30
 0.0
  40
-27.55
-100
-AcDbArc
- 50
-197.9706605
- 51
-342.0293395
+3
   0
-ARC
+CIRCLE
   5
 268
 330
@@ -3229,21 +3215,15 @@ AcDbEntity
 100
 AcDbCircle
  10
-130
+7.5
  20
-78.5
+774
  30
 0.0
  40
-27.55
-100
-AcDbArc
- 50
-197.9706605
- 51
-342.0293395
+3
   0
-LINE
+CIRCLE
   5
 269
 330
@@ -3253,21 +3233,17 @@ AcDbEntity
   8
 0
 100
-AcDbLine
+AcDbCircle
  10
-85
+62.5
  20
-13.1
+805
  30
 0.0
- 11
-135
- 21
-13.1
- 31
-0.0
+ 40
+3.5
   0
-LINE
+CIRCLE
   5
 26A
 330
@@ -3277,73 +3253,17 @@ AcDbEntity
   8
 0
 100
-AcDbLine
- 10
-85
- 20
-6.9
- 30
-0.0
- 11
-135
- 21
-6.9
- 31
-0.0
-  0
-ARC
-  5
-26B
-330
-6F
-100
-AcDbEntity
-  8
-0
-100
 AcDbCircle
  10
-85
+92.5
  20
-10
+805
  30
 0.0
  40
-3.1
-100
-AcDbArc
- 50
-90
- 51
-270
+3.5
   0
-ARC
-  5
-26C
-330
-6F
-100
-AcDbEntity
-  8
-0
-100
-AcDbCircle
- 10
-135
- 20
-10
- 30
-0.0
- 40
-3.1
-100
-AcDbArc
- 50
-270
- 51
-90
-  0
-LINE
+TEXT
   5
 26D
 330
@@ -3353,23 +3273,49 @@ AcDbEntity
   8
 0
 100
+AcDbText
+ 10
+-150
+ 20
+775
+ 30
+0.0
+ 40
+12
+  1
+067784
+  7
+Standard
+100
+AcDbText
+  0
+LINE
+  5
+271
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
 AcDbLine
  10
-85
+0
  20
-33.1
+482
  30
 0.0
  11
-135
+2
  21
-33.1
+480
  31
 0.0
   0
 LINE
   5
-26E
+272
 330
 6F
 100
@@ -3379,21 +3325,1001 @@ AcDbEntity
 100
 AcDbLine
  10
-85
+2
  20
-26.9
+480
  30
 0.0
  11
-135
+521.16
  21
-26.9
+480
+ 31
+0.0
+  0
+LINE
+  5
+273
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+521.16
+ 20
+480
+ 30
+0.0
+ 11
+523.16
+ 21
+482
+ 31
+0.0
+  0
+LINE
+  5
+274
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+523.16
+ 20
+482
+ 30
+0.0
+ 11
+523.16
+ 21
+528
+ 31
+0.0
+  0
+LINE
+  5
+275
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+523.16
+ 20
+528
+ 30
+0.0
+ 11
+521.16
+ 21
+530
+ 31
+0.0
+  0
+LINE
+  5
+276
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+521.16
+ 20
+530
+ 30
+0.0
+ 11
+2
+ 21
+530
+ 31
+0.0
+  0
+LINE
+  5
+277
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+2
+ 20
+530
+ 30
+0.0
+ 11
+0
+ 21
+528
+ 31
+0.0
+  0
+LINE
+  5
+278
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+0
+ 20
+528
+ 30
+0.0
+ 11
+0
+ 21
+482
+ 31
+0.0
+  0
+LINE
+  5
+279
+330
+6F
+100
+AcDbEntity
+  8
+0
+  6
+DASHED
+100
+AcDbLine
+ 10
+30.96
+ 20
+480
+ 30
+0.0
+ 11
+30.96
+ 21
+530
+ 31
+0.0
+  0
+LINE
+  5
+27A
+330
+6F
+100
+AcDbEntity
+  8
+0
+  6
+DASHED
+100
+AcDbLine
+ 10
+34
+ 20
+480
+ 30
+0.0
+ 11
+34
+ 21
+530
+ 31
+0.0
+  0
+LINE
+  5
+27B
+330
+6F
+100
+AcDbEntity
+  8
+0
+  6
+DASHED
+100
+AcDbLine
+ 10
+399.16
+ 20
+480
+ 30
+0.0
+ 11
+399.16
+ 21
+530
+ 31
+0.0
+  0
+LINE
+  5
+27C
+330
+6F
+100
+AcDbEntity
+  8
+0
+  6
+DASHED
+100
+AcDbLine
+ 10
+402.2
+ 20
+480
+ 30
+0.0
+ 11
+402.2
+ 21
+530
+ 31
+0.0
+  0
+TEXT
+  5
+27D
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+-150
+ 20
+505
+ 30
+0.0
+ 40
+12
+  1
+067785
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+27E
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+493
+ 30
+0.0
+ 40
+5
+  1
+1. Thi\U+1EBFu k\U+00EDch th\U+01B0\U+1EDBc (2 l\U+1ED7 d\U+00E0i r\U+1ED9ng 6,
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+27F
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+486
+ 30
+0.0
+ 40
+5
+  1
+c\U+00E1ch nhau 24, c\U+00E1ch m\U+00E9p 25, n\U+1EB1m tr\U+00EAn t\U+1EA5m
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+280
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+479
+ 30
+0.0
+ 40
+5
+  1
+th\U+1EB3ng \U+0111\U+1EE9ng d\U+00E0y 3 \U+1EDF h\U+00ECnh nh\U+00ECn m\U+1EB7t b\U+00EAn;
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+281
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+472
+ 30
+0.0
+ 40
+5
+  1
+kh\U+00F4ng r\U+00F5 thu\U+1ED9c ph\U+00F4i n\U+00E0y hay chi ti\U+1EBFt r\U+1EDDi
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+282
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+465
+ 30
+0.0
+ 40
+5
+  1
+v\U+00E0 thi\U+1EBFu v\U+1ECB tr\U+00ED theo b\U+1EC1 r\U+1ED9ng 50, ch\U+01B0a v\U+1EBD
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+283
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+458
+ 30
+0.0
+ 40
+5
+  1
+l\U+1ED7).
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+284
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+451
+ 30
+0.0
+ 40
+5
+  1
+2. Ghi ch\U+00FA tay kh\U+00F4ng \U+0111\U+1ECDc r\U+00F5 (\U+0111\U+1ED9 gi\U+00E3n
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+285
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+444
+ 30
+0.0
+ 40
+5
+  1
+3.04 \U+00E1p cho c\U+1EA3 2 ch\U+1ED7 u\U+1ED1n 111\U+00B0; k\U+00EDch
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+286
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+437
+ 30
+0.0
+ 40
+5
+  1
+th\U+01B0\U+1EDBc 5 \U+1EDF h\U+00ECnh m\U+1EB7t b\U+00EAn ch\U+01B0a x\U+00E1c \U+0111\U+1ECBnh
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+287
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+430
+ 30
+0.0
+ 40
+5
+  1
+\U+0111\U+01B0\U+1EE3c).
+  7
+Standard
+100
+AcDbText
+  0
+LINE
+  5
+288
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+0
+ 20
+252
+ 30
+0.0
+ 11
+2
+ 21
+250
+ 31
+0.0
+  0
+LINE
+  5
+289
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+2
+ 20
+250
+ 30
+0.0
+ 11
+40.36
+ 21
+250
+ 31
+0.0
+  0
+LINE
+  5
+28A
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+40.36
+ 20
+250
+ 30
+0.0
+ 11
+42.36
+ 21
+252
+ 31
+0.0
+  0
+LINE
+  5
+28B
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+42.36
+ 20
+252
+ 30
+0.0
+ 11
+42.36
+ 21
+278
+ 31
+0.0
+  0
+LINE
+  5
+28C
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+42.36
+ 20
+278
+ 30
+0.0
+ 11
+40.36
+ 21
+280
+ 31
+0.0
+  0
+LINE
+  5
+28D
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+40.36
+ 20
+280
+ 30
+0.0
+ 11
+2
+ 21
+280
+ 31
+0.0
+  0
+LINE
+  5
+28E
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+2
+ 20
+280
+ 30
+0.0
+ 11
+0
+ 21
+278
+ 31
+0.0
+  0
+LINE
+  5
+28F
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+0
+ 20
+278
+ 30
+0.0
+ 11
+0
+ 21
+252
+ 31
+0.0
+  0
+LINE
+  5
+290
+330
+6F
+100
+AcDbEntity
+  8
+0
+  6
+DASHED
+100
+AcDbLine
+ 10
+27.36
+ 20
+250
+ 30
+0.0
+ 11
+27.36
+ 21
+280
+ 31
+0.0
+  0
+LINE
+  5
+291
+330
+6F
+100
+AcDbEntity
+  8
+0
+  6
+DASHED
+100
+AcDbLine
+ 10
+30
+ 20
+250
+ 30
+0.0
+ 11
+30
+ 21
+280
+ 31
+0.0
+  0
+CIRCLE
+  5
+292
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+15
+ 20
+265
+ 30
+0.0
+ 40
+4.1
+  0
+CIRCLE
+  5
+293
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+37.36
+ 20
+256
+ 30
+0.0
+ 40
+2
+  0
+CIRCLE
+  5
+294
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+37.36
+ 20
+274
+ 30
+0.0
+ 40
+2
+  0
+TEXT
+  5
+295
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+-150
+ 20
+265
+ 30
+0.0
+ 40
+12
+  1
+067787
+  7
+Standard
+100
+AcDbText
+  0
+LINE
+  5
+296
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+0.5
+ 20
+0
+ 30
+0.0
+ 11
+79.2
+ 21
+0
+ 31
+0.0
+  0
+LINE
+  5
+297
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+79.7
+ 20
+0.5
+ 30
+0.0
+ 11
+79.7
+ 21
+49.5
+ 31
+0.0
+  0
+LINE
+  5
+298
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+79.2
+ 20
+50
+ 30
+0.0
+ 11
+0.5
+ 21
+50
+ 31
+0.0
+  0
+LINE
+  5
+299
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbLine
+ 10
+0
+ 20
+49.5
+ 30
+0.0
+ 11
+0
+ 21
+0.5
  31
 0.0
   0
 ARC
   5
-26F
+29A
 330
 6F
 100
@@ -3403,23 +4329,23 @@ AcDbEntity
 100
 AcDbCircle
  10
-85
+0.5
  20
-30
+0.5
  30
 0.0
  40
-3.1
+0.5
 100
 AcDbArc
  50
-90
+180
  51
 270
   0
 ARC
   5
-270
+29B
 330
 6F
 100
@@ -3429,19 +4355,537 @@ AcDbEntity
 100
 AcDbCircle
  10
-135
+79.2
  20
-30
+0.5
  30
 0.0
  40
-3.1
+0.5
 100
 AcDbArc
  50
 270
  51
+0
+  0
+ARC
+  5
+29C
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+79.2
+ 20
+49.5
+ 30
+0.0
+ 40
+0.5
+100
+AcDbArc
+ 50
+0
+ 51
 90
+  0
+ARC
+  5
+29D
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+0.5
+ 20
+49.5
+ 30
+0.0
+ 40
+0.5
+100
+AcDbArc
+ 50
+90
+ 51
+180
+  0
+LINE
+  5
+29E
+330
+6F
+100
+AcDbEntity
+  8
+0
+  6
+DASHED
+100
+AcDbLine
+ 10
+26.2
+ 20
+0
+ 30
+0.0
+ 11
+26.2
+ 21
+50
+ 31
+0.0
+  0
+LINE
+  5
+29F
+330
+6F
+100
+AcDbEntity
+  8
+0
+  6
+DASHED
+100
+AcDbLine
+ 10
+30
+ 20
+0
+ 30
+0.0
+ 11
+30
+ 21
+50
+ 31
+0.0
+  0
+CIRCLE
+  5
+2A0
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+43.7
+ 20
+41
+ 30
+0.0
+ 40
+1.75
+  0
+CIRCLE
+  5
+2A1
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+75.7
+ 20
+9
+ 30
+0.0
+ 40
+1.75
+  0
+CIRCLE
+  5
+2A2
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+10
+ 20
+10
+ 30
+0.0
+ 40
+3.75
+  0
+CIRCLE
+  5
+2A3
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbCircle
+ 10
+10
+ 20
+40
+ 30
+0.0
+ 40
+3.75
+  0
+TEXT
+  5
+2A4
+330
+6F
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+-150
+ 20
+25
+ 30
+0.0
+ 40
+12
+  1
+067800
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2A5
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+13
+ 30
+0.0
+ 40
+5
+  1
+1. Thi\U+1EBFu k\U+00EDch th\U+01B0\U+1EDBc (\U+0111\U+01B0\U+1EDDng k\U+00EDnh 2 l\U+1ED7 nh\U+1ECF
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2A6
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+6
+ 30
+0.0
+ 40
+5
+  1
+\U+1EDF c\U+00E1nh ngang v\U+00E0 2 l\U+1ED7 \U+1EDF c\U+00E1nh \U+0111\U+1EE9ng kh\U+00F4ng
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2A7
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+-1
+ 30
+0.0
+ 40
+5
+  1
+ghi s\U+1ED1; v\U+1EBD t\U+1EA1m \U+03C63.5 v\U+00E0 \U+03C67.5 theo \U+0111o
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2A8
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+-8
+ 30
+0.0
+ 40
+5
+  1
+\U+1EA3nh).
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2A9
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+-15
+ 30
+0.0
+ 40
+5
+  1
+2. Thi\U+1EBFu k\U+00EDch th\U+01B0\U+1EDBc (g\U+00F3c bo cong \U+1EDF \U+0111\U+1EA7u 2
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2AA
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+-22
+ 30
+0.0
+ 40
+5
+  1
+c\U+00E1nh kh\U+00F4ng ghi s\U+1ED1 R; v\U+1EBD t\U+1EA1m R0.5, \U+1EA3nh
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2AB
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+-29
+ 30
+0.0
+ 40
+5
+  1
+cho th\U+1EA5y c\U+1EA1nh tr\U+01B0\U+1EDBc bo l\U+1EDBn kho\U+1EA3ng R5,
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2AC
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+-36
+ 30
+0.0
+ 40
+5
+  1
+c\U+1EA1nh sau kho\U+1EA3ng R3).
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2AD
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+-43
+ 30
+0.0
+ 40
+5
+  1
+3. Ghi ch\U+00FA tay kh\U+00F4ng \U+0111\U+1ECDc r\U+00F5 (53.5+30- b\U+1ECB
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2AE
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+-50
+ 30
+0.0
+ 40
+5
+  1
+c\U+1EAFt m\U+00E9p trang, kh\U+00F4ng th\U+1EA5y \U+0111\U+1ED9 gi\U+00E3n; d\U+00F9ng
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  5
+2AF
+330
+6F
+100
+AcDbEntity
+  8
+0
+62
+6
+100
+AcDbText
+ 10
+-150
+ 20
+-57
+ 30
+0.0
+ 40
+5
+  1
+b\U+1EA3ng Asahi t2.3 = 3.8).
+  7
+Standard
+100
+AcDbText
   0
 ENDSEC
   0

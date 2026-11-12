@@ -7,6 +7,7 @@ Phương án A (Phát chọn 06/11/2026): quyền giới hạn.
   (không có người bấm Cho phép, agent sẽ báo lỗi chứ không treo).
 Cấu hình trong data\\config.json (claude, permission_mode, allowed_tools, max_parallel, model, user).
 """
+import ctypes
 import json
 import os
 import re
@@ -250,6 +251,80 @@ class LiveTracker:
         return self
 
 
+# ---------------------------------------------------------------------------
+# Agent chạy TÁCH khỏi server (Phát chọn 12/11/2026, sau vụ đơn 521111-25 chết giữa chừng khi server khởi động lại):
+# - agent ghi stream thẳng vào file log (không qua ống nối với server) và có console ẩn riêng (không gắn cửa sổ start.bat),
+#   nên đóng cửa sổ server, sửa server.py hay khởi động lại server KHÔNG làm agent chết;
+# - server lưu pid + thời điểm tạo tiến trình vào job (pid, pctime, log, t0); khởi động lại thì nhận lại agent còn sống
+#   và đọc tiếp log; agent đã chết thì đọc log để biết kết quả rồi đóng việc (đóng luôn agent và mã còn "đang chạy").
+# ---------------------------------------------------------------------------
+
+def _k32():
+    k = ctypes.WinDLL('kernel32', use_last_error=True)
+    k.OpenProcess.restype = ctypes.c_void_p
+    k.OpenProcess.argtypes = (ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong)
+    k.WaitForSingleObject.argtypes = (ctypes.c_void_p, ctypes.c_ulong)
+    k.GetExitCodeProcess.argtypes = (ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulong))
+    k.GetProcessTimes.argtypes = (ctypes.c_void_p,) + (ctypes.POINTER(ctypes.c_ulonglong),) * 4
+    k.CloseHandle.argtypes = (ctypes.c_void_p,)
+    return k
+
+
+class PidProc:
+    """Tiến trình agent theo pid (không phải con của server đang chạy): poll() giống Popen."""
+
+    def __init__(self, pid):
+        self.pid = int(pid)
+        self.k = _k32()
+        self.h = self.k.OpenProcess(0x00100000 | 0x1000, 0, self.pid)     # SYNCHRONIZE | QUERY_LIMITED_INFORMATION
+        if not self.h:
+            raise OSError('không mở được tiến trình %s' % pid)
+
+    def ctime(self):
+        t = [ctypes.c_ulonglong() for _ in range(4)]
+        if not self.k.GetProcessTimes(self.h, *[ctypes.byref(x) for x in t]):
+            return None
+        return int(t[0].value)
+
+    def poll(self):
+        if self.k.WaitForSingleObject(self.h, 0) != 0:          # chưa signaled = còn chạy
+            return None
+        code = ctypes.c_ulong()
+        self.k.GetExitCodeProcess(self.h, ctypes.byref(code))
+        return int(code.value)
+
+
+def proc_ctime(pid):
+    """Thời điểm tạo tiến trình (để không nhận nhầm pid đã bị Windows cấp lại cho tiến trình khác)."""
+    if os.name != 'nt':
+        return None
+    try:
+        return PidProc(pid).ctime()
+    except Exception:
+        return None
+
+
+def _solo(job):
+    plan = job.get('plan') or {}
+    return not int(job.get('subagents') or 0) and not any(a != 'main' for a in (plan.get('agents') or {}))
+
+
+def _spawn(cmd, env, prompt, log_path, prompt_path):
+    with open(prompt_path, 'w', encoding='utf-8') as f:
+        f.write(prompt)
+    flags = 0
+    if os.name == 'nt':
+        flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+    with open(prompt_path, 'rb') as fin, open(log_path, 'wb') as fout:
+        kw = dict(cwd=S.WORK, stdin=fin, stdout=fout, stderr=subprocess.STDOUT, env=env)
+        if os.name == 'nt':
+            try:            # thoát khỏi job object của tiến trình cha (nếu có) để server chết không kéo agent chết theo
+                return subprocess.Popen(cmd, creationflags=flags | 0x01000000, **kw)     # CREATE_BREAKAWAY_FROM_JOB
+            except OSError:
+                pass
+        return subprocess.Popen(cmd, creationflags=flags, **kw)
+
+
 def run_job(jid, job, claude):
     order = job.get('order') or os.path.basename(job['path'].rstrip('\\/'))
     aid = f'{order}_main'
@@ -258,8 +333,6 @@ def run_job(jid, job, claude):
     model = job.get('model') or cfg.get('model') or 'sonnet'
     effort = cfg.get('effort') or 'high'
     os.makedirs(LOGS, exist_ok=True)
-    result, is_err, rc = '', True, -1
-    track = None
     try:
         workdir = stage_inputs(job)
         S.merge_progress('jobs', jid, {'workdir': os.path.relpath(workdir, S.WORK)})
@@ -287,73 +360,118 @@ def run_job(jid, job, claude):
             S.merge_progress('jobs', jid, {'prep': {'errors': ['prep: ' + str(e)]}})
         cmd += ['--model', model, '--effort', effort]
         env = dict(os.environ, CLAUDE_CODE_EFFORT_LEVEL=effort)
-        flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
-        with open(os.path.join(LOGS, jid + '.jsonl'), 'w', encoding='utf-8') as log:
-            p = subprocess.Popen(cmd, cwd=S.WORK, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT, creationflags=flags, env=env)
-            procs[jid] = p
-            track = LiveTracker(order, aid, workdir, solo=not int(job.get('subagents') or 0) and not (job.get('plan') and any(a != 'main' for a in (job['plan'].get('agents') or {}))), t0=time.time()).start()
-            p.stdin.write(build_prompt(jid, job, workdir).encode('utf-8'))
-            p.stdin.close()
-            last = 0
-            stat = {'calls_main': 0, 'calls_sub': 0, 'images': 0}
-            for raw in p.stdout:
-                line = raw.decode('utf-8', 'replace')
-                log.write(line)
-                log.flush()
-                try:
-                    ev = json.loads(line)
-                except ValueError:
-                    continue
-                t = ev.get('type')
-                if t == 'system' and ev.get('model'):
-                    S.merge_progress('agents', aid, {'model': str(ev['model']).replace('claude-', '')})
-                if t == 'assistant':
-                    for c in (ev.get('message') or {}).get('content') or []:
-                        if c.get('type') == 'tool_use':
-                            stat['calls_sub' if ev.get('parent_tool_use_id') else 'calls_main'] += 1
-                            fp = str((c.get('input') or {}).get('file_path') or '').lower()
-                            if c.get('name') == 'Read' and fp.endswith(('.png', '.jpg', '.jpeg')):
-                                stat['images'] += 1
-                if t == 'result':
-                    result = str(ev.get('result') or '')
-                    is_err = bool(ev.get('is_error'))
-                    mu = (ev.get('modelUsage') or {}).values()
-                    S.merge_progress('jobs', jid, {'usage': {
-                        'costUSD': round(float(ev.get('total_cost_usd') or 0), 4), 'seconds': round((ev.get('duration_ms') or 0) / 1000),
-                        'input': sum(v.get('inputTokens', 0) for v in mu), 'output': sum(v.get('outputTokens', 0) for v in mu),
-                        'thinking': sum(v.get('thinkingTokens', 0) for v in mu), 'cacheRead': sum(v.get('cacheReadInputTokens', 0) for v in mu),
-                        'cacheWrite': sum(v.get('cacheCreationInputTokens', 0) for v in mu), 'denials': len(ev.get('permission_denials') or []),
-                        'models': list((ev.get('modelUsage') or {}).keys()), **stat}})
-                    continue
-                if ev.get('parent_tool_use_id'):
-                    continue                      # việc của subagent: subagent tự báo bằng report.py
-                upd = None
-                if t == 'assistant':
-                    for c in (ev.get('message') or {}).get('content') or []:
-                        if c.get('type') == 'tool_use':
-                            mood, act = _act(c.get('name'), c.get('input'))
-                            upd = {'mood': mood, 'act': act, 'actAt': S.now_iso()}
-                            if track:
-                                track.on_tool(c.get('input'))
-                        elif c.get('type') == 'thinking' and not upd:
-                            upd = {'mood': 'think', 'act': 'Đang suy nghĩ', 'actAt': S.now_iso()}
-                elif t == 'user':
-                    for c in (ev.get('message') or {}).get('content') or []:
-                        if isinstance(c, dict) and c.get('type') == 'tool_result' and c.get('is_error'):
-                            upd = {'mood': 'confused', 'actAt': S.now_iso()}
-                if upd and (time.time() - last > 1.5 or upd.get('mood') == 'confused'):
-                    S.merge_progress('agents', aid, upd)
-                    last = time.time()
-            rc = p.wait()
+        log_path = os.path.join(LOGS, jid + '.jsonl')
+        t0 = time.time()
+        p = _spawn(cmd, env, build_prompt(jid, job, workdir), log_path, os.path.join(tmp_dir(order), '_prompt.txt'))
+        procs[jid] = p
+        S.merge_progress('jobs', jid, {'pid': p.pid, 'pctime': proc_ctime(p.pid), 'log': jid + '.jsonl', 't0': t0})
     except Exception as e:
-        result, is_err = f'Lỗi khi chạy: {e}', True
+        procs.pop(jid, None)
+        clean_tmp(order)
+        _finish(jid, order, aid, f'Lỗi khi chạy: {e}', True, -1)
+        return
+    _follow(jid, job, order, aid, p, log_path, t0, workdir)
+
+
+def _follow(jid, job, order, aid, proc, log_path, t0, workdir, replay_upto=0, dead=False):
+    """Đọc dần file log của agent (kể cả sau khi server khởi động lại) và cập nhật trang.
+    replay_upto: số byte đã có trước khi nhận lại; phần này chỉ đếm thống kê, không ghi lại mood/mã đang làm cũ.
+    dead: agent đã chết trước khi server lên lại, chỉ đọc log để lấy kết quả."""
+    st = {'result': '', 'is_err': True, 'seen_result': False, 'last': 0, 'done': 0}
+    stat = {'calls_main': 0, 'calls_sub': 0, 'images': 0}
+    track = None
+    rc = -1
+    try:
+        if not dead:
+            track = LiveTracker(order, aid, workdir, solo=_solo(job), t0=t0).start()
+
+        def handle(raw):
+            st['done'] += len(raw) + 1
+            live = st['done'] > replay_upto and not dead
+            try:
+                ev = json.loads(raw.decode('utf-8', 'replace'))
+            except ValueError:
+                return
+            t = ev.get('type')
+            if t == 'system' and ev.get('model') and live:
+                S.merge_progress('agents', aid, {'model': str(ev['model']).replace('claude-', '')})
+            if t == 'assistant':
+                for c in (ev.get('message') or {}).get('content') or []:
+                    if c.get('type') == 'tool_use':
+                        stat['calls_sub' if ev.get('parent_tool_use_id') else 'calls_main'] += 1
+                        fp = str((c.get('input') or {}).get('file_path') or '').lower()
+                        if c.get('name') == 'Read' and fp.endswith(('.png', '.jpg', '.jpeg')):
+                            stat['images'] += 1
+            if t == 'result':
+                st['result'] = str(ev.get('result') or '')
+                st['is_err'] = bool(ev.get('is_error'))
+                st['seen_result'] = True
+                mu = (ev.get('modelUsage') or {}).values()
+                S.merge_progress('jobs', jid, {'usage': {
+                    'costUSD': round(float(ev.get('total_cost_usd') or 0), 4), 'seconds': round((ev.get('duration_ms') or 0) / 1000),
+                    'input': sum(v.get('inputTokens', 0) for v in mu), 'output': sum(v.get('outputTokens', 0) for v in mu),
+                    'thinking': sum(v.get('thinkingTokens', 0) for v in mu), 'cacheRead': sum(v.get('cacheReadInputTokens', 0) for v in mu),
+                    'cacheWrite': sum(v.get('cacheCreationInputTokens', 0) for v in mu), 'denials': len(ev.get('permission_denials') or []),
+                    'models': list((ev.get('modelUsage') or {}).keys()), **stat}})
+                return
+            if ev.get('parent_tool_use_id') or not live:
+                return                      # việc của subagent: subagent tự báo bằng report.py
+            upd = None
+            if t == 'assistant':
+                for c in (ev.get('message') or {}).get('content') or []:
+                    if c.get('type') == 'tool_use':
+                        mood, act = _act(c.get('name'), c.get('input'))
+                        upd = {'mood': mood, 'act': act, 'actAt': S.now_iso()}
+                        if track:
+                            track.on_tool(c.get('input'))
+                    elif c.get('type') == 'thinking' and not upd:
+                        upd = {'mood': 'think', 'act': 'Đang suy nghĩ', 'actAt': S.now_iso()}
+            elif t == 'user':
+                for c in (ev.get('message') or {}).get('content') or []:
+                    if isinstance(c, dict) and c.get('type') == 'tool_result' and c.get('is_error'):
+                        upd = {'mood': 'confused', 'actAt': S.now_iso()}
+            if upd and (time.time() - st['last'] > 1.5 or upd.get('mood') == 'confused'):
+                S.merge_progress('agents', aid, upd)
+                st['last'] = time.time()
+
+        with open(log_path, 'rb') as f:
+            buf, exited = b'', dead
+            while True:
+                chunk = f.read(65536)
+                if chunk:
+                    buf += chunk
+                    *lines, buf = buf.split(b'\n')
+                    for raw in lines:
+                        handle(raw)
+                    continue
+                if exited:
+                    break
+                if proc.poll() is not None:
+                    exited = True               # đọc thêm một lượt phần cuối log rồi mới dừng
+                    continue
+                time.sleep(0.5)
+            if buf.strip():
+                handle(buf)
+        if dead:
+            rc = 0 if st['seen_result'] else -1
+        else:
+            rc = proc.poll()
+            rc = -1 if rc is None else rc
+    except Exception as e:
+        st['result'], st['is_err'] = f'Lỗi khi theo dõi agent: {e}', True
     finally:
         procs.pop(jid, None)
         if track:
             track.stop.set()
         clean_tmp(order)                     # xoá file tạm của agent, thư mục đơn chỉ còn DXF
+    if dead and not st['seen_result']:
+        st['result'] = 'Agent dừng giữa chừng khi server tắt, bấm Giao việc lại hoặc Làm tiếp nếu cần.'
+    _finish(jid, order, aid, st['result'], st['is_err'], rc)
+
+
+def _finish(jid, order, aid, result, is_err, rc):
     ok = rc == 0 and not is_err
+    S.merge_progress('jobs', jid, {'ended': S.now_iso()})
     j = S.load_json(S.PROGRESS, {}).get('jobs', {}).get(jid, {})
     if j.get('status') == 'nhan':
         S.merge_progress('jobs', jid, {'status': 'xong' if ok else 'loi', 'doneAt': S.now_iso(),
@@ -410,16 +528,50 @@ def _loop():
         time.sleep(3)
 
 
+def _reattach(jid, job):
+    """Server vừa khởi động lại: agent của việc này còn sống thì nhận lại và đọc tiếp log; chết rồi thì đọc log lấy kết quả và đóng việc."""
+    order = job.get('order') or os.path.basename(str(job.get('path') or '').rstrip('\\/'))
+    aid = f'{order}_main'
+    log_path = os.path.join(LOGS, job.get('log') or (jid + '.jsonl'))
+    workdir = os.path.join(S.WORK, job.get('workdir') or '')
+    proc = None
+    if job.get('pid') and os.name == 'nt':
+        try:
+            proc = PidProc(job['pid'])
+            if job.get('pctime') and proc.ctime() != job.get('pctime'):
+                proc = None                  # pid đã bị cấp cho tiến trình khác
+            elif proc.poll() is not None:
+                proc = None
+        except Exception:
+            proc = None
+    if not os.path.isfile(log_path):
+        procs.pop(jid, None)
+        _finish(jid, order, aid, 'Server khởi động lại khi việc đang chạy, bấm Giao việc lại nếu cần.', True, -1)
+        return
+    if proc:
+        procs[jid] = proc
+        print('Nhận lại agent đang chạy:', jid, 'pid', proc.pid)
+        _follow(jid, job, order, aid, proc, log_path, float(job.get('t0') or time.time()), workdir,
+                replay_upto=os.path.getsize(log_path))
+    else:
+        _follow(jid, job, order, aid, None, log_path, 0, workdir, dead=True)
+
+
 def start():
-    # server khởi động lại: việc 'nhan' do server tự chạy trước đó đã mất tiến trình -> đánh lỗi
+    # server khởi động lại: việc do server tự chạy trước đó (chưa đóng) -> nhận lại agent còn sống, hoặc đóng việc nếu agent đã chết
     with S.lock:
         prog = S.load_json(S.PROGRESS, {})
-        ch = False
-        for j in prog.get('jobs', {}).values():
-            if j.get('status') == 'nhan' and j.get('by') == 'auto':
-                j.update(status='loi', result='Server khởi động lại khi việc đang chạy, bấm Giao việc lại nếu cần.')
-                ch = True
-        if ch:
-            S.save_json(S.PROGRESS, prog)
+        old = [(k, dict(j)) for k, j in prog.get('jobs', {}).items()
+               if j.get('by') == 'auto' and not j.get('ended') and (j.get('status') == 'nhan' or j.get('pid'))]
+        for k, _ in old:
+            procs[k] = None                  # giữ suất, _loop không nhận việc mới chen vào trước khi nhận lại xong
+    def safe(k, j):
+        try:
+            _reattach(k, j)
+        except Exception as e:
+            procs.pop(k, None)
+            print('runner: nhận lại', k, 'lỗi:', e)
+    for k, j in old:
+        threading.Thread(target=safe, args=(k, j), daemon=True).start()
     threading.Thread(target=_loop, daemon=True).start()
     print('Tự chạy agent:', 'BẬT (' + find_claude() + ')' if find_claude() else 'TẮT (chưa có Claude Code CLI)')

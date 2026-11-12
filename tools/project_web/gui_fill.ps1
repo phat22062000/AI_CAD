@@ -2,7 +2,7 @@
 # Dùng: powershell -NoProfile -ExecutionPolicy Bypass -File gui_fill.ps1 -Job <job.json>
 # job.json: {"template": "...xls", "out": "...xls", "order": "521106-24", "rows": [{"code": "26-066371", "x": 90.22, "y": 38, "pending": false}, {"code": "26-066372", "x": null, "y": null, "pending": true}, ...]}
 # Làm: đổi tên sheet và ô B3 (注番) thành số đơn; ghi từng mã vào hàng 6 trở xuống (B = số thứ tự, C = mã, D = X, E = Y);
-#      mã chưa xong ("pending": true): chỉ ghi B và C, trống X/Y và người làm, tô nền xanh lá cả dòng B:R;
+#      mã chưa xong ("pending": true): chỉ ghi B và C, trống X/Y và người làm, tô nền xanh lá TOÀN BỘ dòng (cột A đến cột cuối 備考, gồm ô trống);
 #      thêm hoặc bớt hàng cho vừa số mã (dòng 合計 và vùng in tự co giãn theo); lưu thành .xls.
 param([Parameter(Mandatory = $true)][string]$Job)
 $ErrorActionPreference = 'Stop'
@@ -24,6 +24,9 @@ try {
     $cur = $r - 6
     $pName = $ws.Cells.Item(6, 16).Text       # 作成担当者 (giữ nguyên người ghi trong mẫu)
     $qName = $ws.Cells.Item(6, 17).Text       # チェック担当者
+    # cột cuối của bảng = ô cuối cùng có chữ ở dòng tiêu đề (hàng 4: 備考 chiếm 2 cột R:S); mặc định 19 (S)
+    $lastCol = 19
+    try { $lc = $ws.Cells.Item(4, $ws.Columns.Count).End(-4159).Column; if ($lc -ge 18 -and $lc -le 30) { $lastCol = $lc } } catch { }
     if ($n -gt $cur) {
         for ($k = 0; $k -lt ($n - $cur); $k++) { [void]$ws.Rows.Item(5 + $cur).Insert() }   # chèn vào trong vùng để công thức 合計 giãn theo
     } elseif ($n -lt $cur) {
@@ -37,9 +40,9 @@ try {
         $ws.Cells.Item($row, 2).Value2 = [double]($i + 1)
         $ws.Cells.Item($row, 3).Value2 = [string]$rows[$i].code
         if ($pending) {
-            # mã chưa xong: chỉ số thứ tự + mã, để trống kích thước và tên người làm, tô xanh lá cả dòng (cột B đến R)
+            # mã chưa xong: chỉ số thứ tự + mã, để trống kích thước và tên người làm, tô xanh lá toàn bộ dòng (cột A đến cột cuối 備考)
             [void]$ws.Range($ws.Cells.Item($row, 16), $ws.Cells.Item($row, 17)).ClearContents()      # mẫu có thể đã ghi sẵn tên người làm
-            $ws.Range($ws.Cells.Item($row, 2), $ws.Cells.Item($row, 18)).Interior.Color = 5296274    # RGB(146,208,80)
+            $ws.Range($ws.Cells.Item($row, 1), $ws.Cells.Item($row, $lastCol)).Interior.Color = 5296274    # RGB(146,208,80), cột A (送信No.) đến cột cuối 備考 (kể cả ô trống)
         } else {
             if ($null -ne $rows[$i].x) { $ws.Cells.Item($row, 4).Value2 = [double]$rows[$i].x }
             if ($null -ne $rows[$i].y) { $ws.Cells.Item($row, 5).Value2 = [double]$rows[$i].y }

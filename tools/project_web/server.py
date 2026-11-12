@@ -325,6 +325,9 @@ def build_order(order, info, prog):
         pp = p_parts.get(c, {})
         st = pp.get('status')
         manual = bool(pp.get('manual'))
+        # "Preview OK": người dùng xác nhận hình dựng hiện tại đã đúng -> mã tính là xong, bỏ Flag, không cần check lại.
+        # Mất hiệu lực nếu agent dựng lại mã sau lúc bấm (finishedAt mới hơn previewOkAt).
+        pok = bool(pp.get('previewOk')) and not manual and st == 'built' and (pp.get('finishedAt') or '') <= (pp.get('previewOkAt') or '')
         # file DXF của mã: DXF lẻ có tên chứa mã (đầy đủ hoặc 6 số cuối); không có thì mã nằm trong file <số đơn>_ALL.dxf
         cands = [rel for rel, _ in parts if c in rel or c.split('-')[-1] in os.path.basename(rel)]
         top = next((r for r in cands if not PACK_RE.match(r)), None)        # DXF còn ở thư mục đơn (chưa đóng gói)
@@ -337,14 +340,14 @@ def build_order(order, info, prog):
         elif st == 'built' and not d_rel and not pp.get('packedAt'):
             s = 'thieu'                    # agent báo xong nhưng KHÔNG thấy file DXF nào trong thư mục đơn
         elif st == 'built':
-            s = 'cho' if pp.get('flags') else 'xong'
+            s = 'cho' if pp.get('flags') and not pok else 'xong'
         elif st == 'running':
             s = 'dang'
         elif all_dxf:
             s = 'xong'
         else:
             s = 'chua'
-        if pp.get('flags') and not manual:
+        if pp.get('flags') and not manual and not pok:
             flags += [f'{c}: {f}' for f in pp['flags']]
         if s == 'thieu':
             flags.append(f'{c}: không thấy file DXF trong thư mục đơn (agent đã báo xong)')
@@ -352,12 +355,13 @@ def build_order(order, info, prog):
         code_rows.append({'code': c, 'state': s, 'pstatus': st, 'level': pp.get('level'),
                           'dxf': os.path.join(info['dir'], d_rel) if d_rel else None, 'dxfKind': d_kind,
                           'manual': manual, 'manualAt': pp.get('manualAt'),
+                          'previewOk': pok, 'previewOkAt': pp.get('previewOkAt') if pok else None,
                           'packed': packed,
                           # sẵn sàng đóng gói = mã đã xong (không Flag, không tự làm) và file 26-xxxxxx.dxf đang nằm ở thư mục đơn
                           'ready': s == 'xong' and not manual and top is not None and top.lower() == (c + '.dxf').lower(),
                           'kind': pp.get('kind'), 'blank': pp.get('blank'),
                           'agent': pp.get('agent'), 'startedAt': pp.get('startedAt'),
-                          'finishedAt': pp.get('finishedAt'), 'flags': pp.get('flags') or [],
+                          'finishedAt': pp.get('finishedAt'), 'flags': [] if pok else (pp.get('flags') or []), 'flagsOrig': pp.get('flags') or [],
                           'thick': r.get('thick'), 'material': r.get('material'),
                           'size': f"{r.get('x')} x {r.get('y')}" if r.get('x') is not None else None})
 
@@ -787,6 +791,19 @@ def set_manual(order, code, manual=True):
     return merge_progress('parts', f'{order}_{code}', {'manual': bool(manual), 'manualAt': now_iso() if manual else None})
 
 
+def set_preview_ok(order, code, ok=True):
+    """Nút "Preview OK": hình dựng hiện tại của mã đang chờ (PREVIEW/Flag) đã đúng -> mã tính là xong, bỏ Flag, không check lại."""
+    o = next((x for x in snapshot(True)['orders'] if x['order'] == order), None)
+    if not o:
+        raise ValueError('Không thấy đơn này.')
+    c = next((x for x in o['codes'] if x['code'] == code), None)
+    if not c:
+        raise ValueError('Mã không thuộc đơn này.')
+    if ok and c['state'] != 'cho':
+        raise ValueError('Chỉ bấm Preview OK cho mã đang chờ (PREVIEW/Flag).')
+    return merge_progress('parts', f'{order}_{code}', {'previewOk': bool(ok), 'previewOkAt': now_iso() if ok else None})
+
+
 def del_job(jid):
     with lock:
         prog = load_json(PROGRESS, {})
@@ -921,6 +938,9 @@ class H(BaseHTTPRequestHandler):
                                    'at': now_iso(), 'by': data.get('by') or old.get('by', '')}
                     save_json(REVIEWS, rv)
                 return self.send_json({'ok': True, 'reviews': rv})
+            if path == '/api/previewok':
+                set_preview_ok(data.get('order'), data.get('code'), data.get('ok', True) is not False)
+                return self.send_json({'ok': True})
             if path == '/api/manual':
                 set_manual(data.get('order'), data.get('code'), data.get('manual', True) is not False)
                 return self.send_json({'ok': True})

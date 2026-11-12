@@ -2,7 +2,7 @@
 name: "dxf-check"
 description: "Kiểm DXF đầu ra (26-xxxxxx.dxf, file ALL) sau dxf-sheetmetal: chỉ kiểm hình dạng, không kiểm Template; báo cáo chỉ nêu lỗi sai."
 metadata:
-  version: "2026.11.11-1"
+  version: "2026.11.12-1"
 ---
 
 Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về máy người dùng), hoặc khi người dùng yêu cầu kiểm một file DXF đã có. Tiêu chí lấy từ `dxf-sheetmetal` (mục 2–12), `Quy_Tac_Laser.md`, `Ghi_Chu_Loi_Tao_DXF.md` (`knowledge/Context_Laser/`). **Chỉ kiểm hình dạng, không kiểm cấu trúc Template** (file lưu từ CAD có header/owner khác Template là bình thường, không báo); muốn so Template thì thêm `--template`.
@@ -47,6 +47,7 @@ Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về 
 | | LINE rạch thẳng: sâu t + 0.2 tính từ góc khoét | CẢNH BÁO |
 | Kegaki | trùng mép phôi hoặc trùng đường uốn, nằm ngoài phôi | LỖI |
 | Đặt hình | file riêng góc dưới trái (0,0); ALL: mép trái X = 0, cách nhau 200, hình cuối sát Y = 0; cạnh dài theo X; có cạnh thẳng áp cả Ox và Oy | LỖI/CẢNH BÁO |
+| Hướng uốn Nhôm/304CSP | vật liệu Nhôm hoặc 304CSP có uốn: mọi LINE DASHED đường uốn song song Ox (cùng y; nhiều đường vuông góc nhau thì nhóm dài nhất // Ox); lỗi hướng ưu tiên hơn "cạnh dài theo X" | LỖI |
 | J/LJ | phôi Oy ≤ 100 và Ox ≥ 1000: đủ POINT + TEXT J/LJ cao 10 trên mép trên tại 30, ..., L - 30 | LỖI |
 | Chữ mã (ALL) | đúng 1 TEXT 6 số mỗi hình, X = -150, Y = đáy + cao/2, cao 12, trắng, căn trái, style Standard; file riêng không có chữ mã/Flag | LỖI |
 | Flag (ALL) | cao 4, Magenta, X = -150, Y = Y mã - 12 - 7k; đánh số 1., 2. liên tục, không chữ "Flag"; ≤ 30 ký tự/dòng; ký tự ngoài ASCII dạng `\U+XXXX`; nội dung bắt đầu bằng 1 trong 20 câu chuẩn; không chạm hình dưới | LỖI/CẢNH BÁO |

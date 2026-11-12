@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.11-1"
+  version: "2026.11.12-1"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -38,6 +38,10 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   - Chuỗi lệch nhau: đọc lại điểm đầu/cuối từng kích thước trước khi Flag.
   - Chuỗi cộng không bằng tổng (ví dụ 60 + 114 + 57,5 = 231,5 ≠ 229): CẤM dùng ràng buộc tổng để chốt số nào đo từ đâu. Phóng to ≥ 300 dpi đầu và cuối từng mũi tên (đường gióng dừng ở tâm lỗ, mép ô khoét hay mép tấm), đo pixel vị trí thực (px/mm từ một kích thước chắc chắn), chọn cách đọc khớp pixel (sai số ≤ 1 mm); không phân biệt được thì Flag 14 (thêm Flag 15 nếu chân dim lệch), không tự chốt.
   - Cách đọc khớp tổng chỉ cho thấy có thể đúng, không chứng minh đúng.
+  - Số gạch bỏ rồi ghi số mới (FAX/bản vẽ sửa tay): ghép TỪNG số mới với số cũ nó thay thế (cùng đoạn kích thước) dựa trên chuỗi cũ đã đọc (kể cả chuỗi cũ trong Flag/lần vẽ trước), KHÔNG ghép theo thứ tự chữ nằm trên giấy; số mới ghi ở hàng thứ hai hoặc lệch xa thường thuộc đoạn dài giữa hai vạch, không phải đoạn kề nó. Ví dụ: chuỗi cũ a / b / c, sửa b thành b' (ghi hàng dưới) và c thành c' (ghi hàng trên) thì chuỗi mới là a / b' / c', không phải a / c' / b'.
+  - Mỗi số thuộc đoạn nào xác định bằng hai vạch gióng chặn đoạn đó, không bằng vị trí chữ. Một chuỗi có hai cách gán số khác nhau mà không loại được bằng số cũ/vạch gióng thì Flag 14, không tự chọn.
+  - Kiểm tổng không bắt được lỗi hoán vị (cùng tổng nhưng sai thứ tự đoạn). Dựng xong phải đối chiếu lại từng đoạn: khoảng cách giữa các lỗ/điểm trong file = số ghi giữa hai vạch tương ứng; mép tới điểm đầu và cuối = số ghi ở hai đầu.
+  - Bản phác tay không theo tỉ lệ: không dùng khoảng cách trên hình để suy thứ tự hay giá trị; chỉ dùng để kiểm tính hợp lý (đoạn có số lớn thường vẽ dài hơn đoạn số nhỏ), mâu thuẫn rõ thì xem lại cách gán.
   - Kiểm bằng số đo ảnh ở ≥ 2 hình chiếu (sai số cho phép 0.1 mm; lệch > 0.1 mm thì xem lại chuỗi).
   - Giá trị suy từ chuỗi (vị trí đầu ống/thanh, vết kegaki, mép) phải đo pixel kiểm ở ≥ 300 dpi trên ≥ 2 hình chiếu, sai số ≤ 1 mm. Lệch > 1 mm là dấu hiệu bỏ sót ghi chú nhỏ cạnh chân dim (3.2 thành ống, 9 độ dày...): xác định kích thước tổng bắt đầu từ mặt ngoài hay mặt trong thành ống trước khi cộng/trừ. Ví dụ 26-065615: 65 + 465 − (500 + 3.2) = 26.8, không phải 30 (kích thước 500 bắt đầu từ mặt dưới thành 3.2 ở đầu ống).
 
@@ -67,8 +71,9 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Mỗi đoạn biên phải ứng với một số hoặc nét trên bản vẽ/DXF; không tự thêm đoạn "cho đối xứng".
 - Tấm tách từ hộp/cụm hàn (đáy, nắp, vách ngăn): dò biên theo TỪNG ĐOẠN mép trên hình bằng/hình đứng (phóng to chỗ tiếp giáp cánh hồi, vách, khe hở), quy mỗi đoạn về mặt tiếp xúc thật (mặt trong vách hay mặt ngoài); không lấy kích thước trong hay hình bao làm khung chữ nhật. Dấu hiệu: mép tấm là nét liền chạy giữa các cánh hồi và thẳng hàng với mép ngoài thì mép đó kéo ra tới mặt ngoài. Ví dụ 26-064175 (đơn 521029-08, SUS2B t1.5, hộp U 11.5+87+107+87+11.5 cao 201.5, tấm đáy rời nằm trong hộp): phần chính 104 x 84 (mặt trong tấm lưng tới mặt trong cánh hồi), ở khoảng hở 84 giữa 2 cánh hồi mép trước kéo ra 1.5 bằng mặt ngoài; biên (0,0) (104,0) (104,84) (94,84) (94,85.5) (10,85.5) (10,84) (0,84), R0.5 ở 6 góc lồi, 2 góc lõm không bo. Lần đầu vẽ chữ nhật 104 x 84 theo 2 kích thước trong là sai.
 - Đường xiên bên trong biên hình chiếu cạnh (đổi dần khoảng cách tới mép) là biên thon của tấm, không phải đường phụ: đọc 2 bề rộng (đáy, đỉnh), chiều cao, đoạn thẳng ở đáy, rồi kiểm bằng hình chiếu bằng.
-- Đặt phôi: ghi tọa độ đỉnh trên hình chiếu (x ngang, z cao), rồi XOAY 90° bằng code (không lật, không gương) đưa cạnh thẳng dài nhất lên Ox; không vẽ tự do rồi tự chọn phía. Cạnh thẳng bên trái + đáy rộng ở dưới thì xoay ngược chiều kim đồng hồ: cạnh thẳng nằm trên Ox, đầu hẹp ở x = 0.
+- Đặt phôi: ghi tọa độ đỉnh trên hình chiếu (x ngang, z cao), rồi XOAY 90° bằng code (không lật, không gương) đưa cạnh thẳng dài nhất lên Ox (Nhôm/304CSP có uốn: đường uốn song song Ox trước, mục 10); không vẽ tự do rồi tự chọn phía. Cạnh thẳng bên trái + đáy rộng ở dưới thì xoay ngược chiều kim đồng hồ: cạnh thẳng nằm trên Ox, đầu hẹp ở x = 0.
 - Người dùng báo "vẫn thiếu/sai" sau một lần sửa: đối chiếu bản đã giao mới nhất với bảng gán kích thước; mọi số đều khớp thì KHÔNG đoán thêm, hỏi vị trí cụ thể hoặc xin file tham khảo (người dùng có thể đang mở bản cũ/.bak).
+- Làm tiếp theo câu trả lời/bổ sung của người dùng: chỉ áp dụng đúng phần được nêu, mọi chi tiết khác (lỗ, rãnh, cung, vị trí) giữ nguyên như bản đã vẽ. "Thêm/bổ sung" là THÊM chi tiết mới, KHÔNG sửa hay thay chi tiết có sẵn; chỉ đổi khi người dùng nói rõ "đổi/sửa". Mơ hồ thì hiểu theo hướng thêm và nêu cách hiểu trong báo cáo. Trước khi ghi đè, so số lỗ/cung/đỉnh bản cũ với bản mới: chênh lệch phải đúng bằng phần được yêu cầu.
 
 ### 4.2 Từ DXF khách
 - Có DXF thì LẤY DXF LÀM NỀN rồi chỉnh theo chỉ thị riêng (DXF không phải lúc nào cũng đúng). Dựng từ DXF TRƯỚC rồi mới so PDF.
@@ -79,7 +84,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Bản vẽ phẳng có cánh uốn chỉ hiện ở hình chiếu cạnh : mở cánh ra; đầu tự do cánh = đường uốn phía cánh - (ngoài cánh - giãn). Slit chân cánh của khách nằm đúng vùng uốn là dấu hiệu đúng.
 - Lỗ khoét côn/khoét bậc và ký hiệu ren trong DXF chỉ là ký hiệu: không vẽ, chỉ vẽ lỗ mồi.
 - Góc lồi 90° sắc trong phôi DXF khách vẫn bo theo bảng laser (mục 8).
-- Phôi chéo không có cạnh thẳng nào áp trục: chỉ xoay bội 90° để cạnh dài nằm theo X.
+- Phôi chéo không có cạnh thẳng nào áp trục: chỉ xoay bội 90° để cạnh dài nằm theo X (trừ Nhôm/304CSP có uốn: đường uốn song song Ox trước, mục 10).
 - Đối với trường hợp đã có bản vẽ trải phôi thì không cần rạch (Trừ khi có yêu cầu cụ thể trên PDF).
 
 ### 4.3 Suy phôi từ hình chiếu khi không có DXF phẳng
@@ -137,6 +142,8 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   - Hình chiếu cạnh nhìn từ đầu tự do ống/thanh chỉ thấy mặt ngoài tấm nắp ở đầu đó (tấm đáy bị che): lỗ trong vùng chân ống thuộc tấm nắp (E), lỗ ngoài vùng chân ống thuộc tấm đáy (A).
   - Hình thoi đặc là dấu hàn, không phải lỗ. Kích thước cùng hàng với lỗ chỉ dùng cho tấm chứa lỗ đó.
   - Sau khi vẽ, đếm lỗ từng tấm, đối chiếu mọi ghi chú (không tấm nào thiếu/thừa, không lỗ nào ở 2 tấm).
+  - Chi tiết chữ コ/U có hai cánh giống nhau: lỗ hoặc chi tiết chỉ thấy ở một cánh trong hình cạnh thì MẶC ĐỊNH cả hai cánh đều có (đối xứng), trừ khi bản vẽ ghi rõ "một bên". Số lượng "n-φx" chỉ là số lỗ trong hình đang xem, không phải tổng cho cả chi tiết; ghi nhận trong bảng 'lỗ → tấm' là "mỗi cánh n lỗ" và vẽ đủ cả hai cánh (kiểm tra bằng hình chiếu khác nếu có).
+  - Hai chi tiết cùng hình dạng/kích thước (ví dụ hai tấm nắp 300 x 200) mà ghi chú lỗ/ren/"固定" chỉ trỏ tới MỘT chi tiết (theo đầu mũi tên hoặc ký hiệu ②③): chỉ chi tiết đó có lỗ, chi tiết còn lại vẽ TRƠN. CẤM vẽ "tạm giống mã kia"; không rõ chi tiết nào thì Flag 5 và vẽ ở trạng thái không thêm lỗ.
 - Lỗ taro: vẽ lỗ mồi theo `Quy_Tac_Lo_Moi.md` (M6 → φ5, M8 → φ6.8), TRỪ KHI bản vẽ có ghi chú tay về lỗ mồi (ví dụ 「下穴φ2.5 レーザー → 穴あけ → タップ」 khoanh quanh 4-M5: laser chỉ cắt φ2.5, không phải φ4.2): ghi chú tay thắng bảng. Trước khi vẽ, quét mọi ghi chú tay cạnh từng nhóm lỗ n-Mx/n-φ và ghi vào bảng 'lỗ → tấm' (cột φ vẽ + nguồn: bảng / ghi chú tay).
 - Lỗ nhỏ: so đường kính (kể cả lỗ mồi) với "Lỗ nhỏ nhất" trong `Quy_Tac_Laser.md` mục 2 theo vật liệu và độ dày. Nhỏ hơn, hoặc lỗ có ghi chú tay ピアス khoanh riêng quanh lỗ đó, thì vẽ POINT (piercing) tại tâm lỗ, layer 0, thay CIRCLE. Tem/chữ PIERCING đầu trang KHÔNG áp cho mọi lỗ ren: lỗ ren có lỗ mồi ≥ lỗ nhỏ nhất vẫn vẽ CIRCLE lỗ mồi. Ví dụ 26-059668 (t12, 6-M6 PIERCING, mồi φ5 < 6): 6 POINT. Ví dụ 521030-12 (tem PIERCING, ghi tay chỉ khoanh M12 t16): M12 POINT; 4-M8 t12 mồi φ6.8 (≥ 6) và M6 t6 mồi φ5 (≥ 3) vẽ CIRCLE (lần đầu vẽ POINT cho mọi lỗ ren là sai). Khách có quy định riêng trong `DS_Khach_Hang.md` (ví dụ 875: lỗ nhỏ hơn độ dày làm lỗ trắng) thì theo khách; chưa rõ thì hỏi.
 - Màu POINT: mặc định trắng; có dấu THROUGH HOLE/đột xuyên hoặc khách quy định piercing là lỗ xuyên (`DS_Khach_Hang.md`) thì POINT Xanh lá (`62 = 3` ngay sau layer `8`).
@@ -166,6 +173,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 
 ## 10. Đặt hình trên phôi
 - Góc dưới trái tại (0,0), cạnh dài hơn theo X. Chỉ xoay bội 90°, không lật. Chọn hướng có cạnh thẳng của biên nằm trên cả Ox và Oy (tiếp xúc bằng cạnh, không chỉ một đỉnh). Ví dụ 26-057025: khối chữ nhật sát góc dưới trái, cánh nghiêng hướng lên phải. Hai hướng (xoay 180°) đều có cạnh áp trục thì chọn hướng có cạnh áp trục dài hơn.
+- Vật liệu Nhôm hoặc 304CSP (thép không gỉ) có chi tiết uốn: đường uốn (DASHED) LUÔN song song trục Ox; xoay bội 90° hình khai triển nếu cần (không lật). Ưu tiên hơn "cạnh dài theo X" và hơn mọi quy tắc xoay khác trong mục này, mục 3 và mục 6: chọn hướng thỏa đường uốn // Ox rồi mới xét cạnh áp Ox/Oy, và giữa 2 hướng xoay 180° thì chọn hướng theo quy tắc áp trục. Nhiều đường uốn không song song nhau (vuông góc nhau): song song Ox cho các đường dài nhất/nhóm nhiều đường nhất, nêu rõ trong báo cáo. Phẳng không uốn thì không áp dụng.
 - Phôi dài hẹp (Oy ≤ 100 và Ox ≥ 1000): thêm POINT trên mép trên (y = Oy lớn nhất), mỗi điểm 1 TEXT cao 10 đặt đúng tại điểm (layer 0, style Standard). Theo chiều dài L (Ox): 1000 ≤ L ≤ 1500 → 1 J + 1 LJ; 1500 < L ≤ 2000 → 2 J + 1 LJ; 2000 < L ≤ 2500 → 3 J + 1 LJ.
   - J đầu cách đầu mép thẳng trên 30, LJ cách cuối mép thẳng trên 30: x_đầu và x_cuối là hai đầu đoạn thẳng của mép trên, bỏ đoạn vát C và bo R ở đầu; mép trên không vát thì x_đầu = 0, x_cuối = L. N = số J + 1 điểm chia đều, bước (x_cuối - x_đầu - 60)/(N - 1). Ví dụ 2J + LJ: x_đầu + 30, giữa, x_cuối - 30.
     - Phôi có J/LJ: xoay 180° để mép thẳng nằm trên, phần tai/cánh nhô ra nằm dưới ; vẫn là bội 90°, không lật.
@@ -216,6 +224,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   19. Gọc nhọn quá bé không thể laser R.
   20. Thiếu DXF khách (PDF có ghi DATA nhưng không có DXF khách): áp cho TẤT CẢ mã thuộc trang đó.Không dựng hình vội phải đợi DXF khách.
 - Không Flag chỉ thị riêng (ghi chú laser, chiều dài tay viết) hay lệch số trong ngoặc/CAD依頼書. Flag không thay việc phải hỏi; ghi cả trong báo cáo; không ghi ở file riêng. Flag 5/6 chỉ dùng sau khi đã xoay thẳng, phóng ≥ 300 dpi và đọc lại ≥ 2 lần. Phần đọc được thì phải vẽ; chỉ phần chữ số thật sự không đọc ra mới để Flag. Không bỏ cả chi tiết (rãnh, lỗ, vát) chỉ vì ghi chú "không đọc rõ".
+- Làm lại/làm tiếp (job `tiep`): Flag cũ chỉ được gỡ khi người dùng đã trả lời cho mã đó (`answers`) hoặc dữ liệu khách xác nhận rõ. Tự đối chiếu lại PDF mà không có thông tin mới thì GIỮ Flag, không tự kết luận "file cũ đã đúng" để xóa Flag.
 - Dạng: đánh số 1., 2., 3... theo từng hình (số cuối = số Flag), không ghi chữ "Flag": `<số thứ tự>. <câu chuẩn> (<chi tiết: vị trí, số liệu>)`, ví dụ "1. Kích thước PDF và DXF khác nhau (lỗ 3xφ4: PDF φ4, DXF φ4.5)".
 - Hiển thị: TEXT cao 5, căn trái, X = X chữ mã (-150); dòng k (k = 0, 1...) tại Y = Y chữ mã - 12 - 7k; ≤ 40 ký tự/dòng, ngắt ở khoảng trắng; layer `0`, Magenta `62 = 6`. Style Standard (Arial, mục 11.2 bước 3; SHX `txt` cũ hiện "?"). Ký tự ngoài ASCII ghi `\U+XXXX` (hex hoa, NFC); file vẫn ghi cp932.
 - Kiểm tra: ezdxf `audit` 0 lỗi; render: dấu đúng, không đè hình.
@@ -229,6 +238,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - n-Rx và R ↔ cung (mục 8): đủ số góc, không ghi chú/cung nào lẻ.
 - Render preview, so từng đặc điểm bất đối xứng (cánh sát mép nào, góc vát, tấm hàn nhô ra mép nào) với ≥ 2 hình chiếu gốc; cặp gương kiểm kỹ hơn.
 - Chuỗi kích thước: mọi chuỗi không cộng đủ tổng đã đo pixel từng điểm đầu/cuối và ghi kết quả; cặp gương đã đo vị trí lỗ riêng từng tấm; Flag 14/15 đã ghi nếu còn lệch.
+- Số gạch bỏ/sửa tay: mỗi số mới đã ghép với số cũ nó thay (ghi bảng cũ → mới); khoảng cách từng đoạn trong file khớp số ghi giữa hai vạch (không chỉ khớp tổng).
 - Kegaki: lập bảng (tấm nhận × chi tiết hàn lên): vẽ/bỏ, lý do, từng cạnh vết trùng mép tấm hay nằm trong tấm, số đo pixel kiểm ≥ 2 hình (≤ 1 mm). Không tấm nào có chi tiết hàn lên mà chưa xét.
 - So kích thước phôi với CAD依頼書 và công thức giãn; cạnh thẳng áp cả Ox và Oy; số entity hợp lý (cung nửa tròn là 1 ARC; các cung tiếp nối cùng tâm cùng bán kính gộp làm 1); mọi góc lõm vách–tấm đã xét điều kiện rạch Green và đường uốn ngắt/chạy hết ở cánh có khe theo mục 6 (trừ 2 ngoại lệ mục 6: đầu cánh vát 135°, relief góc của khách); kiểm file theo mục 11.2 bước 8.
 

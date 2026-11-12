@@ -41,7 +41,7 @@ async function load(force){
     S.compare = cmp || {};
     // dữ liệu agent báo có thể sai định dạng (flags là chuỗi): chuẩn hoá về mảng để giao diện không bị lỗi
     const arr = v => Array.isArray(v) ? v.map(String) : (v ? [String(v)] : []);
-    (d.orders || []).forEach(o => { o.flags = arr(o.flags); o.agents = arr(o.agents); (o.codes || []).forEach(c => { c.flagsRaw = arr(c.flags); c.flags = c.manual ? [] : c.flagsRaw; }); });   // mã người dùng tự làm: ẩn Flag trên giao diện (giữ flagsRaw để xem lại khi hoàn tác)
+    (d.orders || []).forEach(o => { o.flags = arr(o.flags); o.agents = arr(o.agents); (o.codes || []).forEach(c => { c.flagsRaw = arr(c.flags); c.flags = (c.manual || c.previewOk) ? [] : c.flagsRaw; if (c.previewOk) c.flagsRaw = arr(c.flagsOrig); }); });   // mã người dùng tự làm: ẩn Flag trên giao diện (giữ flagsRaw để xem lại khi hoàn tác)
     S.data = d; S.reviews = rv;
     $('#err').hidden = true;
     $('#upd').textContent = 'Cập nhật ' + new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
@@ -149,7 +149,7 @@ function buildRuns(){
     const codes_status = o.codes.map(c => ({
       code:c.code,
       stage:'L' + Math.min(3, Math.max(0, +c.level || 0)),
-      status:c.manual ? 'MANUAL' : c.state === 'thieu' ? 'NOFILE' : c.pstatus === 'built' ? (c.flags.length ? 'PREVIEW' : 'PASS') : c.pstatus === 'failed' ? 'FAIL' : '',
+      status:c.manual ? 'MANUAL' : c.previewOk ? 'PASS' : c.state === 'thieu' ? 'NOFILE' : c.pstatus === 'built' ? (c.flags.length ? 'PREVIEW' : 'PASS') : c.pstatus === 'failed' ? 'FAIL' : '',
       flags:c.flags.length,
     }));
     const wk = a => ({name:a.name || a.id, model:a.model || '', effort:a.effort || '', codes:a.codes || [],
@@ -278,7 +278,7 @@ function orderDrawer(o){
       <td class="mono">${esc(c.code)}</td>
       <td class="t2">${c.thick != null ? c.thick + 't' : '—'}</td>
       <td class="t2 mono">${esc(c.size || '—')}</td>
-      <td>${chip(c.state, ST[c.state])}${c.packed ? ' <span class="t3">đã đóng gói</span>' : ''}</td>
+      <td>${chip(c.state, ST[c.state])}${c.previewOk ? ' <span class="t3">Preview OK</span> <button class="btn btn-sec sm" data-pvok="0" data-code="${esc(c.code)}" data-order="${esc(o.order)}" title="Hoàn tác Preview OK: mã quay lại trạng thái chờ">Hoàn tác</button>' : ''}${c.packed ? ' <span class="t3">đã đóng gói</span>' : ''}</td>
     </tr>`).join('');
   // Flag ghi ở dưới cùng: mỗi dòng gồm tên mã + nội dung Flag; mỗi mã có ô để bạn trả lời Flag cho agent làm tiếp
   const fu = (S.data.jobs || []).filter(j => j.kind === 'tiep' && j.order === o.order).sort((x, y) => (y.at || '').localeCompare(x.at || ''))[0];
@@ -290,7 +290,7 @@ function orderDrawer(o){
         <textarea class="fl-ans" data-c="${esc(c.code)}" rows="3" ${busy ? 'disabled' : ''} placeholder="Trả lời Flag của mã ${esc(c.code)} để agent vẽ lại (vd: mặt kegaki là mặt trên, vẽ thêm tấm D)">${esc(draft[c.code] || '')}</textarea>
         <div class="fl-ref">${(c.refs || []).map(n => `<span class="ref-chip" title="${esc(n)}"><span class="ell">${esc(n)}</span><button class="ib" data-refdel="${esc(c.code)}" data-order="${esc(o.order)}" data-name="${esc(n)}" ${busy ? 'disabled' : ''} title="Xoá file này"><svg class="i"><use href="#i-x"/></svg></button></span>`).join('')}
           <label class="btn btn-sec sm ${busy ? 'dis' : ''}" title="Nạp file PDF hoặc DXF tham khảo (tối đa 25 MB/file) để agent đọc khi làm tiếp mã này">Đính kèm PDF / DXF tham khảo<input type="file" class="ref-file" hidden multiple accept=".pdf,.dxf" data-c="${esc(c.code)}" data-order="${esc(o.order)}" ${busy ? 'disabled' : ''}></label></div>
-        <div><button class="btn btn-sec sm" data-manual="${esc(c.code)}" data-order="${esc(o.order)}" title="Hoàn tất đơn không chờ mã này, bạn tự làm sau">Tôi tự làm mã này</button></div></div>`).join('')
+        <div><button class="btn btn-pri sm" data-pvok="1" data-code="${esc(c.code)}" data-order="${esc(o.order)}" title="Hình dựng hiện tại đã đúng: mã tính là xong, bỏ Flag, không cần check lại">Preview OK</button></div></div>`).join('')
     : o.flags.map(f => `<div class="fl"><span>${esc(f)}</span></div>`).join('');
   const nFlag = flagged.reduce((n, c) => n + c.flags.length, 0) || o.flags.length;
   const cli = (S.data.runner || {}).cli;
@@ -761,18 +761,26 @@ function openManual(order, code){
   el.innerHTML = `<div class="pl-h"><span class="jid">${esc(code)}</span><span class="t2">đơn ${esc(order)}</span><span class="sp"></span>
       <button class="ib" data-mx title="Đóng (Esc)"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="pl-b">
-      ${c.manual ? '<p class="hint ok">Mã này đang được đánh dấu "Người dùng tự làm".</p>' : ''}
+      ${c.manual ? '<p class="hint ok">Mã này đang được đánh dấu "Người dùng tự làm" (cũ).</p>' : ''}
       ${c.flagsRaw.length ? `<h3>Flag của agent <span class="n">${c.flagsRaw.length}</span></h3><div class="od-flags">${c.flagsRaw.map(f => `<div class="fl"><span>${esc(f)}</span></div>`).join('')}</div>` : ''}
       <p style="margin:14px 0 0;font-size:13.5px;line-height:1.6">${c.manual
         ? 'Bạn có thể hoàn tác để mã này quay lại trạng thái chờ agent.'
-        : 'Hoàn tất đơn mà <b>không chờ</b> mã này. Mã <b>' + esc(code) + '</b> bạn tự làm và lưu vào thư mục đơn sau:<br><span class="mono">' + esc(dir) + '</span><br>Mã này không tính vào kết quả đánh giá AI.'}</p>
+        : 'Nếu hình dựng hiện tại của mã <b>' + esc(code) + '</b> đã đúng, bấm <b>Preview OK</b>: mã tính là xong, bỏ Flag, không cần check lại và đóng gói được luôn.'}</p>
     </div>
     <div class="pl-f"><span class="sp"></span><button class="btn btn-sec" data-mx>Đóng</button>
-      <button class="btn btn-pri" data-mgo="${c.manual ? '0' : '1'}">${c.manual ? 'Hoàn tác, chờ agent' : 'Tôi tự làm, hoàn tất đơn'}</button></div>`;
+      <button class="btn btn-pri" data-mgo="${c.manual ? '0' : '1'}">${c.manual ? 'Hoàn tác, chờ agent' : 'Preview OK'}</button></div>`;
   el.hidden = false; $('#pl-bg').hidden = false;
 }
 function closeManual(){ S.manual = null; $('#pl').hidden = true; $('#pl-bg').hidden = true; }
 document.addEventListener('click', e => {
+  const pv = e.target.closest('[data-pvok]');       // nút Preview OK (hoặc Hoàn tác) trong chi tiết đơn
+  if (pv && !S.plan && !S.manual) {
+    pv.disabled = true;
+    api('/api/previewok', {order:pv.dataset.order, code:pv.dataset.code, ok:pv.dataset.pvok === '1'}).then(() => {
+      toast(pv.dataset.pvok === '1' ? 'Preview OK ' + pv.dataset.code + ': mã đã xong' : 'Đã hoàn tác Preview OK ' + pv.dataset.code); load(true);
+    }, e2 => { pv.disabled = false; toast(e2.message); });
+    return;
+  }
   const card = e.target.closest('.jt-code.s-rev, .jt-code.s-man, [data-manual]');
   if (card && !S.plan && !S.manual) {
     const code = card.dataset.code || card.dataset.manual, order = (card.closest('.job') || {dataset:{}}).dataset.id || card.dataset.order;
@@ -784,9 +792,10 @@ document.addEventListener('click', e => {
   if (b.id === 'pl-bg' || b.dataset.mx != null) return closeManual();
   if (b.dataset.mgo != null) {
     const {order, code} = S.manual;
+    const o0 = S.data.orders.find(x => x.order === order), c0 = (o0 && o0.codes.find(x => x.code === code)) || {};
     b.disabled = true;
-    api('/api/manual', {order, code, manual:b.dataset.mgo === '1'}).then(() => {
-      toast(b.dataset.mgo === '1' ? 'Đã đánh dấu: người dùng tự làm ' + code : 'Đã hoàn tác ' + code); closeManual(); load(true);
+    api(c0.manual ? '/api/manual' : '/api/previewok', c0.manual ? {order, code, manual:false} : {order, code, ok:true}).then(() => {
+      toast(c0.manual ? 'Đã hoàn tác ' + code : 'Preview OK ' + code + ': mã đã xong'); closeManual(); load(true);
     }, e2 => { b.disabled = false; toast(e2.message); });
   }
 });

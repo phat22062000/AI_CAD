@@ -23,6 +23,7 @@ Bản gốc: DS_khach_hang_yeu_cau_dac_biet.md. Khách không có trong danh sá
 | 412 | Không chỉ định: không bo R góc ngoài. |
 | 425 | Góc không chỉ thị: không bo R góc ngoài. |
 | 433 | PDF và DXF khác nhau: chỉ xác nhận khi sai khác ≥ 1 mm. |
+| 464 | Xác định mặt HL: (1) mặt HL hướng về phía trước trên bản vẽ thì trên mặt đó có ghi "HL方向↔", mặt đó chính là mặt HL; (2) mặt HL ở mặt sau thì ở hình chiếu cạnh v.v. có ghi "HL面" kèm mũi tên. |
 | 473 | Mọi piercing lỗ xuyên. Không bo R. Chỗ khác màu trong DXF = kegaki. Lỗ không khoét được thì hỏi lại. |
 | 512 | Tấm gân: mặt bản vẽ chỉ định là mặt có gân. PDF không hiện kích thước lỗ, xem DXF. |
 | 513 | Taro và khoét côn chỉ làm đến lỗ mồi (không khoan xuyên được thì đột/piercing). |

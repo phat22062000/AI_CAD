@@ -5169,7 +5169,7 @@ AcDbCircle
  10
 25.2
  20
-1473.092893
+1433.492893
  30
 0.0
  40
@@ -5187,7 +5187,7 @@ AcDbEntity
 100
 AcDbCircle
  10
-94.7
+119.9
  20
 1403.592893
  30
@@ -5207,9 +5207,9 @@ AcDbEntity
 100
 AcDbCircle
  10
-94.7
+119.9
  20
-1473.092893
+1433.492893
  30
 0.0
  40
@@ -5227,7 +5227,7 @@ AcDbEntity
 100
 AcDbCircle
  10
-440.3
+415.1
  20
 1403.592893
  30
@@ -5247,9 +5247,9 @@ AcDbEntity
 100
 AcDbCircle
  10
-440.3
+415.1
  20
-1473.092893
+1433.492893
  30
 0.0
  40
@@ -5289,7 +5289,7 @@ AcDbCircle
  10
 509.8
  20
-1473.092893
+1433.492893
  30
 0.0
  40
@@ -5316,110 +5316,6 @@ AcDbText
 12.0
   1
 067077
-100
-AcDbText
-  0
-TEXT
-  5
-2B1
-330
-6F
-100
-AcDbEntity
-  8
-0
- 62
-6
-100
-AcDbText
- 10
--150.0
- 20
-1441.292893
- 30
-0.0
- 40
-5.0
-  1
-1. T\U+1ED5ng c\U+00E1c k\U+00EDch th\U+01B0\U+1EDBc trong chu\U+1ED7i Dim
-100
-AcDbText
-  0
-TEXT
-  5
-2B2
-330
-6F
-100
-AcDbEntity
-  8
-0
- 62
-6
-100
-AcDbText
- 10
--150.0
- 20
-1434.292893
- 30
-0.0
- 40
-5.0
-  1
-kh\U+00E1c v\U+1EDBi k\U+00EDch th\U+01B0\U+1EDBc t\U+1ED5ng (chu\U+1ED7i ngang
-100
-AcDbText
-  0
-TEXT
-  5
-2B3
-330
-6F
-100
-AcDbEntity
-  8
-0
- 62
-6
-100
-AcDbText
- 10
--150.0
- 20
-1427.292893
- 30
-0.0
- 40
-5.0
-  1
-25.3 + 69.5 + 55.3 = 150.1, t\U+1ED5ng 150; l\U+1ED7
-100
-AcDbText
-  0
-TEXT
-  5
-2B4
-330
-6F
-100
-AcDbEntity
-  8
-0
- 62
-6
-100
-AcDbText
- 10
--150.0
- 20
-1420.292893
- 30
-0.0
- 40
-5.0
-  1
-v\U+1EBD theo 25.3 v\U+00E0 69.5 t\U+00EDnh t\U+1EEB m\U+00E9p tr\U+00E1i)
 100
 AcDbText
   0

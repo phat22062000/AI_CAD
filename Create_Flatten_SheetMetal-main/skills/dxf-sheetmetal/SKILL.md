@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.12-1"
+  version: "2026.11.13-1"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -79,7 +79,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Có DXF thì LẤY DXF LÀM NỀN rồi chỉnh theo chỉ thị riêng (DXF không phải lúc nào cũng đúng). Dựng từ DXF TRƯỚC rồi mới so PDF.
 - Trích hình: layer 0, đưa về tỉ lệ 1:1 (DXF vẽ theo tỉ lệ khung tên 1:2, 1:3... thì nhân hệ số), nối LINE/ARC thành vòng kín; bỏ hình chiếu khác, kích thước, đường tâm. Hình có thể nằm trong BLOCK (INSERT JZB_xxxx): đọc cả nội dung block, không chỉ modelspace. Ví dụ 100-09.dxf (26-063640/641): hình trong JZB_0003/0004/0005; cánh rộng 61 kéo tới 29 tính từ mép tự do (cung R3 tâm (58; 26)), không dừng ở đường uốn 27.34.
 - DXF chỉ có hình chiếu (không có phôi) vẫn phải trích số liệu (chiều dài mép tự do, chân cánh, tọa độ lỗ) từ đó.
-- Áp chỉ thị PDF lên nền DXF: ghi chú laser (062682 'laser: φ11.6' → vẽ φ11.6 thay φ12 H7 của DXF), kích thước lỗ PDF khác DXF (062725: PDF 3xφ4, DXF φ4.5 → theo PDF), độ giãn và chiều dài tay viết. Mọi chỗ lệch DXF phải có Flag (mục 11.4).
+- Áp chỉ thị PDF lên nền DXF: ghi chú laser (062682 'laser: φ11.6' → vẽ φ11.6 thay φ12 H7 của DXF), độ giãn và chiều dài tay viết. Kích thước PDF khác DXF (kể cả φ lỗ) mà không có chỉ thị riêng: dựng theo DXF rồi Flag 1. Mọi chỗ lệch DXF–PDF phải có Flag (mục 11.4); khách có quy định riêng (PDF chuẩn/DXF chuẩn) theo `Quy_Tac_Theo_Ma_Khach_AnDanh.md`.
 - Phôi tham khảo (展開図 参考) của khách: hiệu chỉnh chiều dài theo độ giãn tay viết / 旭金属の展開: giữ vị trí tính từ mép tự do của cánh, phần bên kia đường uốn tính từ mép đối diện (dịch cả phần đó), vẽ lại 2 đường DASHED.
 - Bản vẽ phẳng có cánh uốn chỉ hiện ở hình chiếu cạnh : mở cánh ra; đầu tự do cánh = đường uốn phía cánh - (ngoài cánh - giãn). Slit chân cánh của khách nằm đúng vùng uốn là dấu hiệu đúng.
 - Lỗ khoét côn/khoét bậc và ký hiệu ren trong DXF chỉ là ký hiệu: không vẽ, chỉ vẽ lỗ mồi.
@@ -103,6 +103,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   3. Góc uốn khác 90° (kể cả > 90°, ví dụ 110°): KHÔNG dùng bảng, không lấy số 90°; độ giãn do người dùng cung cấp, chưa có thì hỏi. Không tự suy giãn bằng công thức, hệ số K hay nội suy từ bảng 90°. Trước khi kết luận thiếu giãn phải đã quét toàn trang tìm ghi chú tay (mục 1 bước 4); vẫn không có thì Flag 16 và hỏi, không vẽ số tạm.
 - Tra bảng: xác định khoảng chiều dài uốn của mã (hàng 曲げ長さ) trước, rồi mới đọc giãn ở cột tương ứng; ô độ dày không gộp có thể phủ nhiều cột.
 - Kích thước ở chỗ uốn: phóng to đầu đường gióng để xác định đi qua góc trong hay ngoài. Kích thước trong phải đổi sang ngoài trước khi tính phôi (ngoài = trong + t/tan(α/2) mỗi cánh, α là góc trong giữa hai cánh); không xác định được thì Flag 7.
+- Đường gióng kích thước chiều cao/dài cánh: PHẢI phóng ≥ 300 dpi đầu đường gióng ở MỖI chỗ uốn để xác định điểm bắt đầu là góc trong (mặt trong cánh gặp mặt trong tấm) hay góc ngoài. Hai góc lệch t/tan(α/2) (t3, 111°: 2.07 mm) nên bản vẽ 1:2 nhìn thường không thấy. Kích thước trong thì đổi sang ngoài (+ t/tan(α/2)) TRƯỚC khi tính phôi, đồng thời tính lại các số nối tiếp từ cùng đường gióng (ví dụ 132, 71 tính từ đường 34) theo điểm thật đường đó chạm. Không phân biệt được thì Flag 7, không tự chọn. Ví dụ 26-067785 (đơn 521111-25, SUS304 t3): 34 là góc trong chỗ uốn 1, bản đầu coi là ngoài nên phôi ngắn 4.16 (523.16 thay vì 527.32).
 - Xác định góc uốn TỪNG chỗ từ hình chiếu cạnh (ví dụ ghi 70° lệch = uốn 110°). Góc ghi trên hình chưa chắc là góc uốn: góc giữa hai mặt tấm ở hình cạnh/mặt cắt là góc uốn; góc giữa hai cạnh biên của cánh ở hình bằng/hình nhìn thẳng cánh là góc biên dạng (ví dụ đầu cánh vát), không làm đổi góc uốn. Ví dụ 26-063561/62 (天板, SUS304 2B t1.5): 4 ghi chú 135° là góc đầu cánh vát, uốn 90°, giãn 2.64. Chưa chắc thì hỏi, không tự kết luận góc uốn khác 90°.
 - Chỗ uốn góc ≤ 85° (cánh nghiêng; Asahi và AICOKU ALPHA): không dùng kích thước danh nghĩa (ví dụ 80/150) làm kích thước ngoài.
   - R trong: t < 6 → 0.6; t ≥ 6 → 6. Offset ra đúng t được R ngoài (t3.2: 3.8; t ≥ 6: 6 + t), đo kích thước ngoài hiệu chỉnh mỗi cánh từ hình học thực (cánh nghiêng đo dọc mặt ngoài). Giá trị hiệu chỉnh thay đổi theo bản vẽ, không phải hằng số.
@@ -246,4 +247,4 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Đơn ≥ 4 chi tiết chạy song song (tối đa 2-3 subagent) theo `/mnt/project-files/tools/sheetmetal_kit/README.md`; đơn ≤ 3 làm tuần tự.
 - Tấm ĐƠN GIẢN (phẳng/L/U có lỗ) gộp 3–4 tấm/subagent; tấm PHỨC TẠP (có cung, hình tay, nhiều đỉnh xiên, hộp, bản vẽ lắp) một tấm/subagent; cặp gương và tấm chung dim lắp chung một subagent (vẫn đo riêng, mục 2). Không chắc thì PHỨC TẠP.
 - Subagent chỉ đọc skill trích bằng `skill_extract.py` theo loại; overlay chỉ bắt buộc cho tấm PHỨC TẠP.
-- Agent chính gộp bằng `merge_all.py`, kiểm lại mặt vẽ và hướng (mục 3, 10), rồi chạy dxf-check (bước 3a).
+- Agent chính gộp bằng `merge_all.py`, kiểm lại mặt vẽ và hướng (mục 3, 10). KHÔNG tự chạy dxf-check sau khi tạo; chỉ check khi người dùng yêu cầu "check".

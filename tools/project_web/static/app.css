@@ -449,6 +449,10 @@ label.btn{cursor:pointer}
 .pl-ag .t3{font-size:12px}
 .pl select{height:32px;padding:0 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--panel);color:var(--tx);font-size:13px;cursor:pointer;min-width:0}
 .pl-tools{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0 4px;font-size:12.5px}
+.pl-tools .sp{flex:1}
+.pl-off td{opacity:.5}
+.pl-off td:first-child{opacity:1}
+.pl-c{width:16px;height:16px;cursor:pointer}
 .pl .od-t td{padding:6px 10px}
 .pl-f{display:flex;align-items:center;gap:10px;padding:12px 18px;border-top:1px solid var(--line);font-size:12.5px}
 @media (max-width:700px){.pl-ags{grid-template-columns:repeat(2,minmax(0,1fr))}}

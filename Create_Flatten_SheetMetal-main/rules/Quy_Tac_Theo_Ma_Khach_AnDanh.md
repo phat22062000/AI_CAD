@@ -3,7 +3,7 @@
 Bản gốc: DS_khach_hang_yeu_cau_dac_biet.md. Khách không có trong danh sách này thì áp quy tắc chung (Laser R theo bảng).
 
 ## Tra nhanh theo nhóm quy tắc
-- **Không bo R góc ngoài (giữ góc nhọn) nếu không chỉ định:** 325, 412, 425, 473, 768, 779, 790, 859, 979. Riêng 777: mặc định không bo, chỉ thêm R0.5 ở góc quá nhọn.
+- **Không bo R góc ngoài (giữ góc nhọn) nếu không chỉ định:** 325, 412, 425, 473, 760, 768, 779, 790, 859, 940, 979. Riêng 777: mặc định không bo, chỉ thêm R0.5 ở góc quá nhọn.
 - **Bo R3 góc ngoài khi không chỉ định:** 765 (cả chỗ vát R3), 898 (không chỉ thị hoặc chỉ ghi (R) thì R3).
 - **Mọi piercing = lỗ xuyên:** 407, 473, 518, 768, 810, 899.
 - **Piercing/ponch/marking = lỗ trắng:** 703 (ポンチ), 764 (ピアス, マーキング), 781, 898 (punch), 908, 921, 940, 955.
@@ -43,7 +43,7 @@ Bản gốc: DS_khach_hang_yeu_cau_dac_biet.md. Khách không có trong danh sá
 | 725 | Đôi khi khoét lỗ nhỏ hơn ½ độ dày (cần xác nhận). |
 | 733 | DXF khác bản vẽ thì phải liên hệ xác nhận. |
 | 745 | Lỗ không xuyên có thể làm bằng piercing. Bo R làm kích thước ngắn lại thì kiểm tra/xác nhận. |
-| 760 | Mọi nét đứt là kegaki (màu hoặc loại nét có thể khác). Kiểm tra dữ liệu. |
+| 760 | Mọi nét đứt là kegaki (màu hoặc loại nét có thể khác). Kiểm tra dữ liệu. Không chỉnh sửa bo góc (R góc): giữ góc nhọn; hình vẽ có R sẵn thì làm theo hình vẽ. Trên bản vẽ triển khai/bản vẽ gấp (曲げ図), hình chỉ vẽ bằng một nét đơn thì phải hỏi lại khách là kích thước ngoài hay trong (Flag, không tự giả định). |
 | 764 | ピアス, マーキング = lỗ trắng (chú ý chỉ thị マーキング, cần xác nhận). Bản vẽ của khách này: taro → lỗ trắng (thiếu ghi cũng làm lỗ trắng, không cần hỏi). |
 | 765 | Không chỉ định vẫn bo góc ngoài R3; chỗ vát cũng R3. |
 | 768 | Không chỉ định: không bo R góc ngoài. Mọi piercing là lỗ xuyên. |
@@ -78,7 +78,7 @@ Bản gốc: DS_khach_hang_yeu_cau_dac_biet.md. Khách không có trong danh sá
 | 915 | Có DXF thì dữ liệu là chuẩn. |
 | 921 | Đánh dấu tâm (white pierce/đột nguội). Vật mỏng dễ cháy xém hoặc nứt nên có khi dùng white pierce. |
 | 938 | Kể cả không gia công nội bộ, vị trí hàn vẫn cần kegaki. |
-| 940 | Ghi chú M12: lỗ Ø10.5 (chỉ áp dụng M12?). Mark, pin hole, punch = white pierce. |
+| 940 | Ghi chú M12: lỗ Ø10.5 (chỉ áp dụng cho cỡ ren M12). Mark, pin hole, punch = white pierce. Không chỉnh sửa bo góc (R góc): giữ góc nhọn; hình vẽ có R sẵn thì làm theo hình vẽ. |
 | 955 | Đã xác nhận dữ liệu. Có ký hiệu ○-point thì kẻ dấu (đánh dấu bằng white pierce). |
 | 956 | Lỗ không gia công được phải chuyển sang đột (pierce): xác nhận với khách là đột hay bỏ lỗ. |
 | 957 | Kể cả không gia công nội bộ, vẫn kegaki tại vị trí hàn. Chấn SUS cần xác nhận mặt trước/sau vật liệu. |

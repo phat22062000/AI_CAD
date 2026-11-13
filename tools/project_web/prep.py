@@ -77,8 +77,9 @@ def _pages(pdf, out):
     return n, has_text, files
 
 
-def prepare(order, workdir, out):
-    """Chuẩn bị mọi thứ cho đơn; trả về dict tóm tắt (cũng ghi README_don.md). Lỗi từng phần không làm hỏng cả bước."""
+def prepare(order, workdir, out, skip=()):
+    """Chuẩn bị mọi thứ cho đơn; trả về dict tóm tắt (cũng ghi README_don.md). Lỗi từng phần không làm hỏng cả bước.
+    skip = mã người dùng bỏ chọn: không đưa vào README_don.md và order_context.json."""
     t0 = time.time()
     os.makedirs(out, exist_ok=True)
     sys.path.insert(0, HERE)
@@ -89,6 +90,8 @@ def prepare(order, workdir, out):
     xl = next((f for f in files if f.lower().endswith('.xlsx') and '依頼' in f), None)
     if xl:
         req = S.read_request(os.path.join(workdir, xl))
+    n_all = len(req)
+    req = [r for r in req if r['code'] not in set(skip)]
     meta = req[0] if req else {}
     info['codes'] = [r['code'] for r in req]
     # skill theo loại
@@ -114,7 +117,8 @@ def prepare(order, workdir, out):
            'stretch_tables': [os.path.join(REPO, 'rules', 'bang-do-gian', f) for f in sorted(os.listdir(os.path.join(REPO, 'rules', 'bang-do-gian')))] if os.path.isdir(os.path.join(REPO, 'rules', 'bang-do-gian')) else [],
            'parts': [{'code': r['code'], 't': r.get('thick'), 'xy_request': f"{r.get('x')} x {r.get('y')} (chỉ đối chiếu)", 'material': r.get('material', '')} for r in req],
            'order_of_excel': [r['code'] for r in req], 'customer_cad_files': cust_files, 'pdf_pages': pages,
-           'pdf_layout': ('1 trang = 1 mã' if pages and pages == len(req) else f'bản vẽ cụm: {pages} trang cho {len(req)} mã')}
+           'pdf_layout': ('1 trang = 1 mã' if pages and pages == n_all else f'bản vẽ cụm: {pages} trang cho {n_all} mã')
+           + (f' (người dùng chỉ chọn làm {len(req)} mã, bỏ qua {n_all - len(req)} mã: ' + ', '.join(sorted(skip)) + ')' if len(req) < n_all else '')}
     with open(os.path.join(out, 'order_context.json'), 'w', encoding='utf-8') as f:
         json.dump(ctx, f, ensure_ascii=False, indent=1)
     info['layout'] = ctx['pdf_layout']

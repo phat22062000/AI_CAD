@@ -301,11 +301,12 @@ function orderDrawer(o){
   const pm = S.packMsg[o.order];
   // đóng gói được khi có ít nhất 1 mã đã xong (không cần xong cả đơn); mã chưa xong bỏ qua, gửi khách nhiều đợt: đợt 1 vào Gui, đợt sau Gui_2, Gui_3...
   const nReady = o.packReady || 0, nPacked = o.packed || 0, nWait = o.codes.length - nReady - nPacked;
-  const packOff = nReady < 1 || o.running;
-  const packWhy = o.running ? 'Agent đang chạy đơn này' : nPacked && nReady < 1 ? 'Các mã đã xong đều đã được đóng gói' : 'Chưa có mã nào xong để đóng gói';
+  const loose = !(o.path || '').split('\\').pop().toLowerCase().startsWith(String(o.order).toLowerCase());     // file đơn để rời trong thư mục ngày, chưa có thư mục riêng <số đơn>: server không đóng gói được
+  const packOff = nReady < 1 || o.running || loose;
+  const packWhy = loose ? 'Đơn đang nằm rải trong thư mục ngày, chưa có thư mục riêng ' + o.order + '. Tạo thư mục ' + o.order + ' rồi chuyển toàn bộ file của đơn (PDF, xlsx, các file 26-xxxxxx.dxf, _ALL.dxf) vào đó' : o.running ? 'Agent đang chạy đơn này' : nPacked && nReady < 1 ? 'Các mã đã xong đều đã được đóng gói' : 'Chưa có mã nào xong để đóng gói';
   const packHtml = `<h3>Đóng gói</h3><div class="fl-send" style="margin-top:0">
       <button class="btn btn-pri" data-pack="${esc(o.order)}" ${packOff ? 'disabled' : ''} title="${packOff ? esc(packWhy) : ''}"><svg class="i"><use href="#i-folder"/></svg>Đóng gói${nReady ? ' ' + nReady + ' mã đã xong' : ''}</button>
-      <span class="t3">${packOff ? esc(packWhy) + '. Mở khi có ít nhất 1 mã đã xong.' : 'CHUYỂN DXF của ' + nReady + ' mã đã xong (không có file ALL) vào thư mục Gui' + (nPacked ? ' kế tiếp (Gui_2, Gui_3... không ghi đè đợt trước)' : '') + ' và điền file Excel 納品書 (số đơn, kích thước phôi) cho TẤT CẢ mã của đơn.' + (nWait > 0 ? ' ' + nWait + ' mã chưa xong: không chuyển DXF, trong Excel chỉ điền số thứ tự + mã và tô xanh.' : '')}</span></div>
+      <span class="t3">${packOff ? esc(packWhy) + (loose ? '.' : '. Mở khi có ít nhất 1 mã đã xong.') : 'CHUYỂN DXF của ' + nReady + ' mã đã xong (không có file ALL) vào thư mục Gui' + (nPacked ? ' kế tiếp (Gui_2, Gui_3... không ghi đè đợt trước)' : '') + ' và điền file Excel 納品書 (số đơn, kích thước phôi) cho TẤT CẢ mã của đơn.' + (nWait > 0 ? ' ' + nWait + ' mã chưa xong: không chuyển DXF, trong Excel chỉ điền số thứ tự + mã và tô xanh.' : '')}</span></div>
     ${pm ? `<p class="hint ${pm.err ? 'err' : 'ok'}">${esc(pm.text)}${pm.path ? ` <button class="ib" data-copy="${esc(pm.path)}" title="Copy đường dẫn thư mục Gui"><svg class="i"><use href="#i-folder"/></svg></button>` : ''}</p>` : ''}`;
   const archHtml = (o.state === 'xong' || o.state === 'cho') ? `<h3>Phương án</h3><div class="fl-send" style="margin-top:0">
       <button class="btn btn-sec" data-arch="${esc(o.order)}">Lưu phương án và làm lại</button>
@@ -806,20 +807,22 @@ const PA = [['main', 'Agent chính'], ['S1', 'Subagent 1'], ['S2', 'Subagent 2']
 const paName = a => (PA.find(x => x[0] === a) || [a, a])[1];
 function openPlan(pv){
   const def = 'sonnet';     // Phát chốt: bảng phân công luôn mặc định Sonnet cho mọi agent
-  S.plan ={...pv, agents:{main:def, S1:def, S2:def}, assign:Object.fromEntries(pv.codes.map(c => [c.code, 'main']))};
+  S.plan ={...pv, agents:{main:def, S1:def, S2:def}, assign:Object.fromEntries(pv.codes.map(c => [c.code, 'main'])),
+           on:Object.fromEntries(pv.codes.map(c => [c.code, true]))};     // on[mã] = có làm hay không (mặc định chọn hết)
   renderPlan();
 }
 function closePlan(){ S.plan = null; $('#pl').hidden = true; $('#pl-bg').hidden = true; }
 function renderPlan(){
   const P = S.plan, el = $('#pl');
   if (!P) return closePlan();
-  const cnt = a => Object.values(P.assign).filter(x => x === a).length;
+  const cnt = a => Object.entries(P.assign).filter(([c, x]) => P.on[c] && x === a).length;
+  const nOn = P.codes.filter(c => P.on[c.code]).length;
   const mSel = a => `<select class="pl-m" data-a="${a}">${['opus', 'sonnet'].map(m => `<option value="${m}" ${P.agents[a] === m ? 'selected' : ''}>${m === 'opus' ? 'Opus' : 'Sonnet'}</option>`).join('')}</select>`;
   const agents = PA.map(([a, nm]) => { const n = cnt(a); return `<div class="pl-ag ${n || a === 'main' ? '' : 'idle'}"><b>${nm}</b>${mSel(a)}<span class="t3">${n} mã</span></div>`; }).join('');
-  const aSel = (c, v) => `<select class="pl-a" data-c="${esc(c)}">${PA.map(([a, nm]) => `<option value="${a}" ${v === a ? 'selected' : ''}>${nm}</option>`).join('')}</select>`;
-  const rows = P.codes.map(c => `<tr><td class="mono">${esc(c.code)}</td><td class="t2">${c.thick != null ? c.thick + 't' : '—'}</td><td class="t2 mono">${esc(c.size || '—')}</td><td>${aSel(c.code, P.assign[c.code])}</td><td class="t3">${P.agents[P.assign[c.code]] === 'sonnet' ? 'Sonnet' : 'Opus'}</td></tr>`).join('');
+  const aSel = (c, v, off) => `<select class="pl-a" data-c="${esc(c)}" ${off ? 'disabled' : ''}>${PA.map(([a, nm]) => `<option value="${a}" ${v === a ? 'selected' : ''}>${nm}</option>`).join('')}</select>`;
+  const rows = P.codes.map(c => { const on = P.on[c.code]; return `<tr class="${on ? '' : 'pl-off'}"><td><input type="checkbox" class="pl-c" data-c="${esc(c.code)}" ${on ? 'checked' : ''} title="Bỏ chọn nếu mã này không cần làm"></td><td class="mono">${esc(c.code)}</td><td class="t2">${c.thick != null ? c.thick + 't' : '—'}</td><td class="t2 mono">${esc(c.size || '—')}</td><td>${on ? aSel(c.code, P.assign[c.code]) : '<span class="t3">Không làm</span>'}</td><td class="t3">${on ? (P.agents[P.assign[c.code]] === 'sonnet' ? 'Sonnet' : 'Opus') : '—'}</td></tr>`; }).join('');
   const used = PA.filter(([a]) => a !== 'main' && cnt(a)).length;
-  el.innerHTML = `<div class="pl-h"><span class="jid">${esc(P.order || '(chưa rõ số đơn)')}</span><span class="t2">${P.codes.length} mã · ${P.pdf} PDF · ${P.xlsx} xlsx</span>
+  el.innerHTML = `<div class="pl-h"><span class="jid">${esc(P.order || '(chưa rõ số đơn)')}</span><span class="t2">${P.codes.length} mã${nOn < P.codes.length ? ' (làm ' + nOn + ')' : ''} · ${P.pdf} PDF · ${P.xlsx} xlsx</span>
       <span class="sp"></span><button class="ib" data-plx title="Huỷ (Esc)"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="pl-b">
       ${P.dup ? '<p class="hint err">Đơn này đang có trong hàng đợi, giao nữa sẽ bị từ chối.</p>' : ''}
@@ -830,32 +833,36 @@ function renderPlan(){
         <button class="btn btn-sec sm" data-plall="main">Tất cả cho Agent chính</button>
         <button class="btn btn-sec sm" data-plsplit="main,S1">Chia đều cho Agent chính và Subagent 1</button>
         <button class="btn btn-sec sm" data-plsplit="main,S1,S2">Chia đều cho Agent chính và 2 Subagent</button>
+        <span class="sp"></span>
+        <button class="btn btn-sec sm" data-plon="1">Chọn hết</button>
+        <button class="btn btn-sec sm" data-plon="0">Bỏ chọn hết</button>
       </div>
-      <h3>Mã bản vẽ <span class="n">${P.codes.length}</span></h3>
-      <table class="od-t"><thead><tr><th>Mã</th><th>Dày</th><th>Kích thước</th><th>Agent</th><th>Model</th></tr></thead><tbody>${rows}</tbody></table>`
+      <h3>Mã bản vẽ <span class="n">${nOn}/${P.codes.length}</span></h3>
+      <table class="od-t"><thead><tr><th>Làm</th><th>Mã</th><th>Dày</th><th>Kích thước</th><th>Agent</th><th>Model</th></tr></thead><tbody>${rows}</tbody></table>`
       : '<div class="empty">Không đọc được danh sách mã (thiếu file 依頼.xlsx). Agent chính sẽ tự đọc PDF và vẽ tất cả các mã với model đã chọn ở trên.</div>'}
     </div>
-    <div class="pl-f"><span class="t3">${used ? 'Agent chính điều phối + ' + used + ' subagent chạy song song' : 'Agent chính tự vẽ tất cả'}</span><span class="sp"></span>
+    <div class="pl-f"><span class="t3">${P.codes.length && !nOn ? 'Chưa chọn mã nào để làm' : used ? 'Agent chính điều phối + ' + used + ' subagent chạy song song' : (nOn < P.codes.length ? 'Agent chính tự vẽ ' + nOn + ' mã đã chọn' : 'Agent chính tự vẽ tất cả')}</span><span class="sp"></span>
       <button class="btn btn-sec" data-plx>Huỷ</button>
-      <button class="btn btn-pri" data-plgo ${P.dup ? 'disabled' : ''}><svg class="i"><use href="#i-check"/></svg>Giao việc</button></div>`;
+      <button class="btn btn-pri" data-plgo ${P.dup || (P.codes.length && !nOn) ? 'disabled' : ''}><svg class="i"><use href="#i-check"/></svg>Giao việc</button></div>`;
   el.hidden = false; $('#pl-bg').hidden = false;
 }
 function planSplit(list){    // chia các mã thành các nhóm liền nhau, số mã gần bằng nhau, lần lượt cho từng agent trong list
-  const P = S.plan, cs = P.codes.map(c => c.code), k = list.length;
+  const P = S.plan, cs = P.codes.map(c => c.code).filter(c => P.on[c]), k = list.length;     // chỉ chia các mã được chọn
   cs.forEach((c, i) => { P.assign[c] = list[Math.floor(i * k / cs.length)]; });
 }
 async function planGo(btn){
   const P = S.plan, hint = $('#job-hint');
-  const agents = {};
-  Object.values(P.assign).concat('main').forEach(a => { agents[a] = P.agents[a]; });
+  const agents = {}, codes = {}, skip = [];
+  P.codes.forEach(c => { if (P.on[c.code]) codes[c.code] = P.assign[c.code]; else skip.push(c.code); });     // mã bỏ chọn -> skip, agent không đọc PDF mã đó
+  Object.values(codes).concat('main').forEach(a => { agents[a] = P.agents[a]; });
   btn.disabled = true;
   try {
-    const r = await api('/api/jobs', {path:P.path, plan:{agents, codes:P.assign}});
+    const r = await api('/api/jobs', {path:P.path, plan:{agents, codes, skip}});
     const j = r.job, ag = (j.plan || {}).agents || {};
     LS.set('pw-model', ag.main || 'opus');
     hint.className = 'hint ok';
     const auto = (S.data.runner || {}).cli && (S.data.runner || {}).running !== undefined;
-    hint.textContent = `Đã giao đơn ${j.order || '(chưa rõ số đơn)'}: ${P.codes.length} mã, ` +
+    hint.textContent = `Đã giao đơn ${j.order || '(chưa rõ số đơn)'}: ${Object.keys(codes).length}${skip.length ? '/' + P.codes.length : ''} mã, ` +
       Object.entries(ag).map(([a, m]) => paName(a) + ' (' + (m === 'sonnet' ? 'Sonnet' : 'Opus') + ')').join(', ') + '. ' +
       (auto ? 'Agent sẽ tự nhận trong vài giây.' : 'Nói với agent "Xử lý hàng đợi" để chạy.');
     $('#job-path').value = '';
@@ -867,6 +874,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('#pl button, #pl-bg');
   if (!b) return;
   if (b.id === 'pl-bg' || b.dataset.plx != null) return closePlan();
+  if (b.dataset.plon != null) { Object.keys(S.plan.on).forEach(c => { S.plan.on[c] = b.dataset.plon === '1'; }); return renderPlan(); }
   if (b.dataset.plall) { Object.keys(S.plan.assign).forEach(c => { S.plan.assign[c] = b.dataset.plall; }); return renderPlan(); }
   if (b.dataset.plsplit) { planSplit(b.dataset.plsplit.split(',')); return renderPlan(); }
   if (b.dataset.plgo != null) return planGo(b);
@@ -876,6 +884,7 @@ document.addEventListener('change', e => {
   const t = e.target;
   if (t.classList.contains('pl-m')) { S.plan.agents[t.dataset.a] = t.value; renderPlan(); }
   if (t.classList.contains('pl-a')) { S.plan.assign[t.dataset.c] = t.value; renderPlan(); }
+  if (t.classList.contains('pl-c')) { S.plan.on[t.dataset.c] = t.checked; renderPlan(); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.plan) closePlan(); });
 

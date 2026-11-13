@@ -107,6 +107,11 @@ def build_prompt(jid, job, workdir):
                          'cho các subagent chạy song song (mục 13 của skill), id báo tiến độ {0}_S1, {0}_S2, {0}_S3 theo đúng số ở trên.'.format(order))
         if not asg:
             lines.append('Không đọc được danh sách mã từ xlsx: agent chính tự đọc PDF và tự vẽ tất cả các mã.')
+        skip = plan.get('skip') or []
+        if skip:
+            lines.append('Các mã người dùng chọn KHÔNG làm: ' + ', '.join(skip) + '. BỎ QUA hoàn toàn: không đọc/mở trang PDF hay ảnh của các mã này '
+                         '(chỉ nhìn đủ để biết trang nào không phải của mã cần làm, rồi bỏ), không vẽ, không báo tiến độ, không đưa vào partOrder, '
+                         'không đưa vào file ALL, không giao cho subagent. Nếu một trang PDF chứa cả mã cần làm lẫn mã bị bỏ thì chỉ làm mã cần làm.')
         sub = '\n'.join(lines)
     skill =os.path.join(REPO, 'skills', 'dxf-sheetmetal', 'SKILL.md')
     if job.get('kind') == 'tiep':
@@ -351,7 +356,7 @@ def run_job(jid, job, claude):
             if not job.get('use_prep', cfg.get('prep', True)):
                 raise RuntimeError('tắt bước chuẩn bị theo cấu hình')
             import prep
-            info = prep.prepare(order, workdir, tmp_dir(order))      # Python thuần, vài giây, không tốn token
+            info = prep.prepare(order, workdir, tmp_dir(order), (job.get('plan') or {}).get('skip') or [])      # Python thuần, vài giây, không tốn token
             job['prep'] = True
             job['pipeline'] = bool(job.get('use_pipeline', cfg.get('pipeline', False)))
             S.merge_progress('jobs', jid, {'prep': {k: info.get(k) for k in ('seconds', 'pages', 'layout', 'skill_kb', 'errors')}})

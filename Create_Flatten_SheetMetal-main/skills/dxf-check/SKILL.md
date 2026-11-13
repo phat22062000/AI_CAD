@@ -2,10 +2,10 @@
 name: "dxf-check"
 description: "Kiểm DXF đầu ra (26-xxxxxx.dxf, file ALL) sau dxf-sheetmetal: chỉ kiểm hình dạng, không kiểm Template; báo cáo chỉ nêu lỗi sai."
 metadata:
-  version: "2026.11.12-1"
+  version: "2026.11.13-1"
 ---
 
-Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về máy người dùng), hoặc khi người dùng yêu cầu kiểm một file DXF đã có. Tiêu chí lấy từ `dxf-sheetmetal` (mục 2–12), `Quy_Tac_Laser.md`, `Ghi_Chu_Loi_Tao_DXF.md` (`knowledge/Context_Laser/`). **Chỉ kiểm hình dạng, không kiểm cấu trúc Template** (file lưu từ CAD có header/owner khác Template là bình thường, không báo); muốn so Template thì thêm `--template`.
+Chỉ dùng khi người dùng yêu cầu "check" một file DXF đã có; KHÔNG tự chạy sau khi tạo file bằng skill `dxf-sheetmetal`. Tiêu chí lấy từ `dxf-sheetmetal` (mục 2–12), `Quy_Tac_Laser.md`, `Ghi_Chu_Loi_Tao_DXF.md` (`knowledge/Context_Laser/`). **Chỉ kiểm hình dạng, không kiểm cấu trúc Template** (file lưu từ CAD có header/owner khác Template là bình thường, không báo); muốn so Template thì thêm `--template`.
 **Nguyên tắc: kiểm = so file với kỳ vọng dựng độc lập từ nguồn (PDF bản vẽ + CAD依頼書 + DXF khách trong thư mục đơn), không chỉ soi file đầu ra.** Đúng/sai chỉ nói được khi đã có nguồn; thiếu nguồn thì dừng và báo, không kết luận. Script `dxf_check.py` đo phần đo được và đối chiếu chữ PDF/DXF khách (`--src`); PDF scan không có chữ in nên số kích thước, vị trí lỗ và ghi chú tay chỉ kiểm được qua bảng đọc mù độc lập `blind_table.md` (mục 1 bước 3). Không có bảng này thì không được kết luận 'đúng' cho các mục đó.
 **BẮT BUỘC (người dùng chốt 02/11/2026): LUÔN PHẢI ĐỌC BẢN VẼ ĐỘC LẬP (từ PDF/DXF khách) RỒI MỚI ĐƯỢC CHECK. TUYỆT ĐỐI KHÔNG làm lại từ bản vẽ output của skill tạo file ALL: không dùng file ALL/file riêng, `gen_*.py`/`gen_*.ps1`, `exp.csv`, bảng đọc hình, ảnh preview hay báo cáo của phiên tạo file làm nguồn kỳ vọng. Chưa đọc độc lập xong (chưa có `blind_table.md` từ nguồn) thì KHÔNG mở file đầu ra và KHÔNG được kết luận. Không đọc độc lập được (thiếu nguồn, không chạy được subagent) thì dừng và báo người dùng, không tự kiểm lại bằng chính phiên đã tạo file.**
 
@@ -50,7 +50,7 @@ Dùng sau bước 6 của skill `dxf-sheetmetal` (trước khi commit file về 
 | Hướng uốn Nhôm/304CSP | vật liệu Nhôm hoặc 304CSP có uốn: mọi LINE DASHED đường uốn song song Ox (cùng y; nhiều đường vuông góc nhau thì nhóm dài nhất // Ox); lỗi hướng ưu tiên hơn "cạnh dài theo X" | LỖI |
 | J/LJ | phôi Oy ≤ 100 và Ox ≥ 1000: đủ POINT + TEXT J/LJ cao 10 trên mép trên tại 30, ..., L - 30 | LỖI |
 | Chữ mã (ALL) | đúng 1 TEXT 6 số mỗi hình, X = -150, Y = đáy + cao/2, cao 12, trắng, căn trái, style Standard; file riêng không có chữ mã/Flag | LỖI |
-| Flag (ALL) | cao 4, Magenta, X = -150, Y = Y mã - 12 - 7k; đánh số 1., 2. liên tục, không chữ "Flag"; ≤ 30 ký tự/dòng; ký tự ngoài ASCII dạng `\U+XXXX`; nội dung bắt đầu bằng 1 trong 20 câu chuẩn; không chạm hình dưới | LỖI/CẢNH BÁO |
+| Flag (ALL) | cao 5, Magenta, X = -150, Y = Y mã - 12 - 7k; đánh số 1., 2. liên tục, không chữ "Flag"; ≤ 40 ký tự/dòng; ký tự ngoài ASCII dạng `\U+XXXX`; nội dung bắt đầu bằng 1 trong 20 câu chuẩn; không chạm hình dưới | LỖI/CẢNH BÁO |
 | 依頼 | kích thước phôi so X/Y CAD依頼書 (chỉ tham khảo), thiếu mã | CẢNH BÁO/LỖI |
 | Nguồn (`--src`) | không có PDF/DXF khách; PDF không có lớp chữ (scan): phải có `blind_table.md` (bước 3) | CẢNH BÁO |
 | | lỗ vẽ có φ không nằm trong PDF/DXF khách/lỗ mồi M; PDF ghi n-φ mà hình thiếu hoặc lệch số lượng; 下穴φ trong PDF mà hình không có lỗ đó; 展開 PDF khác phôi | CẢNH BÁO |

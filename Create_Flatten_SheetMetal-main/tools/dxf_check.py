@@ -580,10 +580,10 @@ def main():
             num, items_txt = 0, []
             for kk, x in enumerate(fl):
                 if abs(x.dxf.insert.y - (e.dxf.insert.y - 12 - 7 * kk)) > 0.05: E('%s: dòng Flag %d ở Y = %s, phải = %s' % (name, kk + 1, f(x.dxf.insert.y), f(e.dxf.insert.y - 12 - 7 * kk)))
-                if abs(x.dxf.height - 4) > TOL: E('%s: dòng Flag cao %s, phải là 4' % (name, f(x.dxf.height)))
+                if abs(x.dxf.height - 5) > TOL: E('%s: dòng Flag cao %s, phải là 5' % (name, f(x.dxf.height)))
                 s = decode_u(x.dxf.text)
-                if len(s) > 30: W('%s: dòng Flag dài %d ký tự (> 30): %r' % (name, len(s), s))
-                if -150 + len(s) * 4 * 0.6 > -2: W('%s: dòng Flag có thể đè lên hình' % name)
+                if len(s) > 40: W('%s: dòng Flag dài %d ký tự (> 40): %r' % (name, len(s), s))
+                if -150 + len(s) * 5 * 0.6 > -2: W('%s: dòng Flag có thể đè lên hình' % name)
                 m = re.match(r'(\d+)\. ', s)
                 if m:
                     num += 1

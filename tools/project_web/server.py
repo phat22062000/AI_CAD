@@ -312,6 +312,12 @@ def build_order(order, info, prog):
         for c in a.get('codes') or []:
             if c not in codes:
                 codes.append(c)
+    # mã người dùng bỏ chọn ở bảng Giao việc (plan.skip của việc giao mới nhất có plan): không làm, không tính vào tổng/tiến độ đơn
+    pj = sorted(((j.get('at', ''), j.get('plan') or {}) for j in prog.get('jobs', {}).values()
+                 if j.get('order') == order and j.get('kind') != 'tiep' and j.get('status') != 'loi'), key=lambda x: x[0])
+    skipped = sorted(set(pj[-1][1].get('skip') or [])) if pj else []
+    if skipped:
+        codes = [c for c in codes if c not in skipped]
     # DXF lẻ chỉ tính là Output khi tên file chứa mã của đơn (vd 26-066286.dxf); DXF đầu vào của khách (vd 2.DXF) bỏ qua
     parts = [(rel, mt) for rel, mt in parts
              if any(c in rel or c.split('-')[-1] in os.path.basename(rel) for c in codes)]
@@ -343,6 +349,8 @@ def build_order(order, info, prog):
             s = 'cho' if pp.get('flags') and not pok else 'xong'
         elif st == 'running':
             s = 'dang'
+        elif st == 'failed':
+            s = 'cho'                      # agent báo không vẽ được: chờ bổ sung/vẽ lại, không tính xong dù đã có file ALL
         elif all_dxf:
             s = 'xong'
         else:
@@ -409,6 +417,7 @@ def build_order(order, info, prog):
         'path': os.path.relpath(info['dir'], WORK).replace(os.sep, '\\') if info['dir'] != WORK else '',
         'state': state,
         'codes': code_rows,
+        'skipped': skipped,
         'total': len(codes) or len(parts),
         'done': n_done,
         'partFiles': len(parts),
@@ -536,12 +545,23 @@ def _check_plan(plan, codes):
             raise ValueError('Mã không có trong đơn: ' + c)
         if a not in ag:
             raise ValueError(f'Mã {c} được giao cho agent chưa chọn model.')
-    miss = [c for c in known if c not in asg]
+    skip = [str(c) for c in (plan.get('skip') or [])]      # mã người dùng bỏ chọn: không làm, agent không đọc PDF mã đó
+    for c in skip:
+        if known and c not in known:
+            raise ValueError('Mã không có trong đơn: ' + c)
+        if c in asg:
+            raise ValueError(f'Mã {c} vừa chọn làm vừa bỏ qua.')
+    miss = [c for c in known if c not in asg and c not in skip]
     if miss:
         raise ValueError('Còn mã chưa giao cho agent nào: ' + ', '.join(sorted(miss)))
+    if known and not asg:
+        raise ValueError('Phải chọn ít nhất một mã để làm.')
     used = {a for a in asg.values()}
     ag = {a: m for a, m in ag.items() if a == 'main' or a in used}   # bỏ subagent không nhận mã nào
-    return {'agents': ag, 'codes': asg}
+    out = {'agents': ag, 'codes': asg}
+    if skip:
+        out['skip'] = sorted(set(skip))
+    return out
 
 
 def add_job(path, subagents=0, note='', model='', plan=None):

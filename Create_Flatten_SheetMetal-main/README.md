@@ -6,7 +6,7 @@ Bộ skill, quy tắc và công cụ tạo bản vẽ trải phôi (DXF) kim lo�
 
 | Thư mục | Nội dung |
 |---|---|
-| `skills/` | Skill gốc từ app Claude (SKILL.md, UTF-8 không BOM): `dxf-sheetmetal` (v2026.11.04-1) tạo DXF trải phôi; `dxf-check` (v2026.11.03-1) kiểm DXF đầu ra |
+| `skills/` | Skill GỐC (SKILL.md, UTF-8 không BOM; sửa trực tiếp ở đây): `dxf-sheetmetal` tạo DXF trải phôi; `dxf-check` kiểm DXF đầu ra (version ở dòng 5 mỗi SKILL.md) |
 | `rules/` | Quy tắc laser (`Quy_Tac_Laser.md`: vật liệu, Laser R, piercing, joint, kegaki), lỗ mồi, quy tắc NC CamMagic LA, ghi chú lỗi DXF, quy tắc theo mã khách (đã ẩn tên khách), `bang-do-gian/` (bảng độ giãn khi uốn) |
 | `templates/` | `Template.dxf`: file mẫu để ghép hình vào, giữ nguyên từng byte |
 | `lessons/` | Bài học: `skill-updates/` (đề xuất sửa skill rút từ lỗi thực tế), `feedback/` (nguyên tắc làm việc), báo cáo thử nghiệm chạy song song |
@@ -15,7 +15,7 @@ Bộ skill, quy tắc và công cụ tạo bản vẽ trải phôi (DXF) kim lo�
 
 ## Cách dùng nhanh
 
-1. Cài skill: lấy `skills/<tên>/SKILL.md`, nạp vào Claude (Cài đặt, Skills). Skill trên app là bản gốc; repo này là bản lưu.
+1. Skill gốc nằm ở `skills/<tên>/SKILL.md` trong folder này; mỗi lần chạy Claude đọc skill từ đây. Nếu cần nạp lên app Claude thì lấy từ đây.
 2. Đặt `rules/`, `templates/Template.dxf` vào tài liệu project của Claude (skill tham chiếu `Quy_Tac_Laser.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_*.xlsx`, `Template.dxf`).
 3. Kiểm DXF: `python3 tools/dxf_check.py FILE.dxf [--template] [--mat SS --t 3.2]` (cần Python và `ezdxf`; các tùy chọn khác ở đầu file).
 4. Tạo NC: `python3 tools/cammagic_nc.py <file.dxf> <SS|SUS|AL|CU> <độ dày> [file_ra.nc]`, theo `rules/Quy_tac_NC_Cam_LA.md`.

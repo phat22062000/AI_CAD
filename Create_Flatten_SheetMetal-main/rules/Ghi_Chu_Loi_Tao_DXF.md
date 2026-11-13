@@ -17,3 +17,4 @@
 ## Lưu ý khác rút ra từ đơn này
 - HANDSEED của Template hiện là 208 và là handle kế tiếp chưa dùng (handle lớn nhất đang dùng là 207). Entity mới bắt đầu từ đúng giá trị HANDSEED.
 - Khi người dùng chỉ yêu cầu file ALL thì không tạo file riêng từng mã.
+- Lỗi 13/11/2026 - đơn 521111-25, mã 26-067785 (SUS304 t3, uốn 111°): coi kích thước 34 là kích thước ngoài, thực tế đường gióng 34 bắt đầu từ góc trong chỗ uốn 1 nên phôi ngắn 4.16 mm. Phải phóng ≥ 300 dpi đầu đường gióng để xác định trong/ngoài (SKILL.md dòng 106); không chắc thì Flag 7.

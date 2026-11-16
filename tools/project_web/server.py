@@ -23,6 +23,7 @@ WORK = os.environ.get('AI_WORK', os.path.join(ROOT, 'AI_Work'))
 STATIC = os.path.join(HERE, 'static')
 DATA = os.path.join(HERE, 'data')
 REVIEWS = os.path.join(DATA, 'reviews.json')      # Đúng/Sai của người dùng (bền vững)
+LOI_SAI = os.path.join(DATA, 'loi_sai.json')      # lỗi cụ thể của mã bị chấm Sai: {"<đơn>_<mã>": {"loi": ["...", ...], "at": ...}}, agent ghi qua `report.py loi`
 PROGRESS = os.path.join(DATA, 'progress.json')    # agent ghi tiến độ vào đây
 PORT = int(os.environ.get('PORT', '8780'))
 ACTIVE_MIN = 30          # thư mục có file mới trong 30 phút -> coi là đang làm
@@ -781,6 +782,27 @@ def package_order(order, overwrite=False):
     return r
 
 
+def loi_info():
+    """Mã đang chấm Sai -> lỗi cụ thể (loi_sai.json) + thư mục Sua_loi chứa 2 file DXF <mã>T.dxf (đúng) và <mã>F.dxf (sai)."""
+    data = load_json(LOI_SAI, {})
+    orders = {o['order']: o for o in snapshot()['orders']}
+    out = {}
+    for key, v in load_json(REVIEWS, {}).items():
+        if v.get('status') != 'sai' or '_' not in key:
+            continue
+        order, code = key.split('_', 1)
+        o = orders.get(order)
+        folder, files = None, []
+        if o:
+            folder = os.path.join(WORK, o['path'], 'Sua_loi')
+            try:
+                files = sorted(f for f in os.listdir(folder) if f.upper() in (code.upper() + 'T.DXF', code.upper() + 'F.DXF'))
+            except OSError:
+                folder, files = None, []        # chưa có folder Sua_loi của đơn
+        out[key] = {'loi': [str(x) for x in (data.get(key) or {}).get('loi', [])], 'folder': folder, 'files': files}
+    return out
+
+
 def list_compare():
     """Các phương án đã lưu: {số đơn: [bản ghi theo thời gian]}."""
     out = {}
@@ -919,6 +941,8 @@ class H(BaseHTTPRequestHandler):
             return self.send_json(snapshot('refresh' in self.path))
         if path == '/api/reviews':
             return self.send_json(load_json(REVIEWS, {}))
+        if path == '/api/loi':
+            return self.send_json(loi_info())
         if path == '/api/compare':
             return self.send_json(list_compare())
         if path == '/' or path == '':

@@ -190,6 +190,64 @@
     "images": 13
    },
    "ended": "2026-11-13T09:02:12Z"
+  },
+  "20261116080954_521113-16_tiep": {
+   "kind": "tiep",
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\13-11-2026\\521113-16",
+   "order": "521113-16",
+   "subagents": 0,
+   "model": "sonnet",
+   "note": "",
+   "answers": {
+    "26-068428": "(không ghi chú, chỉ có file tham khảo đính kèm)"
+   },
+   "refs": {
+    "26-068428": [
+     "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\13-11-2026\\521113-16\\Tham_Khao\\26-068428\\068428差し替え.pdf"
+    ]
+   },
+   "pdf": 0,
+   "xlsx": 0,
+   "status": "xong",
+   "at": "2026-11-16T01:09:54Z",
+   "ui": true,
+   "nhanAt": "2026-11-16T01:09:55Z",
+   "by": "auto",
+   "workdir": "Thang-11\\13-11-2026\\521113-16",
+   "prep": {
+    "seconds": 12.9,
+    "pages": 5,
+    "layout": "bản vẽ cụm: 5 trang cho 4 mã",
+    "skill_kb": {
+     "phang": 32.7,
+     "uon": 39.2,
+     "hop": 45.8,
+     "dxf": 35.0
+    },
+    "errors": []
+   },
+   "pid": 5960,
+   "pctime": 134392650085889967,
+   "log": "20261116080954_521113-16_tiep.jsonl",
+   "t0": 1794791408.562944,
+   "result": "26-068428 vẫn chưa vẽ được: PDF tham khảo không thêm giãn/kích thước phôi nên giữ Flag (đã cập nhật 4 Flag trong 521113-16_ALL.dxf); 3 mã khác giữ nguyên.",
+   "usage": {
+    "costUSD": 0.6961,
+    "seconds": 199,
+    "input": 36,
+    "output": 24049,
+    "thinking": 15168,
+    "cacheRead": 1229035,
+    "cacheWrite": 83149,
+    "denials": 1,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "calls_main": 24,
+    "calls_sub": 0,
+    "images": 4
+   },
+   "ended": "2026-11-16T01:13:31Z"
   }
  },
  "agents": {
@@ -896,20 +954,27 @@
    "kind": "main",
    "name": "Agent chính",
    "state": "done",
-   "phase": "Xong",
+   "phase": "Xong làm tiếp",
    "mood": "work",
-   "act": "Bash: py -X utf8 \"C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\report.py\" orders 521",
-   "model": "sonnet",
+   "act": "Bash: py -X utf8 \"C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\report.py\" parts 5211",
+   "model": "sonnet-5.5",
    "user": "Phát",
    "slot": "1",
-   "startedAt": "2026-11-13T06:39:11Z",
-   "job": "20261113133908_521113-16",
-   "finishedAt": "2026-11-13T06:45:16Z",
+   "startedAt": "2026-11-16T01:09:55Z",
+   "job": "20261116080954_521113-16_tiep",
+   "finishedAt": "2026-11-16T01:13:23Z",
    "note": null,
-   "heartbeatAt": "2026-11-13T06:45:16Z",
-   "actAt": "2026-11-13T06:45:16Z",
+   "heartbeatAt": "2026-11-16T01:13:23Z",
+   "actAt": "2026-11-16T01:13:22Z",
    "effort": "high",
-   "current": "26-068426"
+   "current": "26-068428",
+   "history": [
+    {
+     "startedAt": "2026-11-13T06:39:11Z",
+     "finishedAt": "2026-11-13T06:45:16Z",
+     "job": "20261113133908_521113-16"
+    }
+   ]
   },
   "521113-20_main": {
    "order": "521113-20",
@@ -930,6 +995,73 @@
    "actAt": "2026-11-13T09:02:03Z",
    "effort": "high",
    "current": "26-068457"
+  },
+  "521116-07_main": {
+   "order": "521116-07",
+   "kind": "main",
+   "name": "Agent chính",
+   "state": "done",
+   "phase": "Xong",
+   "mood": "work",
+   "act": "Bash: py -X utf8 \"C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\report.py\" parts 5211",
+   "model": "sonnet",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-16T02:46:40Z",
+   "job": "20261116094638_521116-07_tiep",
+   "finishedAt": "2026-11-16T02:51:00Z",
+   "note": null,
+   "heartbeatAt": "2026-11-16T02:51:01Z",
+   "actAt": "2026-11-16T02:51:00Z",
+   "current": "26-069022",
+   "effort": "high",
+   "history": [
+    {
+     "startedAt": "2026-11-16T02:32:11Z",
+     "finishedAt": "2026-11-16T02:37:54Z",
+     "job": "20261116093208_521116-07"
+    }
+   ]
+  },
+  "521116-10_main": {
+   "order": "521116-10",
+   "kind": "main",
+   "name": "Agent chính",
+   "state": "done",
+   "phase": "Xong",
+   "mood": "think",
+   "act": "Đang suy nghĩ",
+   "model": "sonnet",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-16T03:14:10Z",
+   "job": "20261116101409_521116-10",
+   "finishedAt": "2026-11-16T03:26:06Z",
+   "note": null,
+   "heartbeatAt": "2026-11-16T03:26:08Z",
+   "actAt": "2026-11-16T03:26:08Z",
+   "effort": "high",
+   "current": null
+  },
+  "521116-14_main": {
+   "order": "521116-14",
+   "kind": "main",
+   "name": "Agent chính",
+   "state": "done",
+   "phase": "Xong",
+   "mood": "work",
+   "act": "Bash: py -X utf8 \"C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\report.py\" orders 521",
+   "model": "sonnet",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-16T07:32:38Z",
+   "job": "20261116143235_521116-14",
+   "finishedAt": "2026-11-16T07:40:48Z",
+   "note": null,
+   "heartbeatAt": "2026-11-16T07:40:48Z",
+   "actAt": "2026-11-16T07:40:48Z",
+   "current": null,
+   "effort": "high"
   }
  },
  "orders": {
@@ -1201,13 +1333,58 @@
   },
   "521113-16": {
    "allFile": "521113-16_ALL.dxf",
-   "mergedAt": "2026-11-13T06:45:16Z"
+   "mergedAt": "2026-11-16T01:13:23Z"
   },
   "521113-20": {
    "order": "521113-20",
    "receivedAt": "2026-11-13T08:48:17Z",
    "allFile": "521113-20_ALL.dxf",
    "mergedAt": "2026-11-13T09:01:56Z"
+  },
+  "521116-07": {
+   "order": "521116-07",
+   "customer": "マイワークス株式会社",
+   "material": "304#1",
+   "receivedAt": "2026-11-16T02:32:25Z",
+   "partOrder": [
+    "26-069022",
+    "26-068397"
+   ],
+   "allFile": "521116-07_ALL.dxf",
+   "mergedAt": "2026-11-16T02:51:00Z"
+  },
+  "521116-10": {
+   "order": "521116-10",
+   "customer": "マイワークス株式会社",
+   "material": "304-2B**",
+   "receivedAt": "2026-11-16T03:26:06Z",
+   "partOrder": [
+    "26-068878",
+    "26-068879",
+    "26-068880",
+    "26-068881",
+    "26-068882",
+    "26-068883",
+    "26-068884",
+    "26-068885",
+    "26-068886"
+   ],
+   "allFile": "521116-10_ALL.dxf",
+   "mergedAt": "2026-11-16T03:26:06Z"
+  },
+  "521116-14": {
+   "order": "521116-14",
+   "customer": "株式会社ミスミ",
+   "material": "SPCC(磨き)",
+   "receivedAt": "2026-11-16T07:33:04Z",
+   "partOrder": [
+    "26-068416",
+    "26-068417",
+    "26-068929",
+    "26-068783"
+   ],
+   "allFile": "521116-14_ALL.dxf",
+   "mergedAt": "2026-11-16T07:40:48Z"
   }
  },
  "parts": {
@@ -2451,7 +2628,9 @@
     "2. Kích thước có dung sai (bề rộng đầu ghi 10 -0.2/-0.5, không đối xứng; ghi tay 9.5 nên dùng 9.5)"
    ],
    "blank": "230.88 x 9.5",
-   "finishedAt": "2026-11-11T07:21:00Z"
+   "finishedAt": "2026-11-11T07:21:00Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T06:05:28Z"
   },
   "521111-25_26-067784": {
    "order": "521111-25",
@@ -2489,7 +2668,9 @@
    "finishedAt": "2026-11-13T06:16:28Z",
    "mood": "write",
    "act": "Ghi: 521111-25_ALL.dxf",
-   "actAt": "2026-11-13T06:16:28Z"
+   "actAt": "2026-11-13T06:16:28Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T09:51:06Z"
   },
   "521111-25_26-067787": {
    "order": "521111-25",
@@ -2538,7 +2719,13 @@
    "act": "Write: 26-067399.dxf",
    "actAt": "2026-11-12T02:16:52Z",
    "blank": "740 x 560",
-   "finishedAt": "2026-11-12T02:16:59Z"
+   "finishedAt": "2026-11-12T02:16:59Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T04:55:22Z",
+   "packedAt": "2026-11-16T04:56:13Z",
+   "packedIn": "Gui_2",
+   "packedX": 740.0,
+   "packedY": 560.0
   },
   "521112-02_26-067248": {
    "order": "521112-02",
@@ -2554,8 +2741,8 @@
    "actAt": "2026-11-12T02:15:32Z",
    "blank": "50 x 33.5",
    "finishedAt": "2026-11-12T02:15:38Z",
-   "packedAt": "2026-11-12T09:53:10Z",
-   "packedIn": "Gui",
+   "packedAt": "2026-11-16T04:56:13Z",
+   "packedIn": "Gui_2",
    "packedX": 50.0,
    "packedY": 33.5
   },
@@ -2577,7 +2764,11 @@
    "blank": "50 x 45.7",
    "finishedAt": "2026-11-12T02:17:26Z",
    "previewOk": true,
-   "previewOkAt": "2026-11-12T10:03:05Z"
+   "previewOkAt": "2026-11-12T10:03:05Z",
+   "packedAt": "2026-11-16T04:56:13Z",
+   "packedIn": "Gui_2",
+   "packedX": 50.0,
+   "packedY": 45.7
   },
   "521112-02_26-067400": {
    "order": "521112-02",
@@ -2593,8 +2784,8 @@
    "actAt": "2026-11-12T02:17:51Z",
    "blank": "740 x 560",
    "finishedAt": "2026-11-12T02:17:58Z",
-   "packedAt": "2026-11-12T09:53:10Z",
-   "packedIn": "Gui",
+   "packedAt": "2026-11-16T04:56:13Z",
+   "packedIn": "Gui_2",
    "packedX": 740.0,
    "packedY": 560.0
   },
@@ -2632,7 +2823,13 @@
    "act": "Write: 26-067401.dxf",
    "actAt": "2026-11-12T02:18:38Z",
    "blank": "650 x 600",
-   "finishedAt": "2026-11-12T02:18:39Z"
+   "finishedAt": "2026-11-12T02:18:39Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T04:55:23Z",
+   "packedAt": "2026-11-16T04:56:13Z",
+   "packedIn": "Gui_2",
+   "packedX": 650.0,
+   "packedY": 600.0
   },
   "521112-02_26-067402": {
    "order": "521112-02",
@@ -2649,7 +2846,13 @@
    "act": "Write: 26-067402.dxf",
    "actAt": "2026-11-12T02:19:33Z",
    "blank": "705 x 560",
-   "finishedAt": "2026-11-12T02:19:35Z"
+   "finishedAt": "2026-11-12T02:19:35Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T04:55:24Z",
+   "packedAt": "2026-11-16T04:56:13Z",
+   "packedIn": "Gui_2",
+   "packedX": 705.0,
+   "packedY": 560.0
   },
   "521112-02_26-067403": {
    "order": "521112-02",
@@ -2665,8 +2868,8 @@
    "actAt": "2026-11-12T02:20:05Z",
    "blank": "705 x 560",
    "finishedAt": "2026-11-12T02:20:06Z",
-   "packedAt": "2026-11-12T09:53:10Z",
-   "packedIn": "Gui",
+   "packedAt": "2026-11-16T04:56:13Z",
+   "packedIn": "Gui_2",
    "packedX": 705.0,
    "packedY": 560.0
   },
@@ -2684,8 +2887,8 @@
    "actAt": "2026-11-12T02:20:45Z",
    "blank": "732 x 110",
    "finishedAt": "2026-11-12T02:20:53Z",
-   "packedAt": "2026-11-12T09:53:10Z",
-   "packedIn": "Gui",
+   "packedAt": "2026-11-16T04:56:13Z",
+   "packedIn": "Gui_2",
    "packedX": 731.62,
    "packedY": 110.0
   },
@@ -3467,14 +3670,21 @@
    "code": "26-068428",
    "agent": "521113-16_main",
    "status": "failed",
-   "level": 1,
-   "startedAt": "2026-11-13T06:41:41Z",
+   "level": 3,
+   "startedAt": "2026-11-16T01:10:24Z",
    "flags": [
-    "1. Thiếu độ giãn dài (chỉ có tay: 150° giãn 0.83; chỗ uốn khác R20, R30, R10, 28°, 22°, 68° không có giãn)",
-    "2. Thiếu kích thước (không tính được chiều dài phôi khai triển và vị trí đường uốn; hình cạnh chưa phân biệt được tấm nào là phôi chính, nét đứt 28°/22°/68° và kích thước 62.3, 25, 95.2, 585.2, 886 chưa gán được)"
+    "1. Thiếu độ giãn dài (chỉ có tay: 150° giãn 0.83; chỗ uốn khác R20, R30, R10, 28°, 22°, 68° không có giãn, góc khác 90° không dùng bảng, người dùng chưa bổ sung giãn)",
+    "2. Thiếu kích thước (PDF tham khảo 差し替え cùng nội dung bản gốc, chỉ thêm ghi chú ①角度曲げ, ②板, ③板 và mã vạch 068984/068985 của 2 tấm kia; vẫn không tính được chiều dài phôi khai triển và vị trí đường uốn của tấm ①; nét đứt 28°/22°/68° và kích thước 62.3, 25, 95.2, 585.2, 886 chưa gán được)",
+    "3. Thiếu DXF khách (PDF tham khảo có chữ DATA nhưng thư mục đơn không có DXF khách, cần DXF hoặc bản vẽ khai triển tấm ①)",
+    "4. Chưa vẽ file riêng 26-068428. Dữ kiện chắc chắn: bề rộng 470, 3-φ7.5 cách mép 38 / 180 / 180 (72), cách đầu cánh nghiêng 50; SPHC t2.3, có J (gia công nội bộ)"
    ],
    "kind": "uon",
-   "finishedAt": "2026-11-13T06:45:10Z"
+   "finishedAt": "2026-11-16T01:13:23Z",
+   "mood": "question",
+   "act": "Flag: thiếu giãn/kích thước/DXF",
+   "actAt": "2026-11-16T01:13:23Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T01:50:06Z"
   },
   "521113-20_26-068456": {
    "order": "521113-20",
@@ -3486,7 +3696,11 @@
    "flags": [],
    "kind": "uon",
    "blank": "1272 x 644",
-   "finishedAt": "2026-11-13T09:00:24Z"
+   "finishedAt": "2026-11-13T09:00:24Z",
+   "packedAt": "2026-11-16T07:31:33Z",
+   "packedIn": "Gui",
+   "packedX": 1272.0,
+   "packedY": 644.0
   },
   "521113-20_26-068457": {
    "order": "521113-20",
@@ -3501,7 +3715,13 @@
    ],
    "kind": "phang",
    "blank": "175 x 111.6",
-   "finishedAt": "2026-11-13T09:00:43Z"
+   "finishedAt": "2026-11-13T09:00:43Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T07:30:46Z",
+   "packedAt": "2026-11-16T07:31:33Z",
+   "packedIn": "Gui",
+   "packedX": 175.0,
+   "packedY": 111.6
   },
   "521113-20_26-068458": {
    "order": "521113-20",
@@ -3513,7 +3733,11 @@
    "flags": [],
    "kind": "uon",
    "blank": "670 x 182",
-   "finishedAt": "2026-11-13T09:00:52Z"
+   "finishedAt": "2026-11-13T09:00:52Z",
+   "packedAt": "2026-11-16T07:31:33Z",
+   "packedIn": "Gui",
+   "packedX": 670.0,
+   "packedY": 182.0
   },
   "521113-20_26-068459": {
    "order": "521113-20",
@@ -3525,7 +3749,11 @@
    "flags": [],
    "kind": "uon",
    "blank": "834 x 644",
-   "finishedAt": "2026-11-13T09:01:03Z"
+   "finishedAt": "2026-11-13T09:01:03Z",
+   "packedAt": "2026-11-16T07:31:33Z",
+   "packedIn": "Gui",
+   "packedX": 834.0,
+   "packedY": 644.0
   },
   "521113-20_26-068460": {
    "order": "521113-20",
@@ -3540,7 +3768,13 @@
    ],
    "kind": "phang",
    "blank": "175 x 81.6",
-   "finishedAt": "2026-11-13T09:01:20Z"
+   "finishedAt": "2026-11-13T09:01:20Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T07:30:48Z",
+   "packedAt": "2026-11-16T07:31:33Z",
+   "packedIn": "Gui",
+   "packedX": 175.0,
+   "packedY": 81.6
   },
   "521113-20_26-068461": {
    "order": "521113-20",
@@ -3552,7 +3786,11 @@
    "flags": [],
    "kind": "uon",
    "blank": "300 x 182",
-   "finishedAt": "2026-11-13T09:01:26Z"
+   "finishedAt": "2026-11-13T09:01:26Z",
+   "packedAt": "2026-11-16T07:31:33Z",
+   "packedIn": "Gui",
+   "packedX": 300.0,
+   "packedY": 182.0
   },
   "521113-20_26-068464": {
    "order": "521113-20",
@@ -3564,7 +3802,11 @@
    "flags": [],
    "kind": "uon",
    "blank": "834 x 644",
-   "finishedAt": "2026-11-13T09:01:41Z"
+   "finishedAt": "2026-11-13T09:01:41Z",
+   "packedAt": "2026-11-16T07:31:33Z",
+   "packedIn": "Gui",
+   "packedX": 834.0,
+   "packedY": 644.0
   },
   "521113-20_26-068465": {
    "order": "521113-20",
@@ -3579,7 +3821,13 @@
    ],
    "kind": "phang",
    "blank": "175 x 126.6",
-   "finishedAt": "2026-11-13T09:01:43Z"
+   "finishedAt": "2026-11-13T09:01:43Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T07:30:48Z",
+   "packedAt": "2026-11-16T07:31:33Z",
+   "packedIn": "Gui",
+   "packedX": 175.0,
+   "packedY": 126.6
   },
   "521113-20_26-068466": {
    "order": "521113-20",
@@ -3591,7 +3839,296 @@
    "flags": [],
    "kind": "uon",
    "blank": "300 x 182",
-   "finishedAt": "2026-11-13T09:01:50Z"
+   "finishedAt": "2026-11-13T09:01:50Z",
+   "packedAt": "2026-11-16T07:31:33Z",
+   "packedIn": "Gui",
+   "packedX": 300.0,
+   "packedY": 182.0
+  },
+  "521116-07_26-069022": {
+   "order": "521116-07",
+   "code": "26-069022",
+   "agent": "521116-07_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T02:50:31Z",
+   "flags": [
+    "1. Ghi chú tay không đọc rõ (無視してOK 左の形状にて製作: đã bỏ rãnh 12.5 x 33 cùng 2-R3 và R10 của rãnh, chỉ vẽ biên ngoài)"
+   ],
+   "mood": "write",
+   "act": "Ghi DXF + gop ALL",
+   "actAt": "2026-11-16T02:34:54Z",
+   "blank": "276 x 45",
+   "finishedAt": "2026-11-16T02:51:00Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T02:53:38Z",
+   "packedAt": "2026-11-16T03:07:39Z",
+   "packedIn": "Gui",
+   "packedX": 276.0,
+   "packedY": 45.0
+  },
+  "521116-07_26-068397": {
+   "order": "521116-07",
+   "code": "26-068397",
+   "agent": "521116-07_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T02:35:02Z",
+   "flags": [
+    "1. Tổng các kích thước trong chuỗi Dim khác với kích thước tổng (chuỗi rãnh dài 6.5+5+15+5+5=36.5, tổng 38 theo chữ tay 寸法数字ミス?; đo ảnh đoạn cuối ≈6.5 nên vẽ đối xứng 6.5, rãnh tính từ mép)"
+   ],
+   "mood": "write",
+   "act": "Write: 26-068397.dxf",
+   "actAt": "2026-11-16T02:37:36Z",
+   "blank": "58.24 x 38",
+   "finishedAt": "2026-11-16T02:37:50Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T02:46:03Z",
+   "packedAt": "2026-11-16T03:07:39Z",
+   "packedIn": "Gui",
+   "packedX": 58.24,
+   "packedY": 38.0
+  },
+  "521116-10_26-068878": {
+   "order": "521116-10",
+   "code": "26-068878",
+   "agent": "521116-10_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T03:17:30Z",
+   "flags": [
+    "1. Số lượng bo R hoặc vát C ghi không khớp với hình (ghi 2-R2, hình/DXF khách có 4 góc bo R2: vẽ R2 cả 4 góc)"
+   ],
+   "kind": "phang",
+   "blank": "1080 x 60",
+   "finishedAt": "2026-11-16T03:17:53Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T06:00:29Z",
+   "packedAt": "2026-11-16T07:04:52Z",
+   "packedIn": "Gui",
+   "packedX": 1080.0,
+   "packedY": 60.0
+  },
+  "521116-10_26-068879": {
+   "order": "521116-10",
+   "code": "26-068879",
+   "agent": "521116-10_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T03:18:40Z",
+   "flags": [],
+   "kind": "phang",
+   "blank": "1010 x 675",
+   "finishedAt": "2026-11-16T03:18:57Z",
+   "packedAt": "2026-11-16T07:04:52Z",
+   "packedIn": "Gui",
+   "packedX": 1010.0,
+   "packedY": 675.0
+  },
+  "521116-10_26-068880": {
+   "order": "521116-10",
+   "code": "26-068880",
+   "agent": "521116-10_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T03:19:03Z",
+   "flags": [],
+   "kind": "phang",
+   "blank": "1010 x 675",
+   "finishedAt": "2026-11-16T03:19:06Z",
+   "packedAt": "2026-11-16T07:04:52Z",
+   "packedIn": "Gui",
+   "packedX": 1010.0,
+   "packedY": 675.0
+  },
+  "521116-10_26-068881": {
+   "order": "521116-10",
+   "code": "26-068881",
+   "agent": "521116-10_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T03:19:58Z",
+   "flags": [
+    "1. Kích thước PDF và DXF khác nhau (lỗ φ10 thứ 2 và thứ 3: PDF 4xP335 tức x = 375 / 710, DXF x = 377 / 711; vẽ theo PDF)"
+   ],
+   "kind": "phang",
+   "blank": "1420 x 60",
+   "finishedAt": "2026-11-16T03:20:05Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T06:22:03Z",
+   "packedAt": "2026-11-16T07:04:52Z",
+   "packedIn": "Gui",
+   "packedX": 1420.0,
+   "packedY": 60.0
+  },
+  "521116-10_26-068882": {
+   "order": "521116-10",
+   "code": "26-068882",
+   "agent": "521116-10_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T03:20:33Z",
+   "flags": [
+    "1. Tổng các kích thước trong chuỗi Dim khác với kích thước tổng (PDF ghi 2xP320=960 nhưng 2 x 320 = 640; vẽ 4 lỗ cách đều 320, tổng 960, khớp 4-φ7, 4-φ10 và DXF khách)"
+   ],
+   "kind": "phang",
+   "blank": "1060 x 60",
+   "finishedAt": "2026-11-16T03:20:41Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T06:27:39Z",
+   "packedAt": "2026-11-16T07:04:52Z",
+   "packedIn": "Gui",
+   "packedX": 1060.0,
+   "packedY": 60.0
+  },
+  "521116-10_26-068883": {
+   "order": "521116-10",
+   "code": "26-068883",
+   "agent": "521116-10_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T03:20:53Z",
+   "flags": [],
+   "kind": "phang",
+   "blank": "100 x 40",
+   "finishedAt": "2026-11-16T03:20:56Z",
+   "packedAt": "2026-11-16T07:04:52Z",
+   "packedIn": "Gui",
+   "packedX": 100.0,
+   "packedY": 40.0
+  },
+  "521116-10_26-068884": {
+   "order": "521116-10",
+   "code": "26-068884",
+   "agent": "521116-10_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T03:22:45Z",
+   "flags": [
+    "1. Kích thước có dung sai (840 0/-0.5 vẽ 839.75; 9 0/-0.5 vẽ 8.75; 11.5 +0.5/0 vẽ 11.75 nên lỗ φ6.5 cách mép tự do cánh 20 là 8.25; chuẩn 60 giữ ở đầu trái hình chiếu đứng)",
+    "2. Không chắc mặt nào là mặt ngoài (hình chiếu đứng thấy mặt trong chỗ uốn; vẽ mặt ngoài, lật trái-phải; ký hiệu tam giác ở mặt cắt A chưa rõ chỉ mặt nào)"
+   ],
+   "kind": "uon",
+   "blank": "839.75 x 26.11",
+   "finishedAt": "2026-11-16T03:22:55Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T06:45:30Z",
+   "packedAt": "2026-11-16T07:04:52Z",
+   "packedIn": "Gui",
+   "packedX": 839.75,
+   "packedY": 26.11
+  },
+  "521116-10_26-068885": {
+   "order": "521116-10",
+   "code": "26-068885",
+   "agent": "521116-10_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T03:23:20Z",
+   "flags": [
+    "1. Kích thước có dung sai (32 0/-0.5 vẽ 31.75: mép khuyết cách mép trên 31.75, tức cao 28.25 tính từ mép dưới; số (28) trong ngoặc chỉ tham khảo)"
+   ],
+   "kind": "phang",
+   "blank": "610 x 60",
+   "finishedAt": "2026-11-16T03:23:23Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-16T06:56:53Z",
+   "packedAt": "2026-11-16T07:04:52Z",
+   "packedIn": "Gui",
+   "packedX": 610.0,
+   "packedY": 60.0
+  },
+  "521116-10_26-068886": {
+   "order": "521116-10",
+   "code": "26-068886",
+   "agent": "521116-10_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T03:25:17Z",
+   "flags": [],
+   "kind": "uon",
+   "blank": "50 x 48.2",
+   "finishedAt": "2026-11-16T03:25:41Z",
+   "packedAt": "2026-11-16T07:04:52Z",
+   "packedIn": "Gui",
+   "packedX": 50.0,
+   "packedY": 48.2
+  },
+  "521116-14_26-068416": {
+   "order": "521116-14",
+   "code": "26-068416",
+   "agent": "521116-14_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T07:33:28Z",
+   "flags": [
+    "1. Kích thước và hình dạng không khớp (cánh nghiêng góc 83/92 độ: cạnh 85, 30, 47 và góc không khép kín, đã dựng theo độ dài cạnh)",
+    "2. Chân dim kích thước bị lệch (vị trí 2 lỗ M3 trên cánh nghiêng: 12 từ đầu cánh, 62 giữa hai lỗ, 5 từ mép, suy từ đường gióng)",
+    "3. Ghi chú tay không đọc rõ (コーナーカット 3mm không rõ R hay C, vị trí góc; tạm vẽ laser R0.5 các góc lồi ≤ 90 độ)"
+   ],
+   "kind": "uon",
+   "mood": "work",
+   "act": "Check: dxf_check",
+   "actAt": "2026-11-16T07:38:23Z",
+   "blank": "270.5 x 170",
+   "finishedAt": "2026-11-16T07:38:40Z"
+  },
+  "521116-14_26-068417": {
+   "order": "521116-14",
+   "code": "26-068417",
+   "agent": "521116-14_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T07:38:40Z",
+   "flags": [
+    "1. Kích thước và hình dạng không khớp (cánh nghiêng góc 83/92 độ: cạnh 85, 30, 47 và góc không khép kín, đã dựng theo độ dài cạnh)",
+    "2. Chân dim kích thước bị lệch (vị trí 2 lỗ M3 trên cánh nghiêng: 12 từ đầu cánh, 62 giữa hai lỗ, 5 từ mép, suy từ đường gióng)",
+    "3. Ghi chú tay không đọc rõ (コーナーカット 3mm không rõ R hay C, vị trí góc; tạm vẽ laser R0.5 các góc lồi ≤ 90 độ)"
+   ],
+   "kind": "uon",
+   "mood": "write",
+   "act": "Write: 26-068417.dxf",
+   "actAt": "2026-11-16T07:39:03Z",
+   "blank": "270.5 x 170",
+   "finishedAt": "2026-11-16T07:39:12Z"
+  },
+  "521116-14_26-068929": {
+   "order": "521116-14",
+   "code": "26-068929",
+   "agent": "521116-14_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T07:39:12Z",
+   "flags": [],
+   "kind": "uon",
+   "mood": "write",
+   "act": "Write: 26-068929.dxf",
+   "actAt": "2026-11-16T07:40:23Z",
+   "blank": "109.5 x 30",
+   "finishedAt": "2026-11-16T07:40:24Z",
+   "packedAt": "2026-11-16T08:41:11Z",
+   "packedIn": "Gui",
+   "packedX": 109.5,
+   "packedY": 30.0
+  },
+  "521116-14_26-068783": {
+   "order": "521116-14",
+   "code": "26-068783",
+   "kind": "phang",
+   "agent": "521116-14_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-16T07:40:24Z",
+   "flags": [],
+   "mood": "write",
+   "act": "Write: 26-068783.dxf",
+   "actAt": "2026-11-16T07:40:34Z",
+   "blank": "202 x 202",
+   "finishedAt": "2026-11-16T07:40:35Z",
+   "packedAt": "2026-11-16T08:41:11Z",
+   "packedIn": "Gui",
+   "packedX": 202.0,
+   "packedY": 202.0
   }
  }
 }

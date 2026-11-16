@@ -10,12 +10,20 @@ $j = Get-Content -Raw -Encoding UTF8 $Job | ConvertFrom-Json
 $rows = @($j.rows)
 $n = $rows.Count
 if ($n -lt 1) { throw 'Không có mã nào để ghi.' }
+$done = $false
+for ($attempt = 1; $attempt -le 3 -and -not $done; $attempt++) {     # Excel mới mở đôi khi từ chối cuộc gọi (RPC_E_CALL_REJECTED): thử lại tối đa 3 lần với Excel mới
 $xl = New-Object -ComObject Excel.Application
 $xl.Visible = $false
 $xl.DisplayAlerts = $false
 $xl.AutomationSecurity = 3     # msoAutomationSecurityForceDisable: không chạy macro nào
+$xlPid = 0
+try {      # PID của Excel vừa mở (để dọn nếu Quit lỗi)
+    if (-not ('W.U' -as [type])) { Add-Type -Namespace W -Name U -MemberDefinition '[DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint p);' }
+    $p =[uint32]0; [void][W.U]::GetWindowThreadProcessId([IntPtr]$xl.Hwnd, [ref]$p); $xlPid = [int]$p
+} catch { }
 try {
     $wb = $xl.Workbooks.Open($j.template, 0, $false)
+    if ($null -eq $wb) { throw 'Excel không mở được file mẫu (rejected: Excel báo lỗi bản quyền Product Activation Failed hoặc đang bận).' }
     $ws = $wb.Worksheets.Item(1)
     # số hàng dữ liệu hiện có trong mẫu: từ hàng 6 đến hàng ngay trên dòng 合計 (cột B)
     $r = 6
@@ -57,7 +65,20 @@ try {
     $wb.SaveAs($out, 56)                                   # 56 = xlExcel8 (.xls)
     $wb.Close($false)
     Write-Output ("OK rows=$n total_row=" + (6 + $n))
+    $done = $true
+} catch {
+    $msg = $_.Exception.Message
+    if ($attempt -lt 3 -and $msg -match 'rejected|0x80010001|0x800AC472|0x8001010A') {
+        $retry = $true
+    } else {
+        [Console]::Error.WriteLine('gui_fill dòng ' + $_.InvocationInfo.ScriptLineNumber + ': ' + $msg)
+        exit 1
+    }
 } finally {
-    $xl.Quit()
-    [void][System.Runtime.Interopservices.Marshal]::ReleaseComObject($xl)
+    # Quit lỗi (Excel treo/crash) không được che lỗi gốc ở trên; Excel còn sót thì tắt đúng tiến trình do script này mở
+    try { $xl.Quit() } catch { }
+    try { [void][System.Runtime.Interopservices.Marshal]::ReleaseComObject($xl) } catch { }
+    if ($xlPid) { Start-Sleep -Milliseconds 500; Stop-Process -Id $xlPid -Force -ErrorAction SilentlyContinue }
+}
+if (-not $done) { Start-Sleep -Seconds 3 }
 }

@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.13-1"
+  version: "2026.11.16-1"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -24,7 +24,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 ## 2. Nguồn số liệu và cách đọc kích thước
 - Bản vẽ là chính xác. X/Y trong CAD依頼書 chỉ là khung bao tham khảo, KHÔNG phải hình dạng. Số trong ngoặc ( ) chỉ tham khảo, chỉ cần theo số không ngoặc. Có DXF khách thì hình dạng theo DXF; lệch chỉ với số trong ngoặc hoặc CAD依頼書 thì không cần hỏi.
 - Chỉ thị viết tay là chỉ thị chính thức, phải theo; lỗi cần tránh là đọc nhầm chữ tay (キリ = lỗ khoan, từng đọc nhầm thành φ7). Lỗ ghi 「あける」 thì vẽ.
-- Lỗ/gia công bị gạch (bút đỏ, gạch chéo): không vẽ.
+- Lỗ/gia công bị gạch (bút đỏ, gạch chéo): không vẽ. Áp cho cả rãnh, khoét, vát: nét hình vẫn in và DXF khách vẫn có nhưng MỌI kích thước của gia công đó bị gạch bỏ thì coi là bị hủy, không vẽ, ưu tiên hơn "hình dạng theo DXF" (dòng 25, mục 4.2); liệt kê phần đã bỏ trong báo cáo.
 - Bản vẽ lắp hàn có ghi chú tay chỉ định phần laser (「SSレーザー 9t×295×700」「曲げ(抜穴アリ)」「角穴+曲げ 抜き」 kèm hình tay): CHỈ vẽ phần được chỉ thị; không tự vẽ lỗ ren, キリ, M5/M6... của bản gốc; liệt kê lỗ đã bỏ trong báo cáo. 
 - Dung sai: vẽ theo giá trị giữa khoảng dung sai, giữ chuẩn đo/đối xứng Flag 18 (mục 11.4).
 - Độ chính xác: tính đủ chữ số, không làm tròn giữa chừng; kết quả giữ ≥ 2 chữ số thập phân.
@@ -59,7 +59,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   4. Uốn ngược chiều (Z/Ω/mũ, 上曲げ + 下曲げ) không có mặt ngoài rõ, không có 表: vẽ theo hình chiếu chính (hình chiếu đứng) đúng như bản vẽ, không lật; trùng mặt với 展開図 của khách nếu có.
   5. Phẳng không uốn: giữ hướng hình chiếu đứng. Tấm tách từ bản vẽ lắp mà hình chiếu đứng là mặt trong thì lật trái–phải để ra mặt ngoài.
   - Không chắc mặt nào là mặt ngoài: vẫn vẽ theo mặt đã chọn và Flag 11 (ghi mặt đã chọn). Chỉ dùng Flag 11 sau khi đã lập bảng mặt vẽ (mục 12) và xác định từng hình tay là loại hình nào; không dùng Flag 11 để thay việc xác định loại hình.
-- Cặp gương (R/L, 本図/対称, A-1/A-2, hai trang cùng loại chi tiết): hình dạng và kegaki bản kia là ảnh gương; chỗ dễ lỗi nhất, kiểm kỹ hơn. Nhãn ở hình 3D → trái/phải ở hình chiếu đứng → cùng trái/phải ở hình từ dưới (chỉ đảo trước–sau). Vẽ mặt trên (mặt kegaki) từ hình từ dưới thì lật trước–sau. Ví dụ 26-064157 (A-1, trái, đế 100 x 50): mặt trên lỗ φ16 (16; 15), kegaki (70; 35), y tính từ mép trước; 064158 (A-2) là ảnh gương. Lỗi đã gặp: coi hình dưới là hình bằng nên ra ảnh gương (26-062206: cánh ngắn 35 phải sát mép trước, mở rộng 50 phía sau; 064157/158 bị đổi chỗ).
+- Cặp gương (R/L, 本図/対称, A-1/A-2, hai trang cùng loại chi tiết): hình dạng và kegaki bản kia là ảnh gương; chỗ dễ lỗi nhất, kiểm kỹ hơn. Nhãn ở hình 3D → trái/phải ở hình chiếu đứng → cùng trái/phải ở hình từ dưới (chỉ đảo trước–sau). Vẽ mặt trên (mặt kegaki) từ hình từ dưới thì lật trước–sau. Ví dụ 26-064157 (A-1, trái, đế 100 x 50): mặt trên lỗ φ16 (16; 15), kegaki (70; 35), y tính từ mép trước; 064158 (A-2) là ảnh gương. Lỗi đã gặp: coi hình dưới là hình bằng nên ra ảnh gương (26-062206: cánh ngắn 35 phải sát mép trước, mở rộng 50 phía sau; 064157/158 bị đổi chỗ). Cặp 本図/対称 mà hình nguồn là hình nhìn từ dưới và mặt dưới là mặt ngoài (cánh còn lại hướng lên): 本図 vẽ ĐÚNG hướng hình dưới, không lật; 対称 là ảnh gương qua trục dọc phôi. Mã vạch đứng cạnh nhãn 本図/対称 cho biết mã nào là bản nào, không đổi theo thứ tự trong bảng. Trước khi dựng ghi ra mặt vẽ và hình nguồn cho cả hai mã; lỗi đã gặp: hai mã của một cặp bị đổi hình cho nhau.
   - Mỗi tấm của cặp gương/đối xứng phải tự đọc và đo riêng điểm đầu–cuối từng kích thước và vị trí lỗ; KHÔNG chép toạ độ từ tấm kia. Chuỗi hai tấm có thể khác nhau (521102-23: 065503 lỗ X = 57,5 / 171,5, ô khoét 60 → 169; 065504 lỗ X = 60 / 174, ô khoét 62,5 → 171,5). Chỉ coi là ảnh gương khi đo từng tấm cho cùng kết quả.
 - Chỉ xoay 90°/180° chọn hướng (mục 10) SAU KHI mặt đã đúng; không dùng xoay để "sửa" khi chưa chắc mặt. Lật chỉ khi quy tắc mặt yêu cầu.
 

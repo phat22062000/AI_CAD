@@ -37,4 +37,5 @@ Có hai nguồn góp ý:
    Cùng loại lỗi với một bài học đã có thì bổ sung vào file đó, không tạo file trùng. Không ghi tên khách hàng (chỉ số đơn, mã).
 5. **Lỗi do skill thiếu hoặc sai quy tắc, hoặc cùng lỗi lặp lại từ 2 lần:** soạn đề xuất sửa vào `lessons\skill-updates\<mã>-<ten-ngan>.md` (ghi rõ dòng cũ, dòng mới như các file đã có). Chỉ sửa skill gốc `skills\dxf-sheetmetal\SKILL.md` khi người dùng đồng ý, và báo rõ vị trí các dòng mới cập nhật.
 6. **Đánh dấu đã rút:** thêm khoá `<số đơn>_<mã>` vào `lessons\feedback\_da_rut_kinh_nghiem.json` (mảng JSON) kèm tên file bài học.
+   Khi có hai file DXF `<mã>T.dxf` (đúng) và `<mã>F.dxf` (sai) trong `<thư mục đơn>\Sua_loi\` (người dùng đặt vào): so sánh hai file rồi ghi lỗi cụ thể của mã lên trang (popup chi tiết mã Sai, chỉ đọc) bằng `py tools\project_web\report.py loi <số đơn>_<mã> "lỗi 1" "lỗi 2"` (mỗi lỗi một câu, ghi đè danh sách cũ). Trang tự hiện đường dẫn folder `Sua_loi`, không cần ghi đường dẫn.
 7. **Báo người dùng:** các mã đã rút, bài học mới hoặc bổ sung, đề xuất sửa skill đang chờ duyệt.

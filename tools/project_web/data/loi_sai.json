@@ -1,0 +1,23 @@
+{
+ "521113-05_26-068185": {
+  "loi": [
+   "F thừa 2 rãnh chữ U (R10, rộng 20) ở hai đầu cung R96, bài đúng T không có: PDF đã gạch tay hết kích thước rãnh (17.1, 2-R10, 20, 87.1, 68.2, 35) nhưng AI vẫn vẽ theo hình dạng DXF khách, không áp quy tắc 'gia công bị gạch: không vẽ' (SKILL dòng 27 trước khi sửa chỉ nói về lỗ).",
+   "Hướng đặt khác: F xoay 180° (cung ở trên, vát C50 ở dưới, lỗ y = 21.9), T giữ hướng DXF khách (cung ở dưới, vát ở trên, lỗ y = 53.1). Do AI chọn cạnh áp trục dài hơn (SKILL mục 10) thay vì giữ hướng hình chiếu đứng (dòng 60). Cần Phát xác nhận hướng đúng."
+  ],
+  "at": "2026-11-16T03:40:31Z"
+ },
+ "521112-15_26-067451": {
+  "loi": [
+   "T và F của 26-067451 là ảnh gương nhau qua trục dọc phôi: T giữ đúng hình dưới trên bản vẽ (chân φ7 ở y 12, đường uốn y 25.2/30, dải M4 ở y 50.2, cánh 170° ở góc trên phải); F lật ngược (chân φ7 ở y 63.2, lỗ M4 ở y 25, cánh ở góc dưới phải), tức F vẽ mặt đối diện dù AI ghi 'giữ mặt ngoài'.",
+   "Khe 1 mm tách cánh 170°: F kéo tới x = 242.66 (đường uốn xa, tự chọn để 'cánh tách hẳn'), T kết thúc tại x = 242.83 (giữa hai đường uốn 242.66 và 243.0). Không có Flag nào cho điểm tự chọn này."
+  ],
+  "at": "2026-11-16T08:15:00Z"
+ },
+ "521112-15_26-067452": {
+  "loi": [
+   "T và F của 26-067452 ngược với 26-067451: F của 067452 giữ hướng hình dưới (chân φ7 ở y 12, cánh ở góc trên phải) còn T là ảnh gương (chân φ7 ở y 63.2, cánh ở góc dưới phải). Hai mã bị đổi chỗ hình cho nhau: F của mỗi mã đúng là T của mã kia, chỉ khác điểm cuối khe.",
+   "Nguyên nhân khả dĩ: nhãn 本図/対称 nằm dưới mã vạch 067451/067452 nhưng AI dựng 本図 từ mặt đối diện hình dưới rồi lấy 対称 làm ảnh gương 'xoay 180°'. Khe 1 mm cũng kéo tới 242.66 thay vì 242.83 (giữa hai đường uốn)."
+  ],
+  "at": "2026-11-16T08:15:00Z"
+ }
+}

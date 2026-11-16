@@ -5,6 +5,7 @@ Cách dùng:
   py report.py <orders|agents|parts|jobs> <id> key=value [key=value ...]
   py report.py jobs          (liệt kê việc giao trên trang còn chờ)
   py report.py review <số đơn>_<mã> status=sai note="..."   (chỉ khi người dùng góp ý trong app)
+  py report.py loi <số đơn>_<mã> "lỗi 1" "lỗi 2"          (lỗi cụ thể của mã Sai sau khi so file T/F, hiện trong popup mã)
 
 Giá trị được đọc như JSON nếu được (số, true/false, null, ["a","b"]), nếu không thì là chuỗi.
 Giá trị "now" = thời gian hiện tại (ISO UTC). "done+=<mã>" thêm một mã vào danh sách done.
@@ -50,6 +51,16 @@ def main(argv):
     if len(argv) < 3:
         print(__doc__)
         return 2
+    if argv[1] == 'loi':
+        # Lỗi cụ thể của mã bị chấm Sai, rút ra sau khi so 2 file DXF T (đúng) và F (sai): hiện trong popup chi tiết mã (mục Đánh Giá AI)
+        # py report.py loi <số đơn>_<mã> "lỗi 1" "lỗi 2" ...   (ghi đè toàn bộ danh sách lỗi của mã)
+        import server
+        with server.lock:
+            d = server.load_json(server.LOI_SAI, {})
+            d[argv[2]] = {'loi': [a for a in argv[3:] if a.strip()], 'at': server.now_iso()}
+            server.save_json(server.LOI_SAI, d)
+        print('OK loi', argv[2], len(d[argv[2]]['loi']), 'dòng')
+        return 0
     if argv[1] == 'review':
         # Chỉ dùng khi NGƯỜI DÙNG góp ý trong app: ghi kết quả chấm lên trang (mục Đánh Giá AI)
         # py report.py review <số đơn>_<mã> status=sai|dung|cho note="..."

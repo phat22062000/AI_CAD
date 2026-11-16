@@ -37,8 +37,8 @@ async function api(path, body){
 
 async function load(force){
   try {
-    const [d, rv, cmp] = await Promise.all([api('/api/state' + (force ? '?refresh=1' : '')), api('/api/reviews'), api('/api/compare').catch(() => ({}))]);
-    S.compare = cmp || {};
+    const [d, rv, cmp, loi] = await Promise.all([api('/api/state' + (force ? '?refresh=1' : '')), api('/api/reviews'), api('/api/compare').catch(() => ({})), api('/api/loi').catch(() => S.loi || {})]);
+    S.compare = cmp || {}; S.loi = loi || {};      // S.loi[đơn_mã] = {loi:[...], folder, files} cho mã chấm Sai
     // dữ liệu agent báo có thể sai định dạng (flags là chuỗi): chuẩn hoá về mảng để giao diện không bị lỗi
     const arr = v => Array.isArray(v) ? v.map(String) : (v ? [String(v)] : []);
     (d.orders || []).forEach(o => { o.flags = arr(o.flags); o.agents = arr(o.agents); (o.codes || []).forEach(c => { c.flagsRaw = arr(c.flags); c.flags = (c.manual || c.previewOk) ? [] : c.flagsRaw; if (c.previewOk) c.flagsRaw = arr(c.flagsOrig); }); });   // mã người dùng tự làm: ẩn Flag trên giao diện (giữ flagsRaw để xem lại khi hoàn tác)
@@ -118,8 +118,8 @@ function renderProgress(){
   ost.value = S.oFilter;
 
   const q = S.oQ.trim().toLowerCase();
-  const list = os.filter(o => (S.oFilter === 'all' || o.state === S.oFilter) && inDate(o.date, S.oDate) &&
-    (!q || o.order.includes(q) || (o.customer || '').toLowerCase().includes(q) || o.codes.some(c => c.code.includes(q))));
+  const list = os.filter(o => (S.oFilter === 'all' || o.state === S.oFilter) && (q || inDate(o.date, S.oDate)) &&      // đang tìm số đơn/mã/khách thì bỏ lọc ngày/tháng/năm (tìm trên mọi ngày)
+    (!q || o.order.includes(q) || String(o.customer || '').toLowerCase().includes(q) || o.codes.some(c => c.code.includes(q))));
   // đơn đang làm / đang chờ lên đầu
   const pri = {dang:0, cho:1, chua:2, xong:3};
   list.sort((a, b) => pri[a.state] - pri[b.state] || (b.date + b.order).localeCompare(a.date + a.order));
@@ -350,6 +350,15 @@ function codeDrawer(x, r){
   const kv = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
   const size = r.size && r.size !== '0.0 x 0.0' ? r.size : '';
   const fl = c.flags || [];
+  // mã chấm Sai: thư mục chứa 2 file DXF đúng (<mã>T.dxf) và sai (<mã>F.dxf) + lỗi cụ thể rút ra sau khi so sánh 2 file (chỉ đọc, agent ghi vào data\loi_sai.json bằng report.py loi)
+  const li = (S.loi || {})[key] || {};
+  const sai = r.status !== 'sai' ? '' : `<h3>File đúng / sai</h3>
+      ${li.folder ? `<div class="mono">${esc(li.folder)} <button class="ib" data-copy="${esc(li.folder)}" title="Copy đường dẫn folder"><svg class="i"><use href="#i-folder"/></svg></button></div>
+        <div class="t3" style="font-size:12px;margin-top:2px">${li.files && li.files.length ? 'Gồm: ' + li.files.map(esc).join(', ') + ' (T = đúng, F = AI vẽ sai)' : 'Chưa thấy file ' + esc(r.code) + 'T.dxf và ' + esc(r.code) + 'F.dxf trong folder này.'}</div>`
+        : '<span class="t3">Chưa có folder Sua_loi chứa file T (đúng) và F (sai) của đơn này.</span>'}
+      <h3>Lỗi sai cụ thể</h3>
+      ${(li.loi || []).length ? `<div class="od-flags">${li.loi.map((t, i) => '<div>' + (i + 1) + '. ' + esc(t) + '</div>').join('')}</div>`
+        : '<p class="hint">Chưa có phân tích. Nhắn agent: "Đơn ' + esc(o.order) + ' so sánh và rút kinh nghiệm mã ' + esc(r.code) + '" để rút ra lỗi sau khi so 2 file T và F.</p>'}`;
   return `<div class="od-h">
       <span class="jid">${esc(r.code)}</span>${chip(r.status === 'dung' ? 'xong' : r.status === 'sai' ? 'sai' : 'check', RV[r.status])}
       <span class="sp"></span><button class="ib" data-odclose title="Đóng (Esc)"><svg class="i"><use href="#i-x"/></svg></button>
@@ -381,8 +390,8 @@ function codeDrawer(x, r){
           : '<span class="t3">Chưa có file DXF</span>')}
       </dl>
       ${fl.length ? `<h3>FLAG <span class="n">${fl.length}</span></h3><div class="od-flags">${fl.map(f => '<div>⚑ ' + esc(f) + '</div>').join('')}</div>` : ''}
-      <h3>Ghi chú</h3>
-      <textarea class="cd-note" data-k="${esc(key)}" rows="4" placeholder="${r.status === 'sai' ? 'Sai ở đâu? (lưu khi bấm ra ngoài ô)' : 'Viết ghi chú (lưu khi bấm ra ngoài ô)'}">${esc(r.note)}</textarea>
+      ${r.status === 'sai' ? sai : `<h3>Ghi chú</h3>
+      <textarea class="cd-note" data-k="${esc(key)}" rows="4" placeholder="Viết ghi chú (lưu khi bấm ra ngoài ô)">${esc(r.note)}</textarea>`}
     </div>`;
 }
 function renderDrawer(){
@@ -467,7 +476,7 @@ function renderReview(){
     .map(([k, l]) => `<button data-f="${k}" class="${S.rFilter === k ? 'on' : ''}">${l} <i>${fc[k]}</i></button>`).join('');
 
   const q = S.rQ.trim().toLowerCase();
-  const list = all.filter(x => (S.rFilter === 'all' || x.n[S.rFilter]) && inDate(x.o.date, S.rDate) &&
+  const list = all.filter(x => (S.rFilter === 'all' || x.n[S.rFilter]) && (q || inDate(x.o.date, S.rDate)) &&      // đang tìm thì bỏ lọc ngày/tháng/năm
     (!q || x.o.order.includes(q) || x.rows.some(r => r.code.includes(q))));
   renderCompare();
   $('#r-n').textContent = list.length;
@@ -549,7 +558,7 @@ async function setReview(items){
     else S.reviews[it.key] = {...(S.reviews[it.key] || {}), status:it.status, note:it.note ?? (S.reviews[it.key] || {}).note ?? '', by:LS.get('pw-who', '')};
   });
   renderReview();
-  try { const r = await api('/api/review', {items, by:LS.get('pw-who', '')}); S.reviews = r.reviews; toast('Đã lưu'); }
+  try { const r = await api('/api/review', {items, by:LS.get('pw-who', '')}); S.reviews = r.reviews; S.loi = await api('/api/loi').catch(() => S.loi || {}); renderReview(); toast('Đã lưu'); }
   catch (e) { toast('Lỗi lưu: ' + e.message); load(); }
 }
 

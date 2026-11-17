@@ -1,0 +1,21 @@
+[
+ {
+  "id": "20261117162639_updscript",
+  "archived": [
+   "066976-gan-lo-nhan-ren-khac-co.md"
+  ],
+  "at": "2026-11-17T09:30:42Z",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\script_backup\\20261117162639_updscript",
+  "changes": [
+   {
+    "proposal": "066976-gan-lo-nhan-ren-khac-co.md",
+    "file": "tools\\dxf_check.py",
+    "lines": "311-324 (cộng 2 dòng docstring đầu file)",
+    "old": "(thêm mới)",
+    "new": "Phôi có từ 2 cặp đường uốn DASHED cùng hướng, hai cánh ngoài cùng rộng bằng nhau (<0.1 mm): so danh sách φ lỗ (CIRCLE và POINT lỗ) từng cánh; khác nhau thì CẢNH BÁO \"hai cánh ngoài cùng bằng nhau (w mm) nhưng lỗ không đối xứng (n1 so n2)\".",
+    "test": "51 file (mọi F/T Sua_loi + mọi _ALL): chỉ 26-067270F và 521111-01_ALL có cảnh báo mới (0 lỗ so 2 lỗ φ8); 067270T và 49 file khác không đổi; thời gian 48.8s so 47.5s."
+   }
+  ],
+  "skipped": []
+ }
+]

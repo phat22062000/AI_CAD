@@ -330,7 +330,228 @@ def _spawn(cmd, env, prompt, log_path, prompt_path):
         return subprocess.Popen(cmd, creationflags=flags, **kw)
 
 
+
+# ---------------------------------------------------------------------------
+# Việc đặc biệt chạy bằng nút trên trang (17/11/2026): "Tự check" (kind=check) và "Rút kinh nghiệm" (kind=rutkn).
+# Khác việc vẽ đơn: không reset/ghi tiến độ vẽ của đơn, không tạo agent hay đèn mã trên sơ đồ, không chuẩn bị prep;
+# kết quả ghi qua report.py (check, loi) và file bài học. Agent KHÔNG sửa skill/rules/script, chỉ báo và nháp đề xuất.
+# ---------------------------------------------------------------------------
+PY_RULES = ('LỆNH BASH: MỌI lệnh phải bắt đầu bằng `py -X utf8` (chỉ lệnh bắt đầu bằng `py` được phép; `cd`, `mkdir`, `python`... bị từ chối và phí một lượt). Dùng đường dẫn tuyệt đối; '
+            'cần tạo thư mục thì dùng Python (`os.makedirs`). Lệnh `py -X utf8 -c "..."` nhiều dòng TUYỆT ĐỐI không chứa ký tự `#`; cần script dài thì ghi file .py vào thư mục tạm bằng Write rồi chạy `py -X utf8 <file.py>`. '
+            'Thiếu thư viện thì `py -m pip install ezdxf pymupdf pillow numpy`. Dặn đúng quy tắc này trong prompt của mọi subagent.')
+
+
+def build_check_prompt(jid, job, tmp):
+    order, path = job.get('order', ''), job['path']
+    codes = ', '.join(job.get('codes') or [])
+    hints = job.get('hints') or []
+    if job.get('scriptRan'):
+        pre = ('SCRIPT ĐÃ CHẠY XONG (0 token) và đã ghi kết quả lên trang: ' + ', '.join(x + '.py' for x in job['scriptRan'])
+               + '. KHÔNG chạy lại, KHÔNG báo lại các mục của script. Việc của bạn là ĐỌC MÙ ĐỘC LẬP đúng các mã ở trên (mã rủi ro), không check mã khác của đơn.\n'
+               + ('Gợi ý từ script (chỉ để biết chỗ cần soi kỹ, KHÔNG phải kết luận; vẫn phải tự đọc bản vẽ rồi mới so):\n'
+                  + '\n'.join(f"- {h['code']} [{'LỖI' if h['level'] == 'loi' else 'CẢNH BÁO'}] {h['text'][:300]}" for h in hints) + '\n' if hints else ''))
+    else:
+        pre = (f'Script chưa chạy được trên máy chủ web: tự chạy trước hai lệnh (0 token) `py -X utf8 "{os.path.join(REPO, "tools", "dxf_check.py")}" "{os.path.join(path, order + "_ALL.dxf")}" --src "{path}"` và '
+               f'`py -X utf8 "{os.path.join(REPO, "tools", "doi_chieu_khach.py")}" "{os.path.join(path, order + "_ALL.dxf")}" --src "{path}"`, rồi đọc mù các mã ở trên.\n')
+    return f"""Việc TỰ CHECK đơn {order} (job id {jid}), giao từ trang Giám Sát bằng nút "Tự check". Chạy không có người trực: không hỏi lại.
+Thư mục đơn (CHỈ ĐỌC, không ghi, không xoá, không xuất lại file nào): {path}
+Mã cần check: {codes}
+{pre}Thư mục tạm của bạn (ghi file tạm ở đây, được xoá sau khi xong): {tmp}
+
+Làm đúng skill dxf-check: ĐỌC toàn bộ {os.path.join(REPO, 'skills', 'dxf-check', 'SKILL.md')} (skill gốc). Cần tra tiêu chí vẽ thì dùng Grep rồi Read đúng mục của {os.path.join(REPO, 'skills', 'dxf-sheetmetal', 'SKILL.md')}, KHÔNG đọc cả file. Quy tắc: {os.path.join(REPO, 'rules')} (Quy_Tac_Laser.md, Quy_Tac_Lo_Moi.md; dòng đúng mã khách trong Quy_Tac_Theo_Ma_Khach_AnDanh.md, tìm bằng Grep). Công cụ: {os.path.join(REPO, 'tools', 'dxf_check.py')}, {os.path.join(REPO, 'tools', 'sheetmetal_kit')} (blind_read_prompt.md, pdfpage.py).
+BẮT BUỘC (Phát chốt 02/11/2026): đọc bản vẽ ĐỘC LẬP từ PDF và DXF khách TRƯỚC, rồi mới được mở file DXF đầu ra để so. Tuyệt đối không dùng exp.csv, gen_*.py, ảnh preview hay báo cáo của lần tạo làm nguồn kỳ vọng. Đọc mù bằng subagent theo blind_read_prompt.md (tối đa 3 subagent chạy song song, mỗi nhóm một thư mục con của {tmp} chỉ chứa PDF trang của nhóm). Không đọc độc lập được thì dừng, ghi status=loi và nêu lý do.
+CHECK CHỈ BÁO, KHÔNG SỬA: không sửa file đầu ra, không sửa script, không sửa skill/rules. Mục SAI chỉ ghi lại: vị trí, nguồn ghi gì, file có gì, đề xuất.
+{PY_RULES}
+
+BÁO KẾT QUẢ lên trang bằng MỘT lệnh duy nhất (ghi đè phần agent báo lần trước của đơn; phần script giữ nguyên), mỗi lỗi một đối số, đúng thứ tự mã trong CAD依頼書:
+`py -X utf8 "{REPORT}" check {order} "<mã đầy đủ 26-xxxxxx>|loi|<tên lỗi đúng như mục 5 của skill, không ghi số>: <chi tiết ngắn, chỉ ngay chỗ sai: nguồn ghi X, file có Z>" "<mã>|canhbao|<tên cảnh báo đúng như mục 6>: <chi tiết>"`
+LỖI (mục 5) dùng `loi`, CẢNH BÁO (mục 6) dùng `canhbao`. Mục đúng KHÔNG báo. Mỗi chi tiết ≤ 300 ký tự. Không phát hiện lỗi nào thì chạy lệnh trên không kèm đối số nào sau số đơn. Phần chưa kiểm được (thiếu nguồn, ảnh mờ) ghi thành CẢNH BÁO "Ghi chú viết bằng tay không chắc chắn về nghĩa" hoặc nêu trong result bên dưới, không coi là đúng.
+Không dùng lệnh report.py parts/agents/orders (không đụng tiến độ vẽ của đơn).
+Xong: `py -X utf8 "{REPORT}" jobs {jid} status=xong result="Check {order}: <x> lỗi, <y> cảnh báo; <phần chưa kiểm được nếu có>"`. Không làm được: `status=loi result="<lý do>"`.
+"""
+
+
+def build_rutkn_prompt(jid, job, tmp):
+    items = job.get('items') or []
+    lst = '\n'.join(f"- {it['key']}: thư mục {it['folder']} (file {it['code']}T.dxf = ĐÚNG do người dùng làm; {it['code']}F.dxf = AI vẽ, SAI)" for it in items)
+    diff = os.path.join(REPO, 'tools', 'diff_tf.py')
+    return f"""Việc RÚT KINH NGHIỆM (job id {jid}), giao từ trang Giám Sát bằng nút "Rút kinh nghiệm". Chạy không có người trực: không hỏi lại.
+Các mã đang chấm Sai và đã có đủ file T (đúng) và F (sai):
+{lst}
+Thư mục tạm của bạn: {tmp}
+Quy trình gốc: {os.path.join(REPO, 'docs', 'QUY_TRINH_RUT_KINH_NGHIEM.md')} (bước 1 đã làm sẵn bằng danh sách trên). Bài học cũ để tránh trùng: {os.path.join(REPO, 'lessons', 'feedback')}\\*.md và {os.path.join(REPO, 'lessons', 'skill-updates')}\\*.md.
+{PY_RULES}
+
+VỚI MỖI MÃ, làm tuần tự:
+1. So hai file bằng script, 0 token: `py -X utf8 "{diff}" "<thư mục>\\<mã>T.dxf" "<thư mục>\\<mã>F.dxf" --json`. Trường `khac_biet` là danh sách khác biệt đã phân loại (loai, mo_ta); `phep_dat_huong` khác "giữ nguyên hướng" nghĩa là F đặt khác T (xoay hoặc lật = đổi mặt vẽ); toạ độ ở hệ của T. Đọc kết quả, KHÔNG tự mở và đọc cả file DXF.
+2. Chỉ khi cần tìm NGUYÊN NHÂN: mở đúng trang PDF của mã và DXF khách trong thư mục đơn (thư mục cha của Sua_loi); cắt vùng nhỏ, không render lại cả trang nhiều lần. Nguyên nhân không có bằng chứng thì ghi rõ "suy đoán". Không giả định kích thước.
+3. Ghi lỗi lên trang: `py -X utf8 "{REPORT}" loi <key> "<lỗi 1>" "<lỗi 2>" loai="<loại lỗi>" nguyen_nhan="<nguyên nhân gốc, 1 câu; không có bằng chứng thì mở đầu bằng 'Suy đoán:'>" nguon="T/F" khop=<ty_le_khop của diff_tf>`. Mỗi lỗi một câu: vị trí, F vẽ gì, T vẽ gì. `loai=` dùng tên mục 5 của dxf-check (Sai mặt vẽ, Sai kích thước lỗ, Sai vị trí lỗ, Thiếu lỗ, Sai biên dạng ngoài, Sai kegaki, Sai độ giãn dài, Thiếu góc bo R, Sai kích thước bo R...) hoặc "Thiếu Flag", "Đổi chỗ cặp gương", "Sai hướng đặt"; lặp `loai=` nếu nhiều loại.
+4. Viết bài học vào {os.path.join(REPO, 'lessons', 'feedback')}\\feedback_<tên-ngắn>.md đúng mẫu ở bước 4 của quy trình gốc (cùng loại lỗi với bài đã có thì bổ sung vào file đó; không ghi tên khách).
+5. Chọn ĐÍCH sửa theo thứ tự ưu tiên: (a) lỗi đo được bằng script (số lượng, kích thước, vị trí, Flag thiếu) → đề xuất thêm kiểm vào tools\\dxf_check.py hoặc tools\\doi_chieu_khach.py (chạy thử `py -X utf8 "{os.path.join(REPO, 'tools', 'doi_chieu_khach.py')}" "<thư mục>\\<mã>F.dxf" --src "<thư mục đơn>"` để biết script hiện có bắt được lỗi này chưa, ghi kết quả vào đề xuất); (b) quy tắc riêng một khách → rules\\Quy_Tac_Theo_Ma_Khach_AnDanh.md; (c) lỗi bắt buộc đọc bản vẽ → skills\\dxf-sheetmetal\\SKILL.md. Với đích (c): Grep skill tìm dòng cùng chủ đề và dòng mâu thuẫn, ƯU TIÊN SỬA/GỘP dòng cũ thay vì thêm dòng mới; ghi số mẫu (đã gặp lỗi này ở mấy mã). Dòng đề xuất chỉ ghi quy tắc tổng quát, không số liệu hay mã đơn.
+6. Ghi đề xuất vào {os.path.join(REPO, 'lessons', 'skill-updates')}\\<mã>-<tên-ngắn>.md, dòng đầu ghi "CHỜ PHÁT DUYỆT, chưa sửa": đích, số dòng và nguyên văn dòng cũ, dòng mới, lý do, số mẫu, loại lỗi. CHỈ gộp các mã vào chung một file đề xuất khi nguyên nhân của từng mã đã XÁC ĐỊNH (có bằng chứng trong file T/F hoặc chính người dùng nói) và GIỐNG NHAU. Mã mà nguyên nhân chỉ là suy đoán, hoặc khác nguyên nhân với mã còn lại, thì KHÔNG đưa vào file đề xuất của mã khác (kể cả cùng loại lỗi, cùng đơn hay khác đơn): ghi bài học riêng ở lessons\\feedback\\ (mỗi nguyên nhân một file) và cùng lắm nhắc một dòng "chưa đề xuất" trong mục của chính mã đó. Tên file đề xuất và dòng "Nguồn" chỉ nêu các mã thật sự cùng nguyên nhân. Chia mục "## (a) Script ..." (đích tools\\*.py) và "## (c) SKILL.md ..." (đích skill/rules); mục nào KHÔNG đề xuất sửa thì ghi rõ câu "Không đề xuất script" hoặc "KHÔNG đề xuất sửa" trong mục đó. Nếu cả hai mục đều không đề xuất sửa (đợi Chạy hồi quy để biết quy tắc hiện tại đã đủ chưa) thì tiêu đề dòng "# Đề xuất: ..." phải có cụm "chờ hồi quy": trang sẽ gắn nhãn riêng và không đưa vào Update Skill/Update Script.
+7. Đánh dấu đã rút: thêm `{{"key": "<đơn>_<mã>", "file": "<tên file bài học>"}}` vào mảng JSON trong {os.path.join(REPO, 'lessons', 'feedback', '_da_rut_kinh_nghiem.json')} (đọc file, thêm phần tử, ghi lại, giữ nguyên các phần tử cũ).
+QUY TẮC CỨNG (Phát): TUYỆT ĐỐI KHÔNG sửa skills\\*\\SKILL.md, rules\\*, tools\\*.py hay reviews.json; chỉ Phát nói "update skill" mới sửa skill. Không ghi file nào vào thư mục đơn (kể cả Sua_loi). Không dùng report.py parts/agents/orders.
+Xong tất cả: `py -X utf8 "{REPORT}" jobs {jid} status=xong result="Đã rút <n> mã. Đề xuất chờ duyệt: <tên file đề xuất>, ..."`. Không làm được: `status=loi result="<lý do>"`.
+"""
+
+
+def build_hoiquy_prompt(jid, job, tmp):
+    items = job.get('items') or []
+    skill = os.path.join(REPO, 'skills', 'dxf-sheetmetal', 'SKILL.md')
+    diff = os.path.join(REPO, 'tools', 'diff_tf.py')
+    lst = '\n'.join(f"- {it['key']}: thư mục đơn {it['dir']} | đáp án ({'bài ĐÚNG do người dùng làm' if it['kieu'] == 'T' else 'file đã giao, được chấm Đúng'}): {it['ref']}" for it in items)
+    return f"""Việc HỒI QUY sau khi update skill (job id {jid}), giao từ trang Giám Sát bằng nút "Chạy hồi quy". Chạy không có người trực: không hỏi lại.
+Mục đích: vẽ lại một số mã bằng skill dxf-sheetmetal HIỆN TẠI (bản {job.get('skill') or '?'}) rồi so với đáp án, để phát hiện THOÁI LUI (mã trước đúng nay sai). Không sửa gì.
+Danh sách mã:
+{lst}
+Thư mục tạm của bạn (mọi file ghi ra đều nằm ở đây): {tmp}
+Chạy skill dxf-sheetmetal: đọc toàn bộ MỘT lần và làm đúng theo {skill}. Tài liệu: {os.path.join(REPO, 'rules')} (Quy_Tac_Laser.md, Quy_Tac_Lo_Moi.md, dòng đúng mã khách trong Quy_Tac_Theo_Ma_Khach_AnDanh.md tìm bằng Grep, bang-do-gian\\*.xlsx), template {os.path.join(REPO, 'templates', 'Template.dxf')}, công cụ {os.path.join(REPO, 'tools', 'sheetmetal_kit')}.
+{PY_RULES}
+
+VỚI MỖI MÃ, làm tuần tự (không dùng subagent):
+1. Vẽ lại CHỈ mã đó từ nguồn trong thư mục đơn (PDF bản vẽ, CAD依頼書, DXF khách), đúng skill, như một lần "tạo" bình thường. Ghi file vào {tmp}\\<key>\\<mã>.dxf. Thư mục đơn CHỈ ĐỌC: không ghi, không tạo file ALL, không chạy dxf-check.
+2. CẤM xem đáp án và kết quả cũ trước khi vẽ xong: không mở file đáp án, không mở <mã>.dxf / *_ALL.dxf / thư mục Gui / Sua_loi của đơn, không đọc {os.path.join(REPO, 'lessons')} và {os.path.join(S.HERE, 'data')}. Hồi quy chỉ có nghĩa khi vẽ lại độc lập.
+3. Vẽ xong mới so: `py -X utf8 "{diff}" "<đáp án>" "{tmp}\\<key>\\<mã>.dxf" --json`. Đọc `khop`, `ty_le_khop`, `khac_biet`. Khác biệt chỉ thuộc loại "Hướng đặt khác" KHÔNG tính là sai. Không sửa lại hình sau khi đã so (kết quả lần vẽ đầu là kết quả hồi quy).
+Tiết kiệm token: mỗi mã chỉ mở đúng trang PDF của mã (cắt vùng, cạnh dài ≤ 1200 px), không render lại cả trang nhiều lần. Mã nào không vẽ được (thiếu nguồn) thì ghi `loi` và sang mã kế.
+
+XONG TẤT CẢ, báo bằng MỘT lệnh: `py -X utf8 "{REPORT}" hoiquy {jid} "<key>|khop|<ty_le_khop>|" "<key>|khac|<ty_le_khop>|<tóm tắt khác biệt ≤ 200 ký tự: loại, vị trí, đáp án có gì, bản vẽ lại có gì>" "<key>|loi|0|<lý do không vẽ được>"` (mỗi mã một đối số).
+Rồi: `py -X utf8 "{REPORT}" jobs {jid} status=xong result="Hồi quy skill {job.get('skill') or ''}: <x>/<y> mã khớp đáp án; mã khác: <danh sách>"`. Không làm được: `status=loi result="<lý do>"`.
+QUY TẮC CỨNG (Phát): KHÔNG sửa skills\\*\\SKILL.md, rules\\*, tools\\*.py, reviews.json, loi_sai.json. Không dùng report.py parts/agents/orders/loi/check.
+"""
+
+
+def backup_skill(jid):
+    """Sao lưu SKILL.md của 2 skill và rules\\*.md vào data\\skill_backup\\<job id>\\ trước khi agent sửa. Trả về đường dẫn thư mục sao lưu ('' nếu lỗi)."""
+    dst = os.path.join(S.DATA, 'skill_backup', jid)
+    try:
+        for rel in (os.path.join('skills', 'dxf-sheetmetal'), os.path.join('skills', 'dxf-check'), 'rules'):
+            src = os.path.join(REPO, rel)
+            if not os.path.isdir(src):
+                continue
+            out = os.path.join(dst, rel)
+            os.makedirs(out, exist_ok=True)
+            for fn in os.listdir(src):
+                if fn.lower().endswith('.md'):
+                    shutil.copy2(os.path.join(src, fn), os.path.join(out, fn))
+        return dst
+    except OSError:
+        return ''
+
+
+def build_updskill_prompt(jid, job, tmp):
+    items = job.get('items') or []
+    lst = '\n'.join(f"- {it['path']} (đơn {', '.join(it.get('orders') or ['?'])}, mã {', '.join(it.get('codes') or ['?'])})" for it in items)
+    sk = os.path.join(REPO, 'skills', 'dxf-sheetmetal', 'SKILL.md')
+    today = datetime.now().strftime('%Y.%m.%d')
+    return f"""Việc UPDATE SKILL (job id {jid}), giao từ trang Giám Sát bằng nút "Update Skill". Người dùng bấm nút này = người dùng đã nói "update skill" và duyệt các đề xuất bên dưới. Chạy không có người trực: không hỏi lại.
+Các file đề xuất cần áp dụng (mỗi file có nguồn, đích, dòng cũ, dòng mới, lý do):
+{lst}
+Skill gốc: {sk} (và {os.path.join(REPO, 'skills', 'dxf-check', 'SKILL.md')}); quy tắc: {os.path.join(REPO, 'rules')}. Đã sao lưu bản cũ vào: {job.get('backup') or '(không sao lưu được: DỪNG, ghi status=loi)'}.
+Thư mục tạm của bạn: {tmp}. Hôm nay: {today.replace('.', '/')}.
+{PY_RULES}
+
+QUY TẮC CỨNG (Phát):
+- CHỈ được sửa: skills\\dxf-sheetmetal\\SKILL.md, skills\\dxf-check\\SKILL.md, rules\\*.md, và dòng đầu của chính các file đề xuất ở trên. KHÔNG sửa tools\\*.py, KHÔNG sửa reviews.json/loi_sai.json, KHÔNG ghi gì vào thư mục đơn.
+- Đề xuất có phần đích là SCRIPT (tools\\*.py): KHÔNG áp dụng, để nguyên, ghi vào "skipped" lý do "đích là script, cần người làm".
+- Chỉ ghi QUY TẮC TỔNG QUÁT vào SKILL.md: không số liệu cụ thể của một mã, không số đơn, không tên khách (quy tắc riêng một khách chỉ vào rules\\Quy_Tac_Theo_Ma_Khach_AnDanh.md theo đúng cách các dòng khác của file đó). Dòng đề xuất có số mã/số đơn thì viết lại cho tổng quát.
+- SỬA/GỘP dòng cũ thay vì thêm dòng mới; tìm dòng cũ bằng nguyên văn (Grep), số dòng trong đề xuất có thể đã lệch. Không tìm được dòng cũ đúng nguyên văn thì BỎ QUA đề xuất đó và ghi lý do, không đoán.
+- Trước khi sửa, Grep skill tìm dòng cùng chủ đề và dòng mâu thuẫn với dòng mới; có mâu thuẫn thì dừng đề xuất đó, ghi vào "skipped" kèm số dòng mâu thuẫn, không tự chọn bên nào.
+- Kích thước skill không được phình: nếu thêm chữ thì tìm câu cũ có thể bỏ/gộp.
+
+VỚI MỖI ĐỀ XUẤT: (1) Read file đề xuất. (2) Áp dụng phần đích là SKILL.md/rules bằng Edit đúng nguyên văn. (3) Read lại đúng dòng đã sửa để chắc đã ghi đúng. (4) Sửa dòng ĐẦU của file đề xuất thành "ĐÃ ÁP DỤNG vào <file> dòng <số dòng> ({today.replace('.', '/')}, job {jid})"; nếu còn phần chưa áp dụng (script hoặc bỏ qua) thì ghi "ĐÃ ÁP DỤNG <phần đã làm>; CÒN CHỜ: <phần còn lại>".
+SAU KHI XONG TẤT CẢ: nếu đã sửa SKILL.md dxf-sheetmetal thì nâng version ở front matter (`metadata.version`, dạng `AAAA.MM.DD-N`): cùng ngày hôm nay thì N tăng 1, khác ngày thì `{today}-1`. Chỉ nâng một lần cho cả lượt. Sửa dxf-check thì làm tương tự nếu file đó có version.
+Lưu ý: khi bạn chạy lệnh `report.py updskill`, web tự chuyển các đề xuất đã "ĐÃ ÁP DỤNG" hết (không còn "CÒN CHỜ") khỏi danh sách; nên PHẢI sửa dòng đầu các file đề xuất xong TRƯỚC khi chạy lệnh đó.
+Rồi ghi nhật ký lên trang: dùng Write tạo `{tmp}\\log.json` (UTF-8) dạng {{"version_before": "...", "version_after": "...", "changes": [{{"proposal": "<tên file đề xuất>", "file": "<file đã sửa>", "lines": "<số dòng>", "old": "<nguyên văn dòng cũ>", "new": "<nguyên văn dòng mới>"}}], "skipped": [{{"proposal": "...", "why": "..."}}]}}, rồi chạy `py -X utf8 "{REPORT}" updskill {jid} "{tmp}\\log.json"`. Nguyên văn "old"/"new" phải là dòng thật trong file (người dùng sẽ đối chiếu).
+Cuối cùng: `py -X utf8 "{REPORT}" jobs {jid} status=xong result="Update skill: <x> đề xuất đã áp dụng, <y> bỏ qua; version <trước> -> <sau>"`. Không làm được: `status=loi result="<lý do>"`.
+"""
+
+
+def backup_tools(jid):
+    """Sao lưu tools\\*.py (chỉ file ở thư mục tools, không vào thư mục con) vào data\\script_backup\\<job id>\\tools\\ trước khi agent sửa."""
+    dst = os.path.join(S.DATA, 'script_backup', jid, 'tools')
+    src = os.path.join(REPO, 'tools')
+    try:
+        os.makedirs(dst, exist_ok=True)
+        for fn in os.listdir(src):
+            if fn.lower().endswith('.py') and os.path.isfile(os.path.join(src, fn)):
+                shutil.copy2(os.path.join(src, fn), os.path.join(dst, fn))
+        return os.path.dirname(dst)
+    except OSError:
+        return ''
+
+
+def build_updscript_prompt(jid, job, tmp):
+    items = job.get('items') or []
+    lst = '\n'.join(f"- {it['path']} (đơn {', '.join(it.get('orders') or ['?'])}, mã {', '.join(it.get('codes') or ['?'])})" for it in items)
+    tools = os.path.join(REPO, 'tools')
+    today = datetime.now().strftime('%Y/%m/%d')
+    return f"""Việc UPDATE SCRIPT (job id {jid}), giao từ trang Giám Sát bằng nút "Update Script". Người dùng bấm nút này = người dùng đã cho phép sửa script theo các đề xuất bên dưới. Chạy không có người trực: không hỏi lại.
+Các file đề xuất cần áp dụng (mỗi file có mục "Script" ghi đích, điều cần kiểm, cách đo):
+{lst}
+Script nằm ở: {tools} (doi_chieu_khach.py, dxf_check.py, diff_tf.py). Đã sao lưu bản cũ vào: {job.get('backup') or '(không sao lưu được: DỪNG, ghi status=loi)'}\\tools.
+Thư mục đơn: {S.WORK} (đơn nằm ở <ngày>\\<đơn>, có <đơn>_ALL.dxf, DXF khách, thư mục Sua_loi chứa <mã>F.dxf là bài AI sai và <mã>T.dxf là bài đúng). Kết quả chấm Đúng/Sai của người dùng: {os.path.join(S.DATA, 'reviews.json')}.
+Thư mục tạm của bạn: {tmp}. Hôm nay: {today}.
+{PY_RULES}
+
+QUY TẮC CỨNG (Phát):
+- CHỈ được sửa: {tools}\\doi_chieu_khach.py, {tools}\\dxf_check.py, {tools}\\diff_tf.py và dòng đầu của chính các file đề xuất ở trên. KHÔNG sửa SKILL.md, rules, sheetmetal_kit, auto_push, các file của trang web (server.py, runner.py, report.py, static), reviews.json, loi_sai.json; KHÔNG ghi gì vào thư mục đơn (mọi file thử nghiệm ghi vào {tmp}).
+- Script chỉ BÁO, không bao giờ tự sửa file DXF. Thêm kiểm mới thì chỉ thêm CẢNH BÁO hoặc LỖI mới, không đổi ý nghĩa/định dạng của các kiểm có sẵn, không đổi tham số dòng lệnh, không đổi mã thoát.
+- Sửa nhỏ nhất đủ làm việc, theo đúng văn phong code đang có; giữ phần docstring đầu file cập nhật (một dòng mô tả kiểm mới).
+- Cảnh báo phải ĐO ĐƯỢC từ dữ liệu (hình học, số liệu), không đoán theo ý nghĩa. Đề xuất mô tả không đo được thì BỎ QUA và ghi lý do.
+
+VỚI MỖI ĐỀ XUẤT:
+1. Read file đề xuất, lấy phần script (đích, điều cần kiểm). Phần SKILL.md/rules của đề xuất KHÔNG thuộc việc này.
+2. Chạy BASELINE trước khi sửa: viết file {tmp}\\chay.py (Write) chạy script đích lên (a) <mã>F.dxf của các mã nêu trong đề xuất (trong Sua_loi của đơn, dùng `--src <thư mục đơn>`), (b) <mã>T.dxf của các mã đó, (c) file <đơn>_ALL.dxf của ít nhất 6 đơn trong {S.WORK} (đơn nêu trong đề xuất + các đơn mới nhất), rồi lưu đầu ra vào {tmp}\\truoc\\. Xem cách gọi trong docstring/--help của từng script.
+3. Sửa script bằng Edit. Chạy `py -X utf8 -m py_compile <file>`.
+4. Chạy lại đúng bộ trên vào {tmp}\\sau\\ rồi so với trước. ĐẠT khi: (i) bản F của mã nêu trong đề xuất có cảnh báo mới đúng điều đề xuất; (ii) bản T (đáp án đúng) và mọi mã người dùng đã chấm Đúng KHÔNG có LỖI/CẢNH BÁO mới; (iii) mã thoát và định dạng các dòng cũ không đổi; (iv) thời gian chạy không tăng quá gấp 3.
+5. KHÔNG ĐẠT: khôi phục file từ bản sao lưu bằng Python (shutil.copy2), kiểm lại file đã trở về như cũ, ghi vào "skipped" kèm số liệu vì sao (cảnh báo giả ở mã nào). Không cố sửa mãi: tối đa 2 lần chỉnh cho mỗi đề xuất.
+6. ĐẠT: sửa dòng ĐẦU của file đề xuất: nếu trước đó là "CÒN CHỜ: ..." chỉ còn phần script thì đổi thành "ĐÃ ÁP DỤNG phần script vào tools\\<file>.py ({today}, job {jid})" (giữ phần ĐÃ ÁP DỤNG cũ ở đầu dòng nếu có, bỏ cụm "CÒN CHỜ"); nếu đề xuất còn phần khác chưa làm thì ghi rõ "CÒN CHỜ: <phần còn lại>". Thêm cuối file đề xuất mục "## Kết quả phần script ({today})" ghi kiểm gì đã thêm, kết quả thử trước/sau (số mã, cảnh báo mới ở đâu, không báo giả ở đâu).
+Lưu ý: khi bạn chạy lệnh `report.py updscript`, web tự chuyển các đề xuất đã "ĐÃ ÁP DỤNG" hết (không còn "CÒN CHỜ") khỏi danh sách; nên PHẢI sửa dòng đầu các file đề xuất xong TRƯỚC khi chạy lệnh đó.
+Ghi nhật ký lên trang: dùng Write tạo `{tmp}\\log.json` (UTF-8) dạng {{"changes": [{{"proposal": "<tên file đề xuất>", "file": "tools\\\\<script>.py", "lines": "<khoảng dòng đã thêm/sửa>", "old": "<nguyên văn dòng cũ ≤300 ký tự, hoặc (thêm mới)>", "new": "<mô tả kiểm mới hoặc đoạn code chính ≤600 ký tự>", "test": "<kết quả thử trước/sau ≤300 ký tự>"}}], "skipped": [{{"proposal": "...", "why": "..."}}]}}, rồi chạy `py -X utf8 "{REPORT}" updscript {jid} "{tmp}\\log.json"`.
+Cuối cùng: `py -X utf8 "{REPORT}" jobs {jid} status=xong result="Update script: <x> đề xuất đã áp dụng, <y> bỏ qua"`. Không làm được: `status=loi result="<lý do>"`.
+"""
+
+
+def run_special(jid, job, claude):
+    kind, o = job['kind'], job.get('order') or ''
+    key = f'{kind}_{o or "all"}'                    # khoá cho thư mục tạm và id nội bộ (không trùng id đơn nên không đụng tiến độ vẽ)
+    aid = key + '_main'
+    cfg = config()
+    # Phát chốt 17/11/2026: mọi công đoạn (vẽ, check, rút kinh nghiệm, hồi quy) mặc định Sonnet 5.5, effort High.
+    # Muốn đổi riêng một việc thì đặt check_model / rutkn_model / hoiquy_model trong data\config.json.
+    model = job.get('model') or cfg.get(kind + '_model') or cfg.get('model') or 'sonnet'
+    effort = cfg.get('effort') or 'high'
+    os.makedirs(LOGS, exist_ok=True)
+    tmp = tmp_dir(key)
+    try:
+        os.makedirs(tmp, exist_ok=True)
+        S.merge_progress('jobs', jid, {'workdir': ''})
+        if kind in ('updskill', 'updscript') and not job.get('backup'):
+            job['backup'] = backup_skill(jid) if kind == 'updskill' else backup_tools(jid)
+            S.merge_progress('jobs', jid, {'backup': job['backup']})
+        cmd = [claude, '-p', '--output-format', 'stream-json', '--verbose',
+               '--permission-mode', cfg.get('permission_mode') or 'acceptEdits',
+               '--allowedTools', ','.join(cfg.get('allowed_tools') or []),
+               '--add-dir', REPO, '--add-dir', S.HERE, '--add-dir', tmp, '--add-dir', job.get('path') or REPO, '--add-dir', S.WORK,
+               '--model', model, '--effort', effort]
+        env = dict(os.environ, CLAUDE_CODE_EFFORT_LEVEL=effort)
+        log_path = os.path.join(LOGS, jid + '.jsonl')
+        t0 = time.time()
+        prompt = {'check': build_check_prompt, 'rutkn': build_rutkn_prompt, 'hoiquy': build_hoiquy_prompt, 'updskill': build_updskill_prompt, 'updscript': build_updscript_prompt}[kind](jid, job, tmp)
+        p = _spawn(cmd, env, prompt, log_path, os.path.join(tmp, '_prompt.txt'))
+        procs[jid] = p
+        S.merge_progress('jobs', jid, {'pid': p.pid, 'pctime': proc_ctime(p.pid), 'log': jid + '.jsonl', 't0': t0})
+    except Exception as e:
+        procs.pop(jid, None)
+        clean_tmp(key)
+        _finish(jid, key, aid, f'Lỗi khi chạy: {e}', True, -1)
+        return
+    _follow(jid, job, key, aid, p, log_path, t0, tmp, special=True)
+
+
 def run_job(jid, job, claude):
+    if job.get('kind') in S.SPECIAL:
+        return run_special(jid, job, claude)
     order = job.get('order') or os.path.basename(job['path'].rstrip('\\/'))
     aid = f'{order}_main'
     cfg = config()
@@ -378,7 +599,7 @@ def run_job(jid, job, claude):
     _follow(jid, job, order, aid, p, log_path, t0, workdir)
 
 
-def _follow(jid, job, order, aid, proc, log_path, t0, workdir, replay_upto=0, dead=False):
+def _follow(jid, job, order, aid, proc, log_path, t0, workdir, replay_upto=0, dead=False, special=False):
     """Đọc dần file log của agent (kể cả sau khi server khởi động lại) và cập nhật trang.
     replay_upto: số byte đã có trước khi nhận lại; phần này chỉ đếm thống kê, không ghi lại mood/mã đang làm cũ.
     dead: agent đã chết trước khi server lên lại, chỉ đọc log để lấy kết quả."""
@@ -387,7 +608,7 @@ def _follow(jid, job, order, aid, proc, log_path, t0, workdir, replay_upto=0, de
     track = None
     rc = -1
     try:
-        if not dead:
+        if not dead and not special:
             track = LiveTracker(order, aid, workdir, solo=_solo(job), t0=t0).start()
 
         def handle(raw):
@@ -398,7 +619,7 @@ def _follow(jid, job, order, aid, proc, log_path, t0, workdir, replay_upto=0, de
             except ValueError:
                 return
             t = ev.get('type')
-            if t == 'system' and ev.get('model') and live:
+            if t == 'system' and ev.get('model') and live and not special:
                 S.merge_progress('agents', aid, {'model': str(ev['model']).replace('claude-', '')})
             if t == 'assistant':
                 for c in (ev.get('message') or {}).get('content') or []:
@@ -435,7 +656,7 @@ def _follow(jid, job, order, aid, proc, log_path, t0, workdir, replay_upto=0, de
                 for c in (ev.get('message') or {}).get('content') or []:
                     if isinstance(c, dict) and c.get('type') == 'tool_result' and c.get('is_error'):
                         upd = {'mood': 'confused', 'actAt': S.now_iso()}
-            if upd and (time.time() - st['last'] > 1.5 or upd.get('mood') == 'confused'):
+            if upd and not special and (time.time() - st['last'] > 1.5 or upd.get('mood') == 'confused'):
                 S.merge_progress('agents', aid, upd)
                 st['last'] = time.time()
 
@@ -535,7 +756,8 @@ def _loop():
 
 def _reattach(jid, job):
     """Server vừa khởi động lại: agent của việc này còn sống thì nhận lại và đọc tiếp log; chết rồi thì đọc log lấy kết quả và đóng việc."""
-    order = job.get('order') or os.path.basename(str(job.get('path') or '').rstrip('\\/'))
+    special = job.get('kind') in S.SPECIAL
+    order = (f"{job['kind']}_{job.get('order') or 'all'}") if special else (job.get('order') or os.path.basename(str(job.get('path') or '').rstrip('\\/')))
     aid = f'{order}_main'
     log_path = os.path.join(LOGS, job.get('log') or (jid + '.jsonl'))
     workdir = os.path.join(S.WORK, job.get('workdir') or '')
@@ -557,9 +779,9 @@ def _reattach(jid, job):
         procs[jid] = proc
         print('Nhận lại agent đang chạy:', jid, 'pid', proc.pid)
         _follow(jid, job, order, aid, proc, log_path, float(job.get('t0') or time.time()), workdir,
-                replay_upto=os.path.getsize(log_path))
+                replay_upto=os.path.getsize(log_path), special=special)
     else:
-        _follow(jid, job, order, aid, None, log_path, 0, workdir, dead=True)
+        _follow(jid, job, order, aid, None, log_path, 0, workdir, dead=True, special=special)
 
 
 def start():

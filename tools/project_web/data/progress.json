@@ -248,6 +248,77 @@
     "images": 4
    },
    "ended": "2026-11-16T01:13:31Z"
+  },
+  "20261117164818_hoiquy": {
+   "kind": "hoiquy",
+   "path": "C:\\Users\\DELL\\Desktop\\AI_CAD\\Create_Flatten_SheetMetal-main",
+   "order": "",
+   "items": [
+    {
+     "key": "521110-12_26-067077",
+     "order": "521110-12",
+     "code": "26-067077",
+     "kieu": "T",
+     "loai": [
+      "Sai vị trí lỗ"
+     ],
+     "ref": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\10-11-2026\\521110-12\\Sua_loi\\26-067077T.dxf",
+     "dir": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\10-11-2026\\521110-12"
+    },
+    {
+     "key": "521110-12_26-067074",
+     "order": "521110-12",
+     "code": "26-067074",
+     "kieu": "dung",
+     "loai": [],
+     "ref": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\10-11-2026\\521110-12\\Gui\\521110-12\\521110-12\\26-067074.dxf",
+     "dir": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\10-11-2026\\521110-12"
+    },
+    {
+     "key": "521110-12_26-067073",
+     "order": "521110-12",
+     "code": "26-067073",
+     "kieu": "dung",
+     "loai": [],
+     "ref": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\10-11-2026\\521110-12\\Gui\\521110-12\\521110-12\\26-067073.dxf",
+     "dir": "C:\\Users\\DELL\\Desktop\\AI_CAD\\AI_Work\\Thang-11\\10-11-2026\\521110-12"
+    }
+   ],
+   "loai": "Sai vị trí lỗ",
+   "skill": "2026.11.17-3",
+   "subagents": 0,
+   "model": "",
+   "note": "",
+   "pdf": 0,
+   "xlsx": 0,
+   "status": "xong",
+   "at": "2026-11-17T09:48:18Z",
+   "ui": true,
+   "nhanAt": "2026-11-17T09:48:19Z",
+   "by": "auto",
+   "workdir": "",
+   "pid": 11104,
+   "pctime": 134393824998272639,
+   "log": "20261117164818_hoiquy.jsonl",
+   "t0": 1794908899.8191738,
+   "result": "Hồi quy skill 2026.11.17-3: 2/3 mã khớp đáp án; mã khác: 521110-12_26-067077 (vị trí lỗ φ12 theo bề rộng 150 lệch, khớp 62.5%)",
+   "usage": {
+    "costUSD": 1.0523,
+    "seconds": 235,
+    "input": 70,
+    "output": 28083,
+    "thinking": 15983,
+    "cacheRead": 3319213,
+    "cacheWrite": 109863,
+    "denials": 1,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "calls_main": 49,
+    "calls_sub": 0,
+    "images": 10
+   },
+   "ended": "2026-11-17T09:52:18Z"
   }
  },
  "agents": {
@@ -1062,6 +1133,26 @@
    "actAt": "2026-11-16T07:40:48Z",
    "current": null,
    "effort": "high"
+  },
+  "521117-09_main": {
+   "order": "521117-09",
+   "kind": "main",
+   "name": "Agent chính",
+   "state": "done",
+   "phase": "Xong",
+   "mood": "think",
+   "act": "Đang suy nghĩ",
+   "model": "sonnet",
+   "user": "Phát",
+   "slot": "1",
+   "startedAt": "2026-11-17T06:05:42Z",
+   "job": "20261117130516_521117-09",
+   "finishedAt": "2026-11-17T06:14:33Z",
+   "note": null,
+   "heartbeatAt": "2026-11-17T06:14:35Z",
+   "actAt": "2026-11-17T06:14:35Z",
+   "current": null,
+   "effort": "high"
   }
  },
  "orders": {
@@ -1385,6 +1476,21 @@
    ],
    "allFile": "521116-14_ALL.dxf",
    "mergedAt": "2026-11-16T07:40:48Z"
+  },
+  "521117-09": {
+   "order": "521117-09",
+   "customer": "吉川工業",
+   "material": "304-2B",
+   "receivedAt": "2026-11-17T06:06:05Z",
+   "partOrder": [
+    "26-069511",
+    "26-069512",
+    "26-069513",
+    "26-069514",
+    "26-069515"
+   ],
+   "allFile": "521117-09_ALL.dxf",
+   "mergedAt": "2026-11-17T06:14:33Z"
   }
  },
  "parts": {
@@ -4129,6 +4235,105 @@
    "packedIn": "Gui",
    "packedX": 202.0,
    "packedY": 202.0
+  },
+  "521117-09_26-069511": {
+   "order": "521117-09",
+   "code": "26-069511",
+   "agent": "521117-09_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-17T06:06:33Z",
+   "flags": [
+    "1. Thiếu kích thước (2 lỗ φ7 chỉ ghi 160 tâm-tâm, 2-M6 không ghi vị trí dọc chiều dài; vẽ theo đo ảnh: φ7 cách đầu 10, M6 ở giữa phôi)",
+    "2. Độ giãn viết tay khác bảng (tay 10, bảng 10.72; vẽ theo số tay 10)"
+   ],
+   "kind": "uon",
+   "blank": "232 x 40",
+   "finishedAt": "2026-11-17T06:10:22Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-17T06:17:01Z",
+   "packedAt": "2026-11-17T06:48:34Z",
+   "packedIn": "Gui",
+   "packedX": 232.0,
+   "packedY": 40.0
+  },
+  "521117-09_26-069512": {
+   "order": "521117-09",
+   "code": "26-069512",
+   "agent": "521117-09_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-17T06:10:22Z",
+   "flags": [
+    "1. Thiếu kích thước (3 lỗ φ7: chỉ ghi 280 giữa 2 lỗ đầu, không ghi lỗ tới đầu tấm và vị trí lỗ giữa do hình cắt ngắn; vẽ theo đo ảnh: lỗ đầu cách đầu 10, lỗ giữa ở giữa tấm)"
+   ],
+   "kind": "phang",
+   "blank": "300 x 14",
+   "finishedAt": "2026-11-17T06:10:57Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-17T06:25:17Z",
+   "packedAt": "2026-11-17T06:48:34Z",
+   "packedIn": "Gui",
+   "packedX": 300.0,
+   "packedY": 14.0
+  },
+  "521117-09_26-069513": {
+   "order": "521117-09",
+   "code": "26-069513",
+   "agent": "521117-09_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-17T06:10:58Z",
+   "flags": [],
+   "kind": "phang",
+   "blank": "100 x 40",
+   "finishedAt": "2026-11-17T06:11:46Z",
+   "packedAt": "2026-11-17T06:48:34Z",
+   "packedIn": "Gui",
+   "packedX": 100.0,
+   "packedY": 40.0
+  },
+  "521117-09_26-069514": {
+   "order": "521117-09",
+   "code": "26-069514",
+   "agent": "521117-09_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-17T06:11:47Z",
+   "flags": [
+    "1. Thiếu kích thước (lỗ M6 trên cánh chỉ ghi 22 từ mặt ngoài chân, không ghi vị trí theo bề rộng 25; vẽ theo đo ảnh: giữa bề rộng)",
+    "2. Độ giãn viết tay khác bảng (tay 10, bảng 10.72; vẽ theo số tay 10)"
+   ],
+   "kind": "uon",
+   "blank": "103 x 25",
+   "finishedAt": "2026-11-17T06:13:44Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-17T06:44:23Z",
+   "packedAt": "2026-11-17T06:48:34Z",
+   "packedIn": "Gui",
+   "packedX": 103.0,
+   "packedY": 25.0
+  },
+  "521117-09_26-069515": {
+   "order": "521117-09",
+   "code": "26-069515",
+   "agent": "521117-09_main",
+   "status": "built",
+   "level": 3,
+   "startedAt": "2026-11-17T06:13:45Z",
+   "flags": [
+    "1. Thiếu kích thước (lỗ M6 trên cánh chỉ ghi 20 từ mặt ngoài chân, không ghi vị trí theo bề rộng 25; vẽ theo đo ảnh: giữa bề rộng)",
+    "2. Độ giãn viết tay khác bảng (tay 10, bảng 10.72; vẽ theo số tay 10)"
+   ],
+   "kind": "uon",
+   "blank": "86 x 25",
+   "finishedAt": "2026-11-17T06:14:17Z",
+   "previewOk": true,
+   "previewOkAt": "2026-11-17T06:48:16Z",
+   "packedAt": "2026-11-17T06:48:34Z",
+   "packedIn": "Gui",
+   "packedX": 86.0,
+   "packedY": 25.0
   }
  }
 }

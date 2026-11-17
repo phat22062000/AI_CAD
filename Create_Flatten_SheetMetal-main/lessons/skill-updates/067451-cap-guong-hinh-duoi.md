@@ -1,4 +1,4 @@
-# Đề xuất sửa skill (CHỜ PHÁT DUYỆT, chưa sửa SKILL.md): cặp gương vẽ từ hình dưới
+# Đề xuất sửa skill (ĐÃ ÁP DỤNG vào SKILL.md dòng 62 (16/11/2026)): cặp gương vẽ từ hình dưới
 
 Nguồn: đơn 521112-15, mã 26-067451/26-067452 (16/11/2026). Chỉ ghi quy tắc tổng quát.
 

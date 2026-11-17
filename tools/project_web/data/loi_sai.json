@@ -1,23 +1,164 @@
 {
  "521113-05_26-068185": {
   "loi": [
-   "F thừa 2 rãnh chữ U (R10, rộng 20) ở hai đầu cung R96, bài đúng T không có: PDF đã gạch tay hết kích thước rãnh (17.1, 2-R10, 20, 87.1, 68.2, 35) nhưng AI vẫn vẽ theo hình dạng DXF khách, không áp quy tắc 'gia công bị gạch: không vẽ' (SKILL dòng 27 trước khi sửa chỉ nói về lỗ).",
-   "Hướng đặt khác: F xoay 180° (cung ở trên, vát C50 ở dưới, lỗ y = 21.9), T giữ hướng DXF khách (cung ở dưới, vát ở trên, lỗ y = 53.1). Do AI chọn cạnh áp trục dài hơn (SKILL mục 10) thay vì giữ hướng hình chiếu đứng (dòng 60). Cần Phát xác nhận hướng đúng."
+   "Mép cung lõm R96 tâm (126; -56): F khoét thêm 2 rãnh chữ U rộng 20 đáy R10 cắt xuyên biên (x 28.9-48.9 sâu tới y 27.09; x 184.22-204.22 sâu tới y 44.96); T không có, vì đó là hốc bậc sâu 2.5 trên tấm dày 5 (không xuyên), laser không cắt.",
+   "Do rãnh đó F cắt ngắn cung R96 còn (49.8; 2.39)-(183.42; 20.93) và thêm 6 cung R0.5 ở mép rãnh; T giữ cung R96 trọn từ (48.03; 0) tới (203.97; 0), hai đoạn mép thẳng 0.5-48.03 và 203.97-251.5.",
+   "Hướng đặt: F xoay 180° so với T và DXF khách (cung lõm ở mép trên, 2 lỗ φ6.5 ở y 21.9); T giữ hướng DXF khách (cung ở mép dưới, lỗ ở y 53.1)."
   ],
-  "at": "2026-11-16T03:40:31Z"
+  "loai": [
+   "Sai biên dạng ngoài",
+   "Sai hướng đặt"
+  ],
+  "at": "2026-11-17T06:04:37Z",
+  "nguyen_nhan": "Hốc bậc không xuyên (hình chiếu cạnh trong block DXF khách có đáy ở giữa chiều dày, dim sâu 2.5 trên tấm 5) bị lấy làm biên cắt xuyên vì chỉ trích hình chiếu bằng; việc AI không mở hình chiếu cạnh là suy đoán từ kết quả (không Flag, vẽ trong 2 phút).",
+  "nguon": "T/F",
+  "khop": 52.9
  },
  "521112-15_26-067451": {
   "loi": [
    "T và F của 26-067451 là ảnh gương nhau qua trục dọc phôi: T giữ đúng hình dưới trên bản vẽ (chân φ7 ở y 12, đường uốn y 25.2/30, dải M4 ở y 50.2, cánh 170° ở góc trên phải); F lật ngược (chân φ7 ở y 63.2, lỗ M4 ở y 25, cánh ở góc dưới phải), tức F vẽ mặt đối diện dù AI ghi 'giữ mặt ngoài'.",
    "Khe 1 mm tách cánh 170°: F kéo tới x = 242.66 (đường uốn xa, tự chọn để 'cánh tách hẳn'), T kết thúc tại x = 242.83 (giữa hai đường uốn 242.66 và 243.0). Không có Flag nào cho điểm tự chọn này."
   ],
-  "at": "2026-11-16T08:15:00Z"
+  "at": "2026-11-16T08:15:00Z",
+  "loai": [
+   "Sai mặt vẽ",
+   "Đổi chỗ cặp gương",
+   "Sai biên dạng ngoài"
+  ],
+  "khop": 91.4,
+  "nguyen_nhan": "Đổi chỗ hình của cặp 本図/対称 nên vẽ mặt đối diện; điểm cuối khe cánh tự chọn mà không Flag.",
+  "nguon": "T/F"
  },
  "521112-15_26-067452": {
   "loi": [
    "T và F của 26-067452 ngược với 26-067451: F của 067452 giữ hướng hình dưới (chân φ7 ở y 12, cánh ở góc trên phải) còn T là ảnh gương (chân φ7 ở y 63.2, cánh ở góc dưới phải). Hai mã bị đổi chỗ hình cho nhau: F của mỗi mã đúng là T của mã kia, chỉ khác điểm cuối khe.",
    "Nguyên nhân khả dĩ: nhãn 本図/対称 nằm dưới mã vạch 067451/067452 nhưng AI dựng 本図 từ mặt đối diện hình dưới rồi lấy 対称 làm ảnh gương 'xoay 180°'. Khe 1 mm cũng kéo tới 242.66 thay vì 242.83 (giữa hai đường uốn)."
   ],
-  "at": "2026-11-16T08:15:00Z"
+  "at": "2026-11-16T08:15:00Z",
+  "loai": [
+   "Sai mặt vẽ",
+   "Đổi chỗ cặp gương",
+   "Sai biên dạng ngoài"
+  ],
+  "khop": 91.4,
+  "nguyen_nhan": "Đổi chỗ hình của cặp 本図/対称 nên vẽ mặt đối diện; điểm cuối khe cánh tự chọn mà không Flag.",
+  "nguon": "T/F"
+ },
+ "521112-02_26-067250": {
+  "loi": [
+   "5 lỗ ren: PDF ghi 5×M3 nhưng DXF khách vẽ ký hiệu M2.6 (cặp vòng φ2.2/φ2.6). F vẽ 5 lỗ φ2.5 (mồi M3 theo PDF) tại x = 12/26/50/78/88, y = 15; T vẽ φ2.2 (mồi M2.6 theo DXF). Vị trí lỗ giống nhau, chỉ khác đường kính.",
+   "Chỉ có khác biệt này (22 entity cả hai bản; hai đường uốn DASHED y 21.56/25 cùng vị trí, chỉ ngược chiều vẽ). Lỗ M4 φ3.3 và 3 lỗ φ6.2 giống nhau. File ALL lúc giao không có dòng Flag dưới chữ 067250: PDF khác DXF phải dựng theo DXF rồi Flag 1 (5xM3 PDF, DXF 5xM2.6)."
+  ],
+  "at": "2026-11-16T10:05:00Z",
+  "loai": [
+   "Sai kích thước lỗ",
+   "Thiếu Flag"
+  ],
+  "khop": 77.3,
+  "nguyen_nhan": "Lấy lỗ mồi theo cỡ ren ghi trên PDF, không so đường kính vòng ký hiệu ren trong DXF khách; không ghi Flag 1.",
+  "nguon": "T/F"
+ },
+ "521116-10_26-068884": {
+  "loi": [
+   "4 lỗ: F vẽ φ6.5, T vẽ φ3.5 (cùng vị trí x = 59.75/299.75/539.75/779.75, y = 8.25). Đây là toàn bộ khác biệt: 14 entity hai bản, biên dạng, bo R, hai đường uốn DASHED y 17.36/20 giống nhau.",
+   "φ6.5 trên PDF (4-φ6.5 ở mặt cắt A) là đường kính khoét đầu vít chìm (khung tên: 六角穴付サラ B-M3x10 4ヶ). DXF khách có sẵn vòng φ3.5 (lỗ thông) lồng trong vòng φ6.5 ở ký hiệu lỗ; AI lấy φ6.5 làm lỗ cắt, chưa áp SKILL dòng 85 (khoét côn/bậc không vẽ). T dùng φ3.5 theo DXF khách (bảng Quy_Tac_Lo_Moi mục 2 cho M3 là 3.4). File ALL không có Flag về điểm này."
+  ],
+  "at": "2026-11-16T10:10:00Z",
+  "loai": [
+   "Sai kích thước lỗ",
+   "Thiếu Flag"
+  ],
+  "khop": 71.4,
+  "nguyen_nhan": "Suy đoán: lấy φ khoét đầu vít chìm ghi trên PDF làm lỗ cắt, không đối chiếu vòng nhỏ trong block ký hiệu lỗ của DXF khách; không ghi Flag 1.",
+  "nguon": "T/F"
+ },
+ "521116-10_26-068885": {
+  "loi": [
+   "Rãnh khuyết góc dưới phải: F vẽ mép đứng rãnh tại x = 562 (rộng 48 tính từ mép ngoài 610, rãnh cao 28.25), T vẽ x = 560.005 (rộng 50). Đúng theo hình DXF khách: mép rãnh cách mép ngoài 50, còn số 48 trên PDF/DXF kết thúc ở tâm cung R2 (cách mép ngoài 2). Trên bản scan đường gióng 48 phía phải cũng lùi vào so với mép ngoài. Các vòng bo R2 và phần còn lại giống nhau.",
+   "Chênh nhỏ: T lấy toạ độ từ DXF khách (dài 610.005; lỗ x = 85/305.003/525.005; mép phải 608.005), F làm tròn theo PDF (610; 85/305/525). Chênh 0.005, không phải lỗi hình học. Cả hai mã đều do AI theo con số PDF (khách 676: 'PDF là chuẩn') mà không đối chiếu hình hoặc vòng trong DXF khách, nên không có Flag 1."
+  ],
+  "at": "2026-11-16T10:10:00Z",
+  "loai": [
+   "Sai biên dạng ngoài",
+   "Thiếu Flag"
+  ],
+  "khop": 76.5,
+  "nguyen_nhan": "Suy đoán: dựng mép rãnh khuyết theo số PDF (kích thước tới tâm cung) thay vì hình DXF khách; không ghi Flag 1.",
+  "nguon": "T/F"
+ },
+ "521109-22_26-066809": {
+  "loi": [
+   "Góc lõm vuông tại (149.9; 116.4) (cạnh y = 116.4 gặp cạnh x = 149.9): F vẽ góc nhọn, T vẽ relief ø3 (vòng R1.5 tâm đúng đỉnh góc, nối hai cạnh bằng 2 cung R2 tiếp tuyến); bản vẽ ghi 'ø3 直角逃がし' tại góc này."
+  ],
+  "loai": [
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-17T08:35:04Z",
+  "nguyen_nhan": "Suy đoán: bản vẽ ghi OUTLINE ONLY nên AI chỉ vẽ biên và bỏ qua chú thích 直角逃がし ø3, không Flag.",
+  "nguon": "T/F",
+  "khop": 80.0
+ },
+ "521110-05_26-066976": {
+  "loi": [
+   "2 lỗ tại (10; 12.5) và (45; 12.5): F vẽ φ6.8 (mồi M8), T vẽ φ5 (mồi M6); hai lỗ còn lại (125; 12.5), (205; 12.5) cùng φ6.8 ở cả hai bản. Bản vẽ tấm này có nhãn 4-M8 và nhãn 4-M6 kèm nét tay nối xuống tấm, F không Flag."
+  ],
+  "loai": [
+   "Sai kích thước lỗ",
+   "Thiếu Flag"
+  ],
+  "at": "2026-11-17T08:35:04Z",
+  "nguyen_nhan": "Suy đoán: AI gán cả 4 lỗ theo nhãn in 4-M8 gần tấm, không tách hai lỗ M6 (nét tay từ nhãn 4-M6 trỏ xuống cùng tấm) và không Flag chỗ không phân biệt được.",
+  "nguon": "T/F",
+  "khop": 85.7
+ },
+ "521109-22_26-066808": {
+  "loi": [
+   "Mép ngang của bậc (x từ 87.8 đến 117.8): F vẽ ở y = 129.2, T vẽ ở y = 127.2 (F cao hơn 2); cạnh đứng x = 87.8 của bậc F dài 28 (157.2 xuống 129.2), T dài 30 (157.2 xuống 127.2) đúng số 30 ghi trên bản vẽ.",
+   "Cung R2 ở góc bậc: F tâm (117.8; 127.2), T tâm (117.8; 125.2); cạnh x = 119.8 F chạy tới y = 127.2, T tới y = 125.2 (cùng lệch 2)."
+  ],
+  "loai": [
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-17T08:35:04Z",
+  "nguyen_nhan": "Suy đoán: AI đo số 30 từ đỉnh góc (sau bo) thay vì tới chân cung R2 như T, nên cả bậc dịch 2 mm.",
+  "nguon": "T/F",
+  "khop": 75.0
+ },
+ "521110-12_26-067077": {
+  "loi": [
+   "4 lỗ φ12 hàng thứ hai tại x = 25.2, 119.9, 415.1, 509.8: F đặt y = 55.2 (25.3 + 29.9), T đặt y = 120.1 (150 - 29.9, tức cách hàng 1 là 94.8); hàng y = 25.3 giống nhau."
+  ],
+  "loai": [
+   "Sai vị trí lỗ"
+  ],
+  "at": "2026-11-17T08:35:04Z",
+  "nguyen_nhan": "Suy đoán: số sửa tay trên FAX (một số gạch thành 94.8, một số gạch thành 29.9) bị ghép sai đoạn, 29.9 thành khoảng giữa hai hàng thay vì 94.8; hoán vị này cùng tổng 150 nên kiểm tổng không bắt được.",
+  "nguon": "T/F",
+  "khop": 75.0
+ },
+ "521111-01_26-067270": {
+  "loi": [
+   "Cánh chữ コ đầu y = 0: F thiếu 2 lỗ φ8 tại (15; 15) và (465; 15); T có đủ 2 lỗ ở mỗi cánh (4 lỗ φ8), F chỉ vẽ 2 lỗ ở cánh trên (y = 673.72)."
+  ],
+  "loai": [
+   "Thiếu lỗ",
+   "Thiếu Flag"
+  ],
+  "at": "2026-11-17T08:35:05Z",
+  "nguyen_nhan": "Suy đoán: AI hiểu '2-φ8キリ' ghi ở hình một cánh là tổng cho cả chi tiết, trong khi chi tiết chữ コ hai cánh giống nhau thì mỗi cánh có 2 lỗ.",
+  "nguon": "T/F",
+  "khop": 94.7
+ },
+ "521111-01_26-067271": {
+  "loi": [
+   "Tấm 300 x 200: F thừa 4 lỗ φ10 tại (30; 30), (30; 170), (270; 30), (270; 170); T là tấm trơn không có lỗ nào. Ghi chú '2x2-Φ10キリ M8x4で固定' nằm ở hình tấm khác trên cùng trang, F vẽ cho tấm này."
+  ],
+  "loai": [
+   "Thừa lỗ"
+  ],
+  "at": "2026-11-17T08:35:05Z",
+  "nguyen_nhan": "Suy đoán: hai tấm cùng 300 x 200 trên một trang, AI gán ghi chú lỗ của tấm ③ cho tấm này thay vì chỉ cho một tấm.",
+  "nguon": "T/F",
+  "khop": 80.0
  }
 }

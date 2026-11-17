@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.16-1"
+  version: "2026.11.17-3"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -77,12 +77,12 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 
 ### 4.2 Từ DXF khách
 - Có DXF thì LẤY DXF LÀM NỀN rồi chỉnh theo chỉ thị riêng (DXF không phải lúc nào cũng đúng). Dựng từ DXF TRƯỚC rồi mới so PDF.
-- Trích hình: layer 0, đưa về tỉ lệ 1:1 (DXF vẽ theo tỉ lệ khung tên 1:2, 1:3... thì nhân hệ số), nối LINE/ARC thành vòng kín; bỏ hình chiếu khác, kích thước, đường tâm. Hình có thể nằm trong BLOCK (INSERT JZB_xxxx): đọc cả nội dung block, không chỉ modelspace. Ví dụ 100-09.dxf (26-063640/641): hình trong JZB_0003/0004/0005; cánh rộng 61 kéo tới 29 tính từ mép tự do (cung R3 tâm (58; 26)), không dừng ở đường uốn 27.34.
+- Trích hình: layer 0, đưa về tỉ lệ 1:1 (DXF vẽ theo tỉ lệ khung tên 1:2, 1:3... thì nhân hệ số), nối LINE/ARC thành vòng kín; bỏ hình chiếu khác (vẫn đọc để biết đặc điểm xuyên hay không), kích thước, đường tâm. Hình có thể nằm trong BLOCK (INSERT JZB_xxxx): đọc cả nội dung block, không chỉ modelspace. Ví dụ 100-09.dxf (26-063640/641): hình trong JZB_0003/0004/0005; cánh rộng 61 kéo tới 29 tính từ mép tự do (cung R3 tâm (58; 26)), không dừng ở đường uốn 27.34.
 - DXF chỉ có hình chiếu (không có phôi) vẫn phải trích số liệu (chiều dài mép tự do, chân cánh, tọa độ lỗ) từ đó.
 - Áp chỉ thị PDF lên nền DXF: ghi chú laser (062682 'laser: φ11.6' → vẽ φ11.6 thay φ12 H7 của DXF), độ giãn và chiều dài tay viết. Kích thước PDF khác DXF (kể cả φ lỗ) mà không có chỉ thị riêng: dựng theo DXF rồi Flag 1. Mọi chỗ lệch DXF–PDF phải có Flag (mục 11.4); khách có quy định riêng (PDF chuẩn/DXF chuẩn) theo `Quy_Tac_Theo_Ma_Khach_AnDanh.md`.
 - Phôi tham khảo (展開図 参考) của khách: hiệu chỉnh chiều dài theo độ giãn tay viết / 旭金属の展開: giữ vị trí tính từ mép tự do của cánh, phần bên kia đường uốn tính từ mép đối diện (dịch cả phần đó), vẽ lại 2 đường DASHED.
 - Bản vẽ phẳng có cánh uốn chỉ hiện ở hình chiếu cạnh : mở cánh ra; đầu tự do cánh = đường uốn phía cánh - (ngoài cánh - giãn). Slit chân cánh của khách nằm đúng vùng uốn là dấu hiệu đúng.
-- Lỗ khoét côn/khoét bậc và ký hiệu ren trong DXF chỉ là ký hiệu: không vẽ, chỉ vẽ lỗ mồi.
+- Chỉ cắt đường xuyên hết chiều dày. Lỗ khoét côn/khoét bậc, ký hiệu ren và hốc/rãnh/bậc không xuyên (hình chiếu cạnh hoặc mặt cắt có đáy giữa chiều dày, dim sâu < t, chữ 深サ/段/座) trong DXF hay PDF chỉ là ký hiệu: không vẽ; lỗ chỉ vẽ lỗ mồi/lỗ thông, biên ngoài giữ theo mép xuyên. Rãnh/khuyết trên hình chiếu bằng của tấm dày phải soi hình chiếu cạnh (kể cả block khác trong DXF khách) trước khi lấy làm biên; chưa chắc thì vẽ biên xuyên và Flag 1. Cỡ ren (đường kính vòng ký hiệu) trong DXF vẫn phải so với cỡ ren PDF, không chỉ so chữ; lệch (ví dụ PDF M3, DXF M2.6) thì lấy lỗ mồi theo cỡ ren của DXF (tra `Quy_Tac_Lo_Moi.md`) và Flag 1. Bu lông đầu chìm (khung tên ghi サラ/皿/ザグリ) mà PDF ghi φ lớn cho nhóm lỗ (ví dụ 4-φ6.5): φ đó là khoét đầu vít, KHÔNG vẽ; lỗ cắt là lỗ thông (vòng nhỏ trong block ký hiệu lỗ của DXF khách, đọc cả BLOCK/INSERT), không có thì tra `Quy_Tac_Lo_Moi.md` mục 2-3. Khác số PDF thì Flag 1.
 - Góc lồi 90° sắc trong phôi DXF khách vẫn bo theo bảng laser (mục 8).
 - Phôi chéo không có cạnh thẳng nào áp trục: chỉ xoay bội 90° để cạnh dài nằm theo X (trừ Nhôm/304CSP có uốn: đường uốn song song Ox trước, mục 10).
 - Đối với trường hợp đã có bản vẽ trải phôi thì không cần rạch (Trừ khi có yêu cầu cụ thể trên PDF).
@@ -145,7 +145,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   - Sau khi vẽ, đếm lỗ từng tấm, đối chiếu mọi ghi chú (không tấm nào thiếu/thừa, không lỗ nào ở 2 tấm).
   - Chi tiết chữ コ/U có hai cánh giống nhau: lỗ hoặc chi tiết chỉ thấy ở một cánh trong hình cạnh thì MẶC ĐỊNH cả hai cánh đều có (đối xứng), trừ khi bản vẽ ghi rõ "một bên". Số lượng "n-φx" chỉ là số lỗ trong hình đang xem, không phải tổng cho cả chi tiết; ghi nhận trong bảng 'lỗ → tấm' là "mỗi cánh n lỗ" và vẽ đủ cả hai cánh (kiểm tra bằng hình chiếu khác nếu có).
   - Hai chi tiết cùng hình dạng/kích thước (ví dụ hai tấm nắp 300 x 200) mà ghi chú lỗ/ren/"固定" chỉ trỏ tới MỘT chi tiết (theo đầu mũi tên hoặc ký hiệu ②③): chỉ chi tiết đó có lỗ, chi tiết còn lại vẽ TRƠN. CẤM vẽ "tạm giống mã kia"; không rõ chi tiết nào thì Flag 5 và vẽ ở trạng thái không thêm lỗ.
-- Lỗ taro: vẽ lỗ mồi theo `Quy_Tac_Lo_Moi.md` (M6 → φ5, M8 → φ6.8), TRỪ KHI bản vẽ có ghi chú tay về lỗ mồi (ví dụ 「下穴φ2.5 レーザー → 穴あけ → タップ」 khoanh quanh 4-M5: laser chỉ cắt φ2.5, không phải φ4.2): ghi chú tay thắng bảng. Trước khi vẽ, quét mọi ghi chú tay cạnh từng nhóm lỗ n-Mx/n-φ và ghi vào bảng 'lỗ → tấm' (cột φ vẽ + nguồn: bảng / ghi chú tay).
+- Lỗ taro: vẽ lỗ mồi theo `Quy_Tac_Lo_Moi.md` (M6 → φ5, M8 → φ6.8), TRỪ KHI bản vẽ có ghi chú tay về lỗ mồi (ví dụ 「下穴φ2.5 レーザー → 穴あけ → タップ」 khoanh quanh 4-M5: laser chỉ cắt φ2.5, không phải φ4.2): ghi chú tay thắng bảng. Trước khi vẽ, quét mọi ghi chú tay cạnh từng nhóm lỗ n-Mx/n-φ và ghi vào bảng 'lỗ → tấm' (cột φ vẽ + nguồn: bảng / ghi chú tay). Một tấm có từ hai nhãn ren khác cỡ trỏ tới (kể cả nét tay nối nhãn xuống tấm) mà số lỗ thấy trên tấm không khớp một nhãn: tách từng lỗ theo ký hiệu lỗ và nét nối; không phân biệt được thì Flag 5, không gán cả nhóm theo nhãn gần nhất.
 - Lỗ nhỏ: so đường kính (kể cả lỗ mồi) với "Lỗ nhỏ nhất" trong `Quy_Tac_Laser.md` mục 2 theo vật liệu và độ dày. Nhỏ hơn, hoặc lỗ có ghi chú tay ピアス khoanh riêng quanh lỗ đó, thì vẽ POINT (piercing) tại tâm lỗ, layer 0, thay CIRCLE. Tem/chữ PIERCING đầu trang KHÔNG áp cho mọi lỗ ren: lỗ ren có lỗ mồi ≥ lỗ nhỏ nhất vẫn vẽ CIRCLE lỗ mồi. Ví dụ 26-059668 (t12, 6-M6 PIERCING, mồi φ5 < 6): 6 POINT. Ví dụ 521030-12 (tem PIERCING, ghi tay chỉ khoanh M12 t16): M12 POINT; 4-M8 t12 mồi φ6.8 (≥ 6) và M6 t6 mồi φ5 (≥ 3) vẽ CIRCLE (lần đầu vẽ POINT cho mọi lỗ ren là sai). Khách có quy định riêng trong `DS_Khach_Hang.md` (ví dụ 875: lỗ nhỏ hơn độ dày làm lỗ trắng) thì theo khách; chưa rõ thì hỏi.
 - Màu POINT: mặc định trắng; có dấu THROUGH HOLE/đột xuyên hoặc khách quy định piercing là lỗ xuyên (`DS_Khach_Hang.md`) thì POINT Xanh lá (`62 = 3` ngay sau layer `8`).
 
@@ -153,7 +153,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Bản vẽ ghi R thì theo bản vẽ; khách có quy định riêng (không bo, R3...) thì theo khách; còn lại PHẢI bo góc lồi ≤ 90° theo bảng `Quy_Tac_Laser.md` mục 2:
   - Thép (SS: SPHC, SPCC, SS400...): ≤ 5 → R0.5; 6–9 → R2; 10–16 → không bo; ≥ 19 → R3 cả góc trong và ngoài.
   - Inox/khác: ≤ 6 → R0.5; ≥ 7 → không bo. Nhôm: ≤ 6 → R0.5: ≥ 7 → không bo. Đồng/đồng thau: ≤ 5 → R0.5.
-- R0.5 là mặc định, không tự thay. Khi góc lồi quá nhỏ (cạnh kề quá ngắn, cung R0.5 không có chỗ tiếp tuyến) Flag 19 (mục 11.4).
+- R0.5 là mặc định, không tự thay. Khi góc lồi quá nhỏ (cạnh kề quá ngắn, cung R0.5 không có chỗ tiếp tuyến) Flag 19 (mục 11.4). Chú thích 直角逃がし (ø hoặc R) chỉ vào góc lõm vuông của biên (kể cả bản OUTLINE ONLY): vẽ relief tại góc đó, vòng tâm tại đỉnh góc đường kính = số ghi, hai cạnh nối vào vòng qua cung tiếp tuyến (không có số R cung nối thì Flag 3); không xác định được góc nào hoặc số góc không khớp "n-" thì Flag 5.
 - Góc nhìn thấy bo cong trên hình nhưng không có số R: KHÔNG coi là góc nhọn rồi bo R0.5 như thường, KHÔNG tự điền R theo ghi chú lân cận. Zoom ≥ 200 dpi từng góc; góc bo cong mà thiếu số thì Flag 3 (nêu vị trí góc, 'bo cong, không ghi số R'), vẫn vẽ tạm R0.5 để file không hở và ghi rõ 'tạm' trong Flag; chờ người dùng cung cấp R.
 - Góc đã vát C (135°) và góc lõm không bo (trừ thép ≥ 19t). Vát C vẽ thành đoạn chéo.
 - Vẽ ARC tiếp tuyến 2 cạnh, cắt ngắn 2 cạnh tại tiếp điểm. Kích thước bản vẽ là kích thước chưa bo.
@@ -204,7 +204,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 
 ### 11.4 Flag (cảnh báo trong file ALL)
 - Ghi Flag tiếng Việt có dấu ngay dưới chữ mã khi gặp:
-  1. Kích thước PDF và DXF khác nhau.
+  1. Kích thước PDF và DXF khác nhau (kể cả cỡ ren lệch, ví dụ PDF M3, DXF M2.6).
   2. Kích thước giữa các hình chiếu không khớp.
   3. Thiếu kích thước (chỉ khi không tính được qua chuỗi, mục 2; kể cả góc bo cong thấy trên hình mà không ghi số R, mục 8).
   4. Kích thước và hình dạng không khớp.

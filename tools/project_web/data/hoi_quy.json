@@ -1,0 +1,36 @@
+[
+ {
+  "id": "20261117164818_hoiquy",
+  "at": "2026-11-17T09:52:09Z",
+  "skill": "2026.11.17-3",
+  "loai": "Sai vị trí lỗ",
+  "items": [
+   {
+    "key": "521110-12_26-067077",
+    "kq": "khac",
+    "khop": 62.5,
+    "text": "Sai vị trí lỗ: 6/8 lỗ φ12 lệch theo bề rộng 150. Đáp án lỗ ở 25.3 và 120.1, vẽ lại ở 25.3 và 94.8 (đọc chuỗi 25.3/69.5/55.3 từ mép trái); vị trí theo chiều dài 535 khớp",
+    "kieu": "T",
+    "loai": [
+     "Sai vị trí lỗ"
+    ]
+   },
+   {
+    "key": "521110-12_26-067074",
+    "kq": "khop",
+    "khop": 100.0,
+    "text": "",
+    "kieu": "dung",
+    "loai": []
+   },
+   {
+    "key": "521110-12_26-067073",
+    "kq": "khop",
+    "khop": 100.0,
+    "text": "",
+    "kieu": "dung",
+    "loai": []
+   }
+  ]
+ }
+]

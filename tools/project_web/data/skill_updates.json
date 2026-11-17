@@ -1,0 +1,86 @@
+[
+ {
+  "id": "20261117133354_updskill",
+  "at": "2026-11-17T06:34:40Z",
+  "before": "2026.11.17-1",
+  "after": "2026.11.17-2",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261117133354_updskill",
+  "changes": [
+   {
+    "proposal": "068185-hoc-bac-khong-xuyen.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "80",
+    "old": "- Trích hình: layer 0, đưa về tỉ lệ 1:1 (DXF vẽ theo tỉ lệ khung tên 1:2, 1:3... thì nhân hệ số), nối LINE/ARC thành vòng kín; bỏ hình chiếu khác, kích thước, đường tâm. Hình có thể nằm trong BLOCK (INSERT JZB_xxxx): đọc cả nội dung block, không chỉ modelspace. Ví dụ 100-09.dxf (26-063640/641): hình trong JZB_0003/0004/0005; cánh rộng 61 kéo tới 29 tính từ mép tự do (cung R3 tâm (58; 26)), không dừng ở đường uốn 27.34.",
+    "new": "- Trích hình: layer 0, đưa về tỉ lệ 1:1 (DXF vẽ theo tỉ lệ khung tên 1:2, 1:3... thì nhân hệ số), nối LINE/ARC thành vòng kín; bỏ hình chiếu khác (vẫn đọc để biết đặc điểm xuyên hay không), kích thước, đường tâm. Hình có thể nằm trong BLOCK (INSERT JZB_xxxx): đọc cả nội dung block, không chỉ modelspace. Ví dụ 100-09.dxf (26-063640/641): hình trong JZB_0003/0004/0005; cánh rộng 61 kéo tới 29 tính từ mép tự do (cung R3 tâm (58; 26)), không dừng ở đường uốn 27.34."
+   },
+   {
+    "proposal": "068185-hoc-bac-khong-xuyen.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "85",
+    "old": "- Lỗ khoét côn/khoét bậc và ký hiệu ren trong DXF chỉ là ký hiệu: không vẽ, chỉ vẽ lỗ mồi. Cỡ ren (đường kính vòng ký hiệu) trong DXF vẫn phải so với cỡ ren PDF, không chỉ so chữ; lệch (ví dụ PDF M3, DXF M2.6) thì lấy lỗ mồi theo cỡ ren của DXF (tra `Quy_Tac_Lo_Moi.md`) và Flag 1. Bu lông đầu chìm (khung tên ghi サラ/皿/ザグリ) mà PDF ghi φ lớn cho nhóm lỗ (ví dụ 4-φ6.5): φ đó là khoét đầu vít, KHÔNG vẽ; lỗ cắt là lỗ thông (vòng nhỏ trong block ký hiệu lỗ của DXF khách, đọc cả BLOCK/INSERT), không có thì tra `Quy_Tac_Lo_Moi.md` mục 2-3. Khác số PDF thì Flag 1.",
+    "new": "- Chỉ cắt đường xuyên hết chiều dày. Lỗ khoét côn/khoét bậc, ký hiệu ren và hốc/rãnh/bậc không xuyên (hình chiếu cạnh hoặc mặt cắt có đáy giữa chiều dày, dim sâu < t, chữ 深サ/段/座) trong DXF hay PDF chỉ là ký hiệu: không vẽ; lỗ chỉ vẽ lỗ mồi/lỗ thông, biên ngoài giữ theo mép xuyên. Rãnh/khuyết trên hình chiếu bằng của tấm dày phải soi hình chiếu cạnh (kể cả block khác trong DXF khách) trước khi lấy làm biên; chưa chắc thì vẽ biên xuyên và Flag 1. Cỡ ren (đường kính vòng ký hiệu) trong DXF vẫn phải so với cỡ ren PDF, không chỉ so chữ; lệch (ví dụ PDF M3, DXF M2.6) thì lấy lỗ mồi theo cỡ ren của DXF (tra `Quy_Tac_Lo_Moi.md`) và Flag 1. Bu lông đầu chìm (khung tên ghi サラ/皿/ザグリ) mà PDF ghi φ lớn cho nhóm lỗ (ví dụ 4-φ6.5): φ đó là khoét đầu vít, KHÔNG vẽ; lỗ cắt là lỗ thông (vòng nhỏ trong block ký hiệu lỗ của DXF khách, đọc cả BLOCK/INSERT), không có thì tra `Quy_Tac_Lo_Moi.md` mục 2-3. Khác số PDF thì Flag 1."
+   }
+  ],
+  "skipped": [
+   {
+    "proposal": "068185-hoc-bac-khong-xuyen.md",
+    "why": "Phần (a) có đích là script tools\\doi_chieu_khach.py: không áp dụng, cần người làm"
+   }
+  ]
+ },
+ {
+  "id": "20261117155115_updskill",
+  "archived": [
+   "066809-relief-goc-vuong.md"
+  ],
+  "at": "2026-11-17T08:52:10Z",
+  "before": "2026.11.17-2",
+  "after": "2026.11.17-3",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261117155115_updskill",
+  "changes": [
+   {
+    "proposal": "066809-relief-goc-vuong.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "156",
+    "old": "- R0.5 là mặc định, không tự thay. Khi góc lồi quá nhỏ (cạnh kề quá ngắn, cung R0.5 không có chỗ tiếp tuyến) Flag 19 (mục 11.4).",
+    "new": "- R0.5 là mặc định, không tự thay. Khi góc lồi quá nhỏ (cạnh kề quá ngắn, cung R0.5 không có chỗ tiếp tuyến) Flag 19 (mục 11.4). Chú thích 直角逃がし (ø hoặc R) chỉ vào góc lõm vuông của biên (kể cả bản OUTLINE ONLY): vẽ relief tại góc đó, vòng tâm tại đỉnh góc đường kính = số ghi, hai cạnh nối vào vòng qua cung tiếp tuyến (không có số R cung nối thì Flag 3); không xác định được góc nào hoặc số góc không khớp \"n-\" thì Flag 5."
+   },
+   {
+    "proposal": "066976-gan-lo-nhan-ren-khac-co.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "148",
+    "old": "- Lỗ taro: vẽ lỗ mồi theo `Quy_Tac_Lo_Moi.md` (M6 → φ5, M8 → φ6.8), TRỪ KHI bản vẽ có ghi chú tay về lỗ mồi (ví dụ 「下穴φ2.5 レーザー → 穴あけ → タップ」 khoanh quanh 4-M5: laser chỉ cắt φ2.5, không phải φ4.2): ghi chú tay thắng bảng. Trước khi vẽ, quét mọi ghi chú tay cạnh từng nhóm lỗ n-Mx/n-φ và ghi vào bảng 'lỗ → tấm' (cột φ vẽ + nguồn: bảng / ghi chú tay).",
+    "new": "- Lỗ taro: vẽ lỗ mồi theo `Quy_Tac_Lo_Moi.md` (M6 → φ5, M8 → φ6.8), TRỪ KHI bản vẽ có ghi chú tay về lỗ mồi (ví dụ 「下穴φ2.5 レーザー → 穴あけ → タップ」 khoanh quanh 4-M5: laser chỉ cắt φ2.5, không phải φ4.2): ghi chú tay thắng bảng. Trước khi vẽ, quét mọi ghi chú tay cạnh từng nhóm lỗ n-Mx/n-φ và ghi vào bảng 'lỗ → tấm' (cột φ vẽ + nguồn: bảng / ghi chú tay). Một tấm có từ hai nhãn ren khác cỡ trỏ tới (kể cả nét tay nối nhãn xuống tấm) mà số lỗ thấy trên tấm không khớp một nhãn: tách từng lỗ theo ký hiệu lỗ và nét nối; không phân biệt được thì Flag 5, không gán cả nhóm theo nhãn gần nhất."
+   }
+  ],
+  "skipped": [
+   {
+    "proposal": "067077-chuoi-dim-sua-tay-hoan-vi.md",
+    "why": "Đề xuất tự ghi không sửa SKILL.md (dòng 41-43 đã có quy tắc hoán vị; chờ Chạy hồi quy 26-067077), không có phần đích để áp dụng."
+   },
+   {
+    "proposal": "066976-gan-lo-nhan-ren-khac-co.md (phần a)",
+    "why": "đích là script (tools\\dxf_check.py: cảnh báo hai cánh chữ コ không đối xứng lỗ), cần người làm"
+   }
+  ]
+ },
+ {
+  "id": "20261117155325_updskill",
+  "archived": [],
+  "at": "2026-11-17T08:53:40Z",
+  "before": "2026.11.17-3",
+  "after": "2026.11.17-3",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261117155325_updskill",
+  "changes": [],
+  "skipped": [
+   {
+    "proposal": "066976-gan-lo-nhan-ren-khac-co.md",
+    "why": "Phần (c) đã được áp dụng vào SKILL.md dòng 148 ở job 20261117155115_updskill (đã kiểm lại nguyên văn có trong file), lượt này không sửa thêm; phần (a) đích là script tools\\dxf_check.py, cần người làm"
+   },
+   {
+    "proposal": "067077-chuoi-dim-sua-tay-hoan-vi.md",
+    "why": "Đề xuất không có phần nào sửa SKILL.md/rules: dòng 41-43 của SKILL đã có quy tắc này, đề xuất chờ chạy hồi quy với 26-067077; phần script không đề xuất"
+   }
+  ]
+ }
+]

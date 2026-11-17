@@ -3,6 +3,7 @@
 Dùng: python3 dxf_check.py FILE.dxf [--template [--tpl Template.dxf]] [--mat SS|SUS|AL|CU --t 3.2]
        [--expect yeucau.csv] [--src THU_MUC_DON] [--order 064301,064302] [--mirror 064157:064158] [--single THU_MUC] [--png out.png]
 expect.csv: code,X,Y[,mat,t] (X/Y của CAD依頼書). Mã thoát 1 nếu có LỖI.
+Chi tiết chữ コ/U (hai cánh ngoài cùng bằng nhau): CẢNH BÁO nếu số lỗ/φ hai cánh khác nhau.
 Mặc định chỉ kiểm hình dạng; so cấu trúc file với Template (CRLF, header, owner 6F, handle...) chỉ chạy khi có --template."""
 import sys, re, math, argparse, os, unicodedata, subprocess
 from collections import defaultdict
@@ -24,7 +25,11 @@ STD_FLAGS = ['Kích thước PDF và DXF khác nhau', 'Kích thước giữa cá
              'Kích thước và hình dạng không khớp', 'Ghi chú tay không đọc rõ', 'Kích thước ghi quá mờ',
              'Không rõ kích thước trong hay ngoài', 'Số lượng lỗ ghi không khớp', 'Số lượng bo R hoặc vát C',
              'Độ giãn viết tay khác bảng', 'Không chắc mặt nào là mặt ngoài',
-             'Không chắc trên tấm có Kegaki hay không']
+             'Không chắc trên tấm có Kegaki hay không',
+             # Flag 12-20 của dxf-sheetmetal mục 11.4 (bổ sung 17/11/2026: trước đây script chỉ biết 12 câu nên báo nhầm)
+             'Khi trên tấm có hàn', 'Trên tấm có hàn', 'Cộng thêm lượng dư gia công', 'Tổng các kích thước trong chuỗi Dim khác',
+             'Chân dim kích thước bị lệch', 'Thiếu độ giãn dài', 'Có bất kì lỗ tròn', 'Có lỗ tròn', 'Lỗ tròn nhỏ hơn 1/2',
+             'Kích thước có dung sai', 'Góc nhọn quá bé', 'Gọc nhọn quá bé', 'Thiếu DXF khách']
 
 PILOT = {}
 for _th, _d in (('M3', 2.5), ('M3.5', 2.9), ('M4', 3.3), ('M5', 4.2), ('M6', 5), ('M7', 6), ('M8', 6.8), ('M10', 8.5), ('M12', 10.3)):
@@ -303,6 +308,20 @@ def check_part(name, items, mat, t, is_all):
         if k not in paired: W('%s: đường uốn %s→%s không có cặp (mỗi chỗ uốn 2 LINE DASHED cách nhau = độ giãn)' % (name, P(s.p), P(s.q)))
         mid = ((s.p[0] + s.q[0]) / 2, (s.p[1] + s.q[1]) / 2)
         if not inside(mid, outer): E('%s: đường uốn %s→%s nằm ngoài phôi' % (name, P(s.p), P(s.q)))
+    # chi tiết chữ コ/U: hai cánh ngoài cùng bề rộng bằng nhau mà lỗ hai cánh khác nhau (đề xuất 066976, 26-067270)
+    if len(pairs) >= 2:
+        bor = {1 if abs(A.p[1] - A.q[1]) < TOL and abs(B.p[1] - B.q[1]) < TOL else 0 if abs(A.p[0] - A.q[0]) < TOL and abs(B.p[0] - B.q[0]) < TOL else None for A, B, _d in pairs}
+        if len(bor) == 1 and None not in bor:
+            cs = bor.pop()   # trục xếp cánh: 1 (Y) khi đường uốn song song X; 0 (X) khi song song Y
+            lo = min(min(A.p[cs], B.p[cs]) for A, B, _d in pairs); hi = max(max(A.p[cs], B.p[cs]) for A, B, _d in pairs)
+            w1, w2 = lo - bb[cs], bb[cs + 2] - hi
+            if w1 > 1 and w2 > 1 and abs(w1 - w2) < 0.1:
+                hc = [((e.dxf.center.x, e.dxf.center.y)[cs], round(2 * e.dxf.radius, 2)) for c, e in items if c == 'hole']
+                hc += [(p[cs], 0) for p in pts_hole]
+                h1, h2 = sorted(d for v, d in hc if bb[cs] < v < lo), sorted(d for v, d in hc if hi < v < bb[cs + 2])
+                if h1 != h2:
+                    W('%s: hai cánh ngoài cùng bằng nhau (%s mm) nhưng lỗ không đối xứng (%d lỗ %s so %d lỗ %s); chi tiết chữ コ mặc định mỗi cánh đủ lỗ (dxf-sheetmetal mục 10), kiểm lại ghi chú/bản vẽ, không có thì Flag' % (
+                        name, f(w1), len(h1), '/'.join('φ%s' % f(d) for d in sorted(set(h1))) or '-', len(h2), '/'.join('φ%s' % f(d) for d in sorted(set(h2))) or '-'))
     # rạch Green
     gs = [Seg(e) for c, e in items if c == 'green']
     for s in gs:
@@ -593,7 +612,7 @@ def main():
                 else: items_txt[-1] += ' ' + s
                 if s.lower().startswith('flag'): E('%s: không ghi chữ "Flag"' % name)
             for s in items_txt:
-                if not any(s.startswith(x) for x in STD_FLAGS): W('%s: Flag %r không khớp câu chuẩn nào trong 12 trường hợp' % (name, s[:40]))
+                if not any(s.startswith(x) for x in STD_FLAGS): W('%s: Flag %r không khớp câu chuẩn nào trong 20 trường hợp (dxf-sheetmetal mục 11.4)' % (name, s[:40]))
             if fl and k + 1 < len(parts) and fl[-1].dxf.insert.y - 4 < parts[k + 1][1] + 5: W('%s: Flag kéo xuống chạm hình bên dưới' % name)
             if fl: I('%s: %d Flag: %s' % (name, num, ' | '.join(items_txt)))
         if name in exp:

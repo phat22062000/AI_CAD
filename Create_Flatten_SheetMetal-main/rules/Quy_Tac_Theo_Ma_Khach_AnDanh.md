@@ -8,7 +8,7 @@ Bản gốc: DS_khach_hang_yeu_cau_dac_biet.md. Khách không có trong danh sá
 - **Mọi piercing = lỗ xuyên:** 407, 473, 518, 768, 810, 899.
 - **Piercing/ponch/marking = lỗ trắng:** 703 (ポンチ), 764 (ピアス, マーキング), 781, 898 (punch), 908, 921, 940, 955.
 - **Kegaki vị trí hàn dù không có chỉ thị:** 676 (hàn tại khách), 851, 899, 938, 957.
-- **PDF là chuẩn (DXF chỉ tham khảo):** 395, 407, 544, 676, 710. **DXF/dữ liệu là chuẩn:** 240, 829, 915, 964.
+- **PDF là chuẩn (DXF chỉ tham khảo):** 395, 407, 544, 710. **DXF/dữ liệu là chuẩn:** 240, 676 (hình DXF khác số PDF thì theo DXF và Flag 1), 829, 915, 964.
 - **Lưu thêm DWG:** 789, 794, 825 (khách này chỉ DWG, không DXF).
 
 ## Chi tiết từng khách
@@ -36,7 +36,7 @@ Bản gốc: DS_khach_hang_yeu_cau_dac_biet.md. Khách không có trong danh sá
 | 621 | Chỉ gia công chỗ có chỉ dẫn; không có thì chỉ biên ngoài. |
 | 630 | Không gắn joint vào lỗ. Lỗ khoan/pierce ở chu vi ngoài làm bình thường. |
 | 646 | Dùng bảng giãn riêng Bang_Do_Gian_AICOKU ALPHA (kể cả tự uốn tại công ty). |
-| 676 | Có DXF vẫn theo PDF; chênh lớn thì hỏi lại. Hàn tại khách: tất cả cần kegaki. |
+| 676 | Hình DXF khác số PDF (kể cả φ lỗ, vị trí mép/rãnh): theo hình DXF và Flag 1; khác lớn thì hỏi lại. Hàn tại khách: tất cả cần kegaki. |
 | 703 | ポンチ = lỗ trắng. Đôi khi tính uốn ×2. |
 | 710 | Khác nhau (vài mm) giữa dữ liệu và bản vẽ: lấy bản vẽ làm chuẩn; DXF chỉ tham khảo. |
 | 712 | Chỉ gia công chỗ có ghi "旭". Ghi "全加工" thì khoét lỗ đúng bản vẽ. Độ dày bản vẽ có thể khác đơn (vd bản vẽ t16, đơn t19). Có chỉ thị đắp thịt +2 mm (▽▽), đừng bỏ sót. マスキング và ピアス = lỗ trắng; lỗ xuyên có chỉ thị riêng. Vát C không ghi: C5 (không cần hỏi). SS19t: lỗ cách biên ≤ 5 mm thì đắp thịt rồi mới khoét. Hình dạng, có/không lỗ theo chỉ thị của kinh doanh. |

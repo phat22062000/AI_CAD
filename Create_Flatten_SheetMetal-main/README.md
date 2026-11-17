@@ -10,7 +10,7 @@ Bộ skill, quy tắc và công cụ tạo bản vẽ trải phôi (DXF) kim lo�
 | `rules/` | Quy tắc laser (`Quy_Tac_Laser.md`: vật liệu, Laser R, piercing, joint, kegaki), lỗ mồi, quy tắc NC CamMagic LA, ghi chú lỗi DXF, quy tắc theo mã khách (đã ẩn tên khách), `bang-do-gian/` (bảng độ giãn khi uốn) |
 | `templates/` | `Template.dxf`: file mẫu để ghép hình vào, giữ nguyên từng byte |
 | `lessons/` | Bài học: `skill-updates/` (đề xuất sửa skill rút từ lỗi thực tế), `feedback/` (nguyên tắc làm việc), báo cáo thử nghiệm chạy song song |
-| `tools/` | `dxf_check.py` (kiểm DXF), `cammagic_nc.py` (DXF sang NC), `sheetmetal_kit/` (chạy song song: render PDF, dựng spec, gộp vào Template), `prompts/`, `skill_sync/` (đồng bộ skill từ app về máy) |
+| `tools/` | `dxf_check.py` (kiểm DXF), `doi_chieu_khach.py` (đối chiếu hình đã vẽ với DXF khách, báo thiếu Flag 1), `diff_tf.py` (so bài đúng T với bài AI F), `cammagic_nc.py` (DXF sang NC), `sheetmetal_kit/` (chạy song song: render PDF, dựng spec, gộp vào Template), `prompts/`, `skill_sync/` (đồng bộ skill từ app về máy) |
 | `docs/` | Quy trình, bản đồ quy tắc, danh sách file đã loại, hướng dẫn đẩy lên GitHub |
 
 ## Cách dùng nhanh

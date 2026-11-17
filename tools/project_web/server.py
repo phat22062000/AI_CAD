@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
+import qa
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))          # ...\AI_CAD
 WORK = os.environ.get('AI_WORK', os.path.join(ROOT, 'AI_Work'))
@@ -25,6 +27,16 @@ DATA = os.path.join(HERE, 'data')
 REVIEWS = os.path.join(DATA, 'reviews.json')      # Đúng/Sai của người dùng (bền vững)
 LOI_SAI = os.path.join(DATA, 'loi_sai.json')      # lỗi cụ thể của mã bị chấm Sai: {"<đơn>_<mã>": {"loi": ["...", ...], "at": ...}}, agent ghi qua `report.py loi`
 PROGRESS = os.path.join(DATA, 'progress.json')    # agent ghi tiến độ vào đây
+CHECKS = os.path.join(DATA, 'check_results.json') # kết quả nút "Tự check": {"<đơn>": {"at", "items": [{"code", "level": "loi|canhbao", "text"}]}}, agent ghi qua `report.py check`
+REPO = os.path.join(ROOT, 'Create_Flatten_SheetMetal-main')       # skill gốc + quy tắc + bài học
+DA_RUT = os.path.join(REPO, 'lessons', 'feedback', '_da_rut_kinh_nghiem.json')      # mã Sai đã rút kinh nghiệm: [{"key", "file"}]
+SKILL_UPD = os.path.join(REPO, 'lessons', 'skill-updates')       # đề xuất sửa skill chờ Phát duyệt
+SUA_LOI = 'Sua_loi'       # <thư mục đơn>\Sua_loi\ = <mã>F.dxf (AI vẽ, web tự chép khi chấm Sai) + <mã>T.dxf (đúng, người dùng đặt vào)
+QA_FROM = '2026-11-17'      # chỉ báo "Sai chưa có file T" cho đơn từ ngày này (Phát chốt 17/11/2026: bỏ qua các mã Sai cũ chưa phân tích)
+HOIQUY = os.path.join(DATA, 'hoi_quy.json')        # kết quả các lần chạy hồi quy sau update skill: [{id, at, skill, loai, items}]
+SKILL_LOG = os.path.join(DATA, 'skill_updates.json')   # nhật ký các lần bấm "Update Skill": [{id, at, before, after, backup, changes, skipped}]
+SCRIPT_LOG = os.path.join(DATA, 'script_updates.json')   # nhật ký các lần bấm "Update Script": [{id, at, backup, changes, skipped}]
+SPECIAL = ('check', 'rutkn', 'hoiquy', 'updskill', 'updscript')      # việc đặc biệt chạy bằng nút trên trang (không phải vẽ đơn): không đụng tiến độ vẽ của đơn
 PORT = int(os.environ.get('PORT', '8780'))
 ACTIVE_MIN = 30          # thư mục có file mới trong 30 phút -> coi là đang làm
 LOST_MIN = 10            # heartbeat cũ hơn 10 phút -> mất tín hiệu
@@ -270,7 +282,7 @@ def build_order(order, info, prog):
             mt = os.path.getmtime(p)
         except OSError:
             continue
-        if not PACK_RE.match(rel):      # file trong Gui/Gui_N do đóng gói tạo ra, không tính là agent đang làm
+        if not PACK_RE.match(rel) and not rel.lower().startswith(SUA_LOI.lower() + os.sep.lower()) and not rel.lower().startswith(SUA_LOI.lower() + '/'):      # Gui/Gui_N do đóng gói tạo, Sua_loi do rút kinh nghiệm: không tính là agent đang làm
             tlast = max(tlast, mt)
         stem, ext = os.path.splitext(name)
         if ext.lower() == '.pdf' and stem == order:
@@ -280,7 +292,7 @@ def build_order(order, info, prog):
         elif ext.lower() == '.dxf':
             if stem.upper() == f'{order}_ALL'.upper():
                 all_dxf = (rel, mt)
-            elif '_ALL' in stem.upper() or 'review' in low or 'can_check' in low:
+            elif '_ALL' in stem.upper() or 'review' in low or 'can_check' in low or low.startswith(SUA_LOI.lower() + '\\') or low.startswith(SUA_LOI.lower() + '/'):
                 pass
             else:
                 parts.append((rel, mt))
@@ -315,7 +327,7 @@ def build_order(order, info, prog):
                 codes.append(c)
     # mã người dùng bỏ chọn ở bảng Giao việc (plan.skip của việc giao mới nhất có plan): không làm, không tính vào tổng/tiến độ đơn
     pj = sorted(((j.get('at', ''), j.get('plan') or {}) for j in prog.get('jobs', {}).values()
-                 if j.get('order') == order and j.get('kind') != 'tiep' and j.get('status') != 'loi'), key=lambda x: x[0])
+                 if j.get('order') == order and j.get('kind') not in ('tiep',) + SPECIAL and j.get('status') != 'loi'), key=lambda x: x[0])
     skipped = sorted(set(pj[-1][1].get('skip') or [])) if pj else []
     if skipped:
         codes = [c for c in codes if c not in skipped]
@@ -476,7 +488,7 @@ def snapshot(force=False):
         rn = sys.modules.get('runner')
         data = {'orders': orders, 'agents': agents, 'jobs': jobs[:50], 'generatedAt': now_iso(),
                 'runner': rn.status() if rn else {'cli': False},
-                'work': os.path.basename(WORK), 'workPath': WORK, 'progressFile': os.path.exists(PROGRESS)}
+                'work': os.path.basename(WORK), 'workPath': WORK, 'qaFrom': QA_FROM, 'progressFile': os.path.exists(PROGRESS)}
         _cache.update(t=time.time(), data=data)
         return data
 
@@ -782,9 +794,49 @@ def package_order(order, overwrite=False):
     return r
 
 
+def _find_dxf_in_dir(info, fname):
+    """Tìm <mã>.dxf trong thư mục đơn (không lấy Sua_loi, Tham_Khao); ưu tiên file chưa đóng gói, rồi file mới nhất."""
+    base, hits = info['dir'], []
+    for dp, dns, fns in os.walk(base):
+        dns[:] = [d for d in dns if d not in (REF_DIR, SUA_LOI)]
+        for f in fns:
+            if f.lower() == fname.lower():
+                hits.append(os.path.join(dp, f))
+    hits.sort(key=lambda p: (bool(PACK_RE.match(os.path.relpath(p, base))), -os.path.getmtime(p)))
+    return hits[0] if hits else None
+
+
+def ensure_sua_loi(order, code):
+    """Mã vừa chấm Sai: tạo <thư mục đơn>\\Sua_loi\\ và chép file AI đã vẽ thành <mã>F.dxf (không ghi đè). File T (đúng) do người dùng tự đặt vào."""
+    if not ORDER_RE.match(order or '') or not CODE_RE.match(code or ''):
+        return {'ok': False, 'why': 'Số đơn hoặc mã không hợp lệ.'}
+    info = scan_orders().get(order)
+    if not info or info['loose']:
+        return {'ok': False, 'why': 'Đơn chưa có thư mục riêng ' + order + ' (file đang để rời trong thư mục ngày), chưa tạo được Sua_loi.'}
+    folder = os.path.join(info['dir'], SUA_LOI)
+    dst = os.path.join(folder, code + 'F.dxf')
+    os.makedirs(folder, exist_ok=True)
+    if os.path.isfile(dst):
+        return {'ok': True, 'folder': folder, 'created': False}
+    src = _find_dxf_in_dir(info, code + '.dxf')
+    if not src:
+        return {'ok': False, 'folder': folder, 'why': 'Đã tạo folder Sua_loi nhưng không thấy file ' + code + '.dxf của đơn (mã chỉ nằm trong file ALL hoặc đã dời đi): hãy chép file AI vẽ vào thành ' + code + 'F.dxf.'}
+    shutil.copy2(src, dst)
+    if os.path.getsize(dst) != os.path.getsize(src):
+        os.remove(dst)
+        return {'ok': False, 'folder': folder, 'why': 'Chép file F lệch dung lượng, thử lại.'}
+    return {'ok': True, 'folder': folder, 'created': True, 'from': os.path.relpath(src, info['dir'])}
+
+
+def _rut_done():
+    d = load_json(DA_RUT, [])
+    return {x.get('key') for x in d if isinstance(x, dict)} if isinstance(d, list) else set()
+
+
 def loi_info():
-    """Mã đang chấm Sai -> lỗi cụ thể (loi_sai.json) + thư mục Sua_loi chứa 2 file DXF <mã>T.dxf (đúng) và <mã>F.dxf (sai)."""
+    """Mã đang chấm Sai -> lỗi cụ thể (loi_sai.json), thư mục Sua_loi chứa <mã>T.dxf (đúng) và <mã>F.dxf (AI vẽ), đã rút kinh nghiệm chưa."""
     data = load_json(LOI_SAI, {})
+    done = _rut_done()
     orders = {o['order']: o for o in snapshot()['orders']}
     out = {}
     for key, v in load_json(REVIEWS, {}).items():
@@ -794,13 +846,333 @@ def loi_info():
         o = orders.get(order)
         folder, files = None, []
         if o:
-            folder = os.path.join(WORK, o['path'], 'Sua_loi')
+            folder = os.path.join(WORK, o['path'].replace('\\', os.sep), SUA_LOI)
             try:
                 files = sorted(f for f in os.listdir(folder) if f.upper() in (code.upper() + 'T.DXF', code.upper() + 'F.DXF'))
             except OSError:
                 folder, files = None, []        # chưa có folder Sua_loi của đơn
-        out[key] = {'loi': [str(x) for x in (data.get(key) or {}).get('loi', [])], 'folder': folder, 'files': files}
+        up = [f.upper() for f in files]
+        out[key] = {'loi': [str(x) for x in (data.get(key) or {}).get('loi', [])], 'loai': [str(x) for x in (data.get(key) or {}).get('loai', [])],
+                    'nguyen_nhan': str((data.get(key) or {}).get('nguyen_nhan', '')), 'nguon': str((data.get(key) or {}).get('nguon', '')), 'khop': (data.get(key) or {}).get('khop'),
+                    'folder': folder, 'files': files, 'hasT': code.upper() + 'T.DXF' in up, 'hasF': code.upper() + 'F.DXF' in up,
+                    'rut': key in done, 'order': order, 'code': code, 'date': (o or {}).get('date', '')}
     return out
+
+
+def rutkn_status():
+    li = loi_info()
+    ready = [k for k, v in li.items() if v['hasT'] and v['hasF'] and not v['rut']]
+    wait_t = [k for k, v in li.items() if not v['hasT'] and not v['rut'] and v.get('date', '') >= QA_FROM]
+    return li, ready, wait_t
+
+
+def proposal_pending(head):
+    """Đề xuất còn chờ: dòng đầu ghi CHỜ PHÁT DUYỆT, hoặc ghi CÒN CHỜ (đã áp dụng một phần). ĐÃ ÁP DỤNG mà không còn CÒN CHỜ thì xong."""
+    h = head or ''
+    if re.search(r'CÒN CHỜ', h, re.I):
+        return True
+    return bool(re.search(r'CHỜ PHÁT DUYỆT', h, re.I)) and not re.search(r'ĐÃ ÁP DỤNG', h, re.I)
+
+
+def proposal_kind(head):
+    """Loại đề xuất để quyết định nút nào xử lý:
+    'skill'  = còn phần sửa SKILL.md/rules (nút Update Skill);
+    'script' = chỉ còn phần sửa script tools\\*.py (nút Update Script);
+    'hq'     = không sửa gì, chờ Chạy hồi quy rồi người dùng tự đóng;
+    'xong'   = đã áp dụng hết."""
+    h = head or ''
+    if not proposal_pending(h):
+        return 'xong'
+    lines = h.split('\n')
+    title = next((l for l in lines if l.startswith('# ')), '')
+    if re.search(r'chờ (chạy )?hồi quy', title, re.I):
+        return 'hq'
+    m = re.search(r'CÒN CHỜ:?\s*([^\n]*)', lines[0])
+    if m:                                                    # đã áp dụng một phần: xem phần còn chờ là gì
+        rest = m.group(1)
+        if re.search(r'script|\.py', rest, re.I) and not re.search(r'SKILL|rules|quy tắc', rest, re.I):
+            return 'script'
+        return 'skill'
+    # đề xuất mới (CHỜ PHÁT DUYỆT): xem các mục "## (a) Script", "## (c) SKILL.md" có thật sự đề xuất sửa không
+    secs, cur = [], None
+    for l in lines[1:]:
+        if l.startswith('## '):
+            cur = [l, '']
+            secs.append(cur)
+        elif cur is not None:
+            cur[1] += l + '\n'
+    act = {'skill': False, 'script': False}
+    for hd, body in secs:
+        tg = 'script' if re.search(r'script|\.py', hd, re.I) else 'skill' if re.search(r'SKILL|rules|skill', hd, re.I) else None
+        if tg and not re.search(r'không đề xuất[^.\n]{0,12}(script|sửa|SKILL|skill)', hd + '\n' + body, re.I):
+            act[tg] = True
+    if secs and not act['skill'] and not act['script']:
+        return 'hq'
+    if secs and act['script'] and not act['skill']:
+        return 'script'
+    return 'skill'
+
+
+def close_proposal(name):
+    """Nút "Đóng đề xuất": cất file đề xuất sang lessons\\skill-updates\\da_ap_dung\\ (không xoá hẳn)."""
+    src = os.path.join(SKILL_UPD, os.path.basename(name or ''))
+    if not os.path.isfile(src) or not src.lower().endswith('.md'):
+        raise ValueError('Không thấy file đề xuất.')
+    dst = os.path.join(SKILL_UPD, 'da_ap_dung')
+    os.makedirs(dst, exist_ok=True)
+    to = os.path.join(dst, os.path.basename(src))
+    if os.path.exists(to):
+        to = os.path.join(dst, datetime.now().strftime('%Y%m%d%H%M%S_') + os.path.basename(src))
+    shutil.move(src, to)
+    _cache['t'] = 0
+    return os.path.basename(to)
+
+
+def archive_applied(names):
+    """Sau Update Skill: đề xuất đã ĐÃ ÁP DỤNG hết (không còn CÒN CHỜ) thì chuyển khỏi danh sách, sang lessons\\skill-updates\\da_ap_dung\\ (không xoá hẳn để còn tra lại lý do).
+    Trả về tên các file đã chuyển."""
+    dst = os.path.join(SKILL_UPD, 'da_ap_dung')
+    moved = []
+    for name in names or []:
+        src = os.path.join(SKILL_UPD, os.path.basename(name))
+        try:
+            with open(src, 'r', encoding='utf-8') as f:
+                head = f.read(12000)
+        except OSError:
+            continue
+        if proposal_pending(head) or not re.search(r'ĐÃ ÁP DỤNG', head):
+            continue
+        try:
+            os.makedirs(dst, exist_ok=True)
+            to = os.path.join(dst, os.path.basename(src))
+            if os.path.exists(to):
+                to = os.path.join(dst, datetime.now().strftime('%Y%m%d%H%M%S_') + os.path.basename(src))
+            shutil.move(src, to)
+            moved.append(os.path.basename(src))
+        except OSError:
+            continue
+    return moved
+
+
+def list_proposals(n=12):
+    """Đề xuất sửa skill (lessons\\skill-updates\\*.md) mới nhất, để Phát xem trên trang. Kèm số đơn và mã Sai nêu trong đề xuất."""
+    out = []
+    try:
+        fs = [os.path.join(SKILL_UPD, f) for f in os.listdir(SKILL_UPD) if f.lower().endswith('.md')]
+    except OSError:
+        return out
+    for fp in sorted(fs, key=os.path.getmtime, reverse=True)[:n]:
+        try:
+            with open(fp, 'r', encoding='utf-8') as f:
+                head = f.read(12000)
+        except OSError:
+            continue
+        orders = list(dict.fromkeys(re.findall(r'(?<!\d)(5\d{5}-\d{2})(?!\d)', head)))
+        codes = list(dict.fromkeys(re.findall(r'(?<!\d)(26-\d{6})(?!\d)', head)))
+        out.append({'name': os.path.basename(fp), 'path': fp, 'at': iso(os.path.getmtime(fp)), 'head': head,
+                    'orders': orders, 'codes': codes, 'pending': proposal_pending(head), 'kind': proposal_kind(head),
+                    'partial': (lambda m: m.group(1).strip()[:120] if m else '')(re.search(r'CÒN CHỜ:?\s*([^\n]*)', head.split('\n', 1)[0]))})
+    return out
+
+
+def _dup_job(kind, order=''):
+    prog = load_json(PROGRESS, {})
+    return any(j.get('kind') == kind and j.get('order', '') == order and j.get('status') in ('moi', 'nhan') for j in prog.get('jobs', {}).values())
+
+
+def run_script_check(order, info, known):
+    """Chạy 2 script kiểm (0 token) cho đơn, lưu vào check_results.json (giữ nguyên các mục do agent báo)."""
+    res = qa.script_check(REPO, info['dir'], order, known)
+    with lock:
+        d = load_json(CHECKS, {})
+        cur = d.get(order) or {}
+        keep = [it for it in cur.get('items', []) if it.get('src', 'ai') != 'script']
+        d[order] = dict(cur, items=res['items'] + keep, info=res['info'], scriptErr=res['err'], scriptRan=res['ran'], scriptAt=now_iso())
+        save_json(CHECKS, d)
+    return res
+
+
+def add_check_job(order, codes=None):
+    """Nút "Tự check": (1) chạy script dxf_check.py + doi_chieu_khach.py ngay, 0 token; (2) chỉ mã rủi ro (script có LỖI/CẢNH BÁO,
+    tối đa 30% số mã) mới giao agent đọc mù theo skill dxf-check. Bấm ở một mã cụ thể thì luôn đọc mù mã đó. Chỉ báo, không sửa file."""
+    o = next((x for x in snapshot(True)['orders'] if x['order'] == order), None)
+    info = scan_orders().get(order or '')
+    if not o or not info:
+        raise ValueError('Không thấy đơn này.')
+    if not (o.get('hasAll') or o.get('partFiles')):
+        raise ValueError('Đơn chưa có file DXF để check.')
+    if o.get('running'):
+        raise ValueError('Agent đang vẽ đơn này, chờ xong rồi hãy check.')
+    known = [c['code'] for c in o['codes']]
+    one = [c for c in (codes or []) if c in known]
+    if codes and not one:
+        raise ValueError('Không có mã nào để check.')
+    if _dup_job('check', order):
+        raise ValueError('Đơn này đã có việc check đang chờ hoặc đang chạy.')
+    res = run_script_check(order, info, known)
+    if one:
+        risky, why = one, 'ma'
+    elif not res['ran']:
+        risky, why = known, 'khong_script'          # script không chạy được: agent tự chạy script và check cả đơn như trước
+    else:
+        risky, why = qa.pick_risky(res['items'], known), 'rui_ro'
+    out = {'script': {'ran': res['ran'], 'err': res['err'], 'loi': sum(1 for x in res['items'] if x['level'] == 'loi'),
+                      'canhbao': sum(1 for x in res['items'] if x['level'] == 'canhbao')}, 'risky': risky, 'why': why, 'job': None}
+    if not risky:
+        return out
+    hints = [{'code': x['code'], 'level': x['level'], 'text': x['text']} for x in res['items'] if x['code'] in risky][:40]
+    with lock:
+        prog = load_json(PROGRESS, {})
+        jobs = prog.setdefault('jobs', {})
+        jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_' + order + '_check'
+        jobs[jid] = {'kind': 'check', 'path': info['dir'], 'order': order, 'codes': risky, 'hints': hints, 'scriptRan': res['ran'], 'subagents': 0, 'model': '', 'note': '',
+                     'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
+        save_json(PROGRESS, prog)
+        _cache['t'] = 0
+        out['job'] = dict(jobs[jid], id=jid)
+    return out
+
+
+def hoiquy_set(loai='', n=8):
+    """Bộ mã hồi quy: mã Sai đã có file T (đáp án chuẩn), thêm mã đã chấm Đúng còn file riêng (đáp án bạc) cho đủ n.
+    Có loai thì chỉ lấy mã T thuộc loại lỗi đó + tối đa 2 mã Đúng cùng đơn làm đối chứng."""
+    li = loi_info()
+    rv = load_json(REVIEWS, {})
+    found = scan_orders()
+    items = []
+    for k, v in sorted(li.items(), key=lambda z: (rv.get(z[0]) or {}).get('at', ''), reverse=True):
+        if not v['hasT'] or not v['folder']:
+            continue
+        lo = [qa.norm_loai(x) for x in v['loai']]
+        if loai and loai not in lo:
+            continue
+        items.append({'key': k, 'order': v['order'], 'code': v['code'], 'kieu': 'T', 'loai': lo,
+                      'ref': os.path.join(v['folder'], v['code'] + 'T.dxf'), 'dir': (found.get(v['order']) or {}).get('dir', '')})
+    items = [x for x in items if x['dir']][:n]
+    want = min(n, len(items) + 2) if loai else n
+    per, pref = {}, {x['order'] for x in items}
+    dung = sorted(((k, v) for k, v in rv.items() if v.get('status') == 'dung' and '_' in k), key=lambda z: z[1].get('at', ''), reverse=True)
+    if loai:
+        dung = [z for z in dung if z[0].split('_', 1)[0] in pref]
+    for k, v in dung:
+        if len(items) >= want:
+            break
+        order, code = k.split('_', 1)
+        info = found.get(order)
+        if not info or per.get(order, 0) >= 2:
+            continue
+        fp = _find_dxf_in_dir(info, code + '.dxf')
+        if not fp:
+            continue
+        per[order] = per.get(order, 0) + 1
+        items.append({'key': k, 'order': order, 'code': code, 'kieu': 'dung', 'loai': [], 'ref': fp, 'dir': info['dir']})
+    return items
+
+
+def add_hoiquy_job(loai=''):
+    """Nút "Chạy hồi quy" (sau khi update skill): agent vẽ lại bộ mã bằng skill hiện tại vào thư mục tạm rồi so với đáp án bằng diff_tf.py."""
+    items = hoiquy_set(loai or '')
+    if not items:
+        raise ValueError('Chưa có mã nào làm đáp án (cần mã Sai có file T hoặc mã Đúng còn file riêng).')
+    if _dup_job('hoiquy'):
+        raise ValueError('Đã có việc hồi quy đang chờ hoặc đang chạy.')
+    with lock:
+        prog = load_json(PROGRESS, {})
+        jobs = prog.setdefault('jobs', {})
+        jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_hoiquy'
+        jobs[jid] = {'kind': 'hoiquy', 'path': REPO, 'order': '', 'items': items, 'loai': loai or '', 'skill': qa.skill_version(REPO), 'subagents': 0, 'model': '', 'note': '',
+                     'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
+        save_json(PROGRESS, prog)
+        _cache['t'] = 0
+        return dict(jobs[jid], id=jid)
+
+
+def qa_info():
+    """Số liệu cho mục chất lượng ở trang Đánh Giá AI: M1-M4, bộ hồi quy, các lần hồi quy gần đây, chi phí thật của việc check/rút kinh nghiệm/hồi quy."""
+    done = set(_rut_done())
+    st = qa.stats(load_json(REVIEWS, {}), load_json(LOI_SAI, {}), done)
+    jobs = load_json(PROGRESS, {}).get('jobs', {})
+    use = {}
+    for jid, j in jobs.items():
+        u = j.get('usage')
+        if not u:
+            continue
+        k = j.get('kind') if j.get('kind') in SPECIAL else 've'
+        g = use.setdefault(k, {'n': 0, 'cost': 0.0, 'out': 0, 'codes': 0})
+        g['n'] += 1
+        g['cost'] = round(g['cost'] + float(u.get('costUSD') or 0), 4)
+        g['out'] += int(u.get('output') or 0)
+        g['codes'] += len(j.get('codes') or j.get('items') or [])
+    try:
+        hs = hoiquy_set()
+    except Exception:
+        hs = []
+    try:        # mọi loại lỗi có mã đã đủ file T (không bị cắt theo giới hạn 8 mã của "Cả bộ"), để chọn hồi quy theo loại
+        loais = sorted({qa.norm_loai(x) for v in loi_info().values() if v['hasT'] and v['folder'] for x in v['loai']})
+    except Exception:
+        loais = sorted({x for it in hs for x in it['loai']})
+    return {'loais': loais, 'stats': st, 'usage': use, 'skill': qa.skill_version(REPO), 'hoiquy': load_json(HOIQUY, [])[-5:], 'updates': load_json(SKILL_LOG, [])[-3:], 'scripts': load_json(SCRIPT_LOG, [])[-3:],
+            'set': [{'key': x['key'], 'kieu': x['kieu'], 'loai': x['loai']} for x in hs]}
+
+
+def add_updskill_job(files=None):
+    """Nút "Update Skill" (người dùng bấm = lệnh "update skill"): agent áp dụng các đề xuất còn chờ vào SKILL.md/rules, sao lưu trước, ghi nhật ký dòng đã đổi.
+    files = tên file đề xuất muốn áp dụng; không chọn thì áp dụng mọi đề xuất còn chờ."""
+    pend = {p['name']: p for p in list_proposals(50) if p['pending'] and p['kind'] == 'skill'}
+    names = [f for f in (files or list(pend)) if f in pend]
+    if not names:
+        raise ValueError('Không có đề xuất nào còn phần sửa SKILL.md/rules để áp dụng.')
+    if _dup_job('updskill') or _dup_job('updscript'):
+        raise ValueError('Đã có việc update skill hoặc update script đang chờ hoặc đang chạy.')
+    items = [{'name': n, 'path': pend[n]['path'], 'orders': pend[n]['orders'], 'codes': pend[n]['codes']} for n in names]
+    with lock:
+        prog = load_json(PROGRESS, {})
+        jobs = prog.setdefault('jobs', {})
+        jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_updskill'
+        jobs[jid] = {'kind': 'updskill', 'path': REPO, 'order': '', 'items': items, 'skillBefore': qa.skill_version(REPO), 'subagents': 0, 'model': '', 'note': '',
+                     'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
+        save_json(PROGRESS, prog)
+        _cache['t'] = 0
+        return dict(jobs[jid], id=jid)
+
+
+def add_updscript_job(files=None):
+    """Nút "Update Script": agent áp dụng phần script (tools\\*.py) của các đề xuất, sao lưu script trước, thử trước/sau trên dữ liệu thật, ghi nhật ký."""
+    pend = {p['name']: p for p in list_proposals(50) if p['pending'] and p['kind'] == 'script'}
+    names = [f for f in (files or list(pend)) if f in pend]
+    if not names:
+        raise ValueError('Không có đề xuất nào còn phần sửa script để áp dụng.')
+    if _dup_job('updskill') or _dup_job('updscript'):
+        raise ValueError('Đã có việc update skill hoặc update script đang chờ hoặc đang chạy.')
+    items = [{'name': n, 'path': pend[n]['path'], 'orders': pend[n]['orders'], 'codes': pend[n]['codes']} for n in names]
+    with lock:
+        prog = load_json(PROGRESS, {})
+        jobs = prog.setdefault('jobs', {})
+        jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_updscript'
+        jobs[jid] = {'kind': 'updscript', 'path': REPO, 'order': '', 'items': items, 'subagents': 0, 'model': '', 'note': '',
+                     'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
+        save_json(PROGRESS, prog)
+        _cache['t'] = 0
+        return dict(jobs[jid], id=jid)
+
+
+def add_rutkn_job():
+    """Nút "Rút kinh nghiệm": mọi mã Sai đã có đủ T và F mà chưa rút -> agent so T/F, ghi lỗi, bài học, nháp đề xuất sửa skill (KHÔNG sửa skill)."""
+    li, ready, wait_t = rutkn_status()
+    if not ready:
+        raise ValueError('Chưa có mã Sai nào đủ file T và F để rút kinh nghiệm.' + (' Còn %d mã Sai chờ file T.' % len(wait_t) if wait_t else ''))
+    if _dup_job('rutkn'):
+        raise ValueError('Đã có việc rút kinh nghiệm đang chờ hoặc đang chạy.')
+    items = [{'key': k, 'order': li[k]['order'], 'code': li[k]['code'], 'folder': li[k]['folder']} for k in ready]
+    with lock:
+        prog = load_json(PROGRESS, {})
+        jobs = prog.setdefault('jobs', {})
+        jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_rutkn'
+        jobs[jid] = {'kind': 'rutkn', 'path': REPO, 'order': '', 'items': items, 'subagents': 0, 'model': '', 'note': '',
+                     'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
+        save_json(PROGRESS, prog)
+        _cache['t'] = 0
+        return dict(jobs[jid], id=jid)
 
 
 def list_compare():
@@ -945,6 +1317,12 @@ class H(BaseHTTPRequestHandler):
             return self.send_json(loi_info())
         if path == '/api/compare':
             return self.send_json(list_compare())
+        if path == '/api/check':
+            return self.send_json(load_json(CHECKS, {}))
+        if path == '/api/proposals':
+            return self.send_json(list_proposals())
+        if path == '/api/qa':
+            return self.send_json(qa_info())
         if path == '/' or path == '':
             path = '/index.html'
         fp = os.path.normpath(os.path.join(STATIC, path.lstrip('/')))
@@ -965,6 +1343,7 @@ class H(BaseHTTPRequestHandler):
             data = self.body(40_000_000 if path == '/api/ref/upload' else 1_000_000)     # file tham khảo gửi dạng base64
             if path == '/api/review':
                 # {items:[{key:"<đơn>_<mã>", status:"dung"|"sai"|"cho", note?}], by?}
+                newly_sai = []
                 with lock:
                     rv = load_json(REVIEWS, {})
                     for it in data.get('items', []):
@@ -980,8 +1359,30 @@ class H(BaseHTTPRequestHandler):
                         old = rv.get(key, {})
                         rv[key] = {'status': st, 'note': it.get('note', old.get('note', '')),
                                    'at': now_iso(), 'by': data.get('by') or old.get('by', '')}
+                        if st == 'sai' and old.get('status') != 'sai':
+                            newly_sai.append(key)
                     save_json(REVIEWS, rv)
-                return self.send_json({'ok': True, 'reviews': rv})
+                sualoi = {}
+                for key in newly_sai:      # mã mới chấm Sai: tự tạo Sua_loi và chép file F (AI vẽ) vào
+                    try:
+                        sualoi[key] = ensure_sua_loi(*key.split('_', 1))
+                    except Exception as e:
+                        sualoi[key] = {'ok': False, 'why': str(e)}
+                return self.send_json({'ok': True, 'reviews': rv, 'sualoi': sualoi})
+            if path == '/api/sualoi':      # tạo lại Sua_loi + chép F của một mã Sai (khi lần đầu chưa thấy file)
+                return self.send_json({'ok': True, 'result': ensure_sua_loi(data.get('order'), data.get('code'))})
+            if path == '/api/jobs/check':
+                return self.send_json(dict(add_check_job(data.get('order'), data.get('codes')), ok=True))
+            if path == '/api/jobs/updscript':
+                return self.send_json({'ok': True, 'job': add_updscript_job(data.get('files'))})
+            if path == '/api/proposal/close':
+                return self.send_json({'ok': True, 'moved': close_proposal(data.get('name'))})
+            if path == '/api/jobs/updskill':
+                return self.send_json({'ok': True, 'job': add_updskill_job(data.get('files'))})
+            if path == '/api/jobs/hoiquy':
+                return self.send_json({'ok': True, 'job': add_hoiquy_job(data.get('loai') or '')})
+            if path == '/api/jobs/rutkn':
+                return self.send_json({'ok': True, 'job': add_rutkn_job()})
             if path == '/api/previewok':
                 set_preview_ok(data.get('order'), data.get('code'), data.get('ok', True) is not False)
                 return self.send_json({'ok': True})

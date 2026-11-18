@@ -33,6 +33,7 @@
   <nav>
     <a href="#/tien-do" data-r="tien-do"><svg class="i"><use href="#i-board"/></svg>Giám Sát</a>
     <a href="#/danh-gia" data-r="danh-gia"><svg class="i"><use href="#i-chart"/></svg>Đánh Giá AI <span class="count" id="nav-cho" hidden></span></a>
+    <a href="#/lich-su-loi" data-r="lich-su-loi"><svg class="i"><use href="#i-clock"/></svg>Lịch Sử Lỗi</a>
   </nav>
   <div class="right">
     <span class="upd" id="upd"></span>
@@ -107,6 +108,34 @@
       <label class="field sm"><svg class="i"><use href="#i-search"/></svg><input id="r-q" placeholder="Số đơn, mã…"></label>    </div>
     <div id="reviews"></div>
   </section>
+
+  <!-- ===== MỤC 3: LỊCH SỬ LỖI ===== -->
+  <section id="v-lich-su-loi" hidden>
+    <h1>Lịch sử lỗi</h1>
+    <div class="bar">
+      <h2 style="margin:0">Số lượng lỗi <span class="n" id="l-n"></span></h2>
+      <div class="sp"></div>
+      <div class="seg" id="l-filter"></div>
+      <label class="field sm"><svg class="i"><use href="#i-search"/></svg><input id="l-q" placeholder="Số đơn, mã, loại lỗi…"></label>
+    </div>
+    <div id="lsl"></div>
+  </section>
+<style>
+.lsl{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.lsl-r{display:grid;grid-template-columns:minmax(170px,210px) minmax(0,1fr) 210px minmax(170px,230px);gap:14px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);font-size:14px}
+.lsl-r:first-child{border-top:0}
+.lsl-h{font-size:12px;font-weight:600;color:var(--tx-3);text-transform:uppercase;letter-spacing:.03em;background:var(--sunk)}
+.lsl-r .lo{display:flex;flex-wrap:wrap;gap:4px}
+.lsl-r .lo span{padding:1px 8px;border-radius:6px;font-size:12.5px;background:var(--err-bg);color:var(--err-tx)}
+.lsl-r .fb{display:flex;gap:6px}
+.lsl-r .fb .btn{min-width:38px;justify-content:center;font-family:var(--mono);font-weight:600}
+.lsl-r .up{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+.opl{font:inherit;font-weight:600;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.opl:hover{color:var(--run-tx);text-decoration:underline}
+.opo{color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.opo:hover{color:var(--run-tx);text-decoration:underline}
+@media (max-width:760px){.lsl-r{grid-template-columns:1fr;gap:6px}.lsl-h{display:none}}
+</style>
 </main>
 <div class="od-bg" id="od-bg"></div>
 <aside class="od" id="od" aria-label="Chi tiết đơn hàng"></aside>

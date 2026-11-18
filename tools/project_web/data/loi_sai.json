@@ -160,5 +160,22 @@
   "nguyen_nhan": "Suy đoán: hai tấm cùng 300 x 200 trên một trang, AI gán ghi chú lỗ của tấm ③ cho tấm này thay vì chỉ cho một tấm.",
   "nguon": "T/F",
   "khop": 80.0
+ },
+ "521118-11_26-069881": {
+  "loi": [
+   "Cạnh trái, lỗ (8; 6): F vẽ φ3.3 (ren M4), T vẽ φ4.5.",
+   "Cạnh trái, lỗ (8; 164.5): F vẽ φ4.5, T vẽ φ3.3 (ren M4); hai lỗ ngoài cùng (8; 6) và (8; 173) là φ4.5, hai lỗ trong (8; 14.5) và (8; 164.5) là M4 φ3.3. F không Flag chỗ này.",
+   "Cạnh trái, F thừa lỗ φ4.04 tại (8; 82.5) (lỗ Ø4 +0.05/+0.02 có chữ tay フライス khoanh tròn); T không có. F có Flag chữ tay chưa rõ phay sau laser nhưng vẫn vẽ.",
+   "Cạnh trái, F thừa rãnh rộng 4.04 (R2.02) tâm (8; 124.5) đến (8; 126.5) (ghi (R2), có chữ tay フライス); T không có."
+  ],
+  "loai": [
+   "Sai kích thước lỗ",
+   "Thừa lỗ",
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-18T08:42:46Z",
+  "nguyen_nhan": "Hai nguyên nhân: (1) nhãn 2-Ø4.5 và 2-M4 mỗi nhãn có đầu mũi tên chạm đúng một lỗ nhưng F gán theo cặp lỗ gần nhãn; cách F suy luận là suy đoán. (2) Lỗ Ø4 dung sai và rãnh (R2) có chữ tay フライス (phay) khoanh tròn; F tự Flag chưa rõ phay sau laser nhưng vẫn vẽ cả hai, T không vẽ; ý nghĩa phay-sau-laser suy ra từ T chứ chưa có lời Phát",
+  "nguon": "T/F",
+  "khop": 87.0
  }
 }

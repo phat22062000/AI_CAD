@@ -82,5 +82,33 @@
     "why": "Đề xuất không có phần nào sửa SKILL.md/rules: dòng 41-43 của SKILL đã có quy tắc này, đề xuất chờ chạy hồi quy với 26-067077; phần script không đề xuất"
    }
   ]
+ },
+ {
+  "id": "20261118160816_updskill",
+  "archived": [
+   "069881-chu-tay-phay.md",
+   "069881-nhan-lo-hai-nhan-cung-so-luong.md"
+  ],
+  "at": "2026-11-18T09:08:49Z",
+  "before": "2026.11.17-3",
+  "after": "2026.11.18-1",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261118160816_updskill",
+  "changes": [
+   {
+    "proposal": "069881-chu-tay-phay.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "27",
+    "old": "- Lỗ/gia công bị gạch (bút đỏ, gạch chéo): không vẽ. Áp cho cả rãnh, khoét, vát: nét hình vẫn in và DXF khách vẫn có nhưng MỌI kích thước của gia công đó bị gạch bỏ thì coi là bị hủy, không vẽ, ưu tiên hơn \"hình dạng theo DXF\" (dòng 25, mục 4.2); liệt kê phần đã bỏ trong báo cáo.",
+    "new": "- Lỗ/gia công bị gạch (bút đỏ, gạch chéo) hoặc có chữ tay chỉ công đoạn khác laser (フライス phay...) khoanh quanh: không vẽ. Áp cho cả rãnh, khoét, vát: nét hình vẫn in và DXF khách vẫn có nhưng MỌI kích thước của gia công đó bị gạch bỏ thì coi là bị hủy, không vẽ, ưu tiên hơn \"hình dạng theo DXF\" (dòng 25, mục 4.2); liệt kê phần đã bỏ trong báo cáo. Chữ tay đọc rõ nghĩa thì không cần Flag 5; dung sai của chỗ đã bỏ không cần Flag 18."
+   },
+   {
+    "proposal": "069881-nhan-lo-hai-nhan-cung-so-luong.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "142",
+    "old": "  - Mỗi ghi chú lỗ (n-Mx, n-φx) xác định theo ĐẦU MŨI TÊN của đường dẫn, đối chiếu ≥ 2 hình chiếu (cạnh + bằng); không gán chỉ vì lỗ nằm trong khung hình đang xem.",
+    "new": "  - Mỗi ghi chú lỗ (n-Mx, n-φx) xác định theo ĐẦU MŨI TÊN của đường dẫn, đối chiếu ≥ 2 hình chiếu (cạnh + bằng); không gán chỉ vì lỗ nằm trong khung hình đang xem. Hai nhãn cùng số lượng trên một hàng/cạnh (ví dụ 2-Ø4.5 và 2-M4 cho 4 lỗ): mũi tên mỗi nhãn chỉ chạm một lỗ; lỗ còn lại của nhãn đó lấy từ các lỗ chưa gán có cùng khoảng cách tới mép (đối xứng) với lỗ đã chạm, KHÔNG chia theo cặp lỗ nằm gần nhãn; không chia được duy nhất thì Flag 8."
+   }
+  ],
+  "skipped": []
  }
 ]

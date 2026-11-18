@@ -1,0 +1,22 @@
+{
+ "521118-11": {
+  "items": [],
+  "info": {
+   "26-069881": "Đối chiếu DXF khách: không có DXF khách",
+   "26-069974": "Đối chiếu DXF khách: không có DXF khách",
+   "26-069975": "Đối chiếu DXF khách: không có DXF khách",
+   "26-069960": "Đối chiếu DXF khách: không có DXF khách",
+   "26-069961": "Đối chiếu DXF khách: không có DXF khách",
+   "26-069756": "Đối chiếu DXF khách: không có DXF khách",
+   "26-069757": "Đối chiếu DXF khách: không có DXF khách",
+   "26-069880": "Đối chiếu DXF khách: không có DXF khách",
+   "26-069817": "Đối chiếu DXF khách: không có DXF khách"
+  },
+  "scriptErr": [],
+  "scriptRan": [
+   "doi_chieu_khach",
+   "dxf_check"
+  ],
+  "scriptAt": "2026-11-18T07:19:50Z"
+ }
+}

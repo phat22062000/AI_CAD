@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.17-3"
+  version: "2026.11.18-1"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -24,7 +24,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 ## 2. Nguồn số liệu và cách đọc kích thước
 - Bản vẽ là chính xác. X/Y trong CAD依頼書 chỉ là khung bao tham khảo, KHÔNG phải hình dạng. Số trong ngoặc ( ) chỉ tham khảo, chỉ cần theo số không ngoặc. Có DXF khách thì hình dạng theo DXF; lệch chỉ với số trong ngoặc hoặc CAD依頼書 thì không cần hỏi.
 - Chỉ thị viết tay là chỉ thị chính thức, phải theo; lỗi cần tránh là đọc nhầm chữ tay (キリ = lỗ khoan, từng đọc nhầm thành φ7). Lỗ ghi 「あける」 thì vẽ.
-- Lỗ/gia công bị gạch (bút đỏ, gạch chéo): không vẽ. Áp cho cả rãnh, khoét, vát: nét hình vẫn in và DXF khách vẫn có nhưng MỌI kích thước của gia công đó bị gạch bỏ thì coi là bị hủy, không vẽ, ưu tiên hơn "hình dạng theo DXF" (dòng 25, mục 4.2); liệt kê phần đã bỏ trong báo cáo.
+- Lỗ/gia công bị gạch (bút đỏ, gạch chéo) hoặc có chữ tay chỉ công đoạn khác laser (フライス phay...) khoanh quanh: không vẽ. Áp cho cả rãnh, khoét, vát: nét hình vẫn in và DXF khách vẫn có nhưng MỌI kích thước của gia công đó bị gạch bỏ thì coi là bị hủy, không vẽ, ưu tiên hơn "hình dạng theo DXF" (dòng 25, mục 4.2); liệt kê phần đã bỏ trong báo cáo. Chữ tay đọc rõ nghĩa thì không cần Flag 5; dung sai của chỗ đã bỏ không cần Flag 18.
 - Bản vẽ lắp hàn có ghi chú tay chỉ định phần laser (「SSレーザー 9t×295×700」「曲げ(抜穴アリ)」「角穴+曲げ 抜き」 kèm hình tay): CHỈ vẽ phần được chỉ thị; không tự vẽ lỗ ren, キリ, M5/M6... của bản gốc; liệt kê lỗ đã bỏ trong báo cáo. 
 - Dung sai: vẽ theo giá trị giữa khoảng dung sai, giữ chuẩn đo/đối xứng Flag 18 (mục 11.4).
 - Độ chính xác: tính đủ chữ số, không làm tròn giữa chừng; kết quả giữ ≥ 2 chữ số thập phân.
@@ -139,7 +139,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 ## 7. Lỗ
 - Vị trí theo chuỗi kích thước (mục 2). Lỗ trên cánh: giữ khoảng cách đo từ mép xa (mép tự do) của cánh. Lỗ trên đáy chữ U: giữ khoảng cách so với tâm đáy.
 - Gán lỗ đúng tấm trong bản vẽ lắp. Trước khi vẽ, lập bảng "lỗ → tấm" cho cả bản vẽ; mỗi mã chỉ vẽ lỗ của đúng tấm.
-  - Mỗi ghi chú lỗ (n-Mx, n-φx) xác định theo ĐẦU MŨI TÊN của đường dẫn, đối chiếu ≥ 2 hình chiếu (cạnh + bằng); không gán chỉ vì lỗ nằm trong khung hình đang xem.
+  - Mỗi ghi chú lỗ (n-Mx, n-φx) xác định theo ĐẦU MŨI TÊN của đường dẫn, đối chiếu ≥ 2 hình chiếu (cạnh + bằng); không gán chỉ vì lỗ nằm trong khung hình đang xem. Hai nhãn cùng số lượng trên một hàng/cạnh (ví dụ 2-Ø4.5 và 2-M4 cho 4 lỗ): mũi tên mỗi nhãn chỉ chạm một lỗ; lỗ còn lại của nhãn đó lấy từ các lỗ chưa gán có cùng khoảng cách tới mép (đối xứng) với lỗ đã chạm, KHÔNG chia theo cặp lỗ nằm gần nhãn; không chia được duy nhất thì Flag 8.
   - Hình chiếu cạnh nhìn từ đầu tự do ống/thanh chỉ thấy mặt ngoài tấm nắp ở đầu đó (tấm đáy bị che): lỗ trong vùng chân ống thuộc tấm nắp (E), lỗ ngoài vùng chân ống thuộc tấm đáy (A).
   - Hình thoi đặc là dấu hàn, không phải lỗ. Kích thước cùng hàng với lỗ chỉ dùng cho tấm chứa lỗ đó.
   - Sau khi vẽ, đếm lỗ từng tấm, đối chiếu mọi ghi chú (không tấm nào thiếu/thừa, không lỗ nào ở 2 tấm).

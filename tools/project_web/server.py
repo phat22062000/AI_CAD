@@ -268,6 +268,32 @@ def del_ref(order, code, name):
     _cache['t'] = 0
 
 
+def _log_usage(j):
+    """Lấy token từ dòng 'result' cuối file log của một việc (khi progress chưa có usage)."""
+    lg = j.get('log')
+    if not lg:
+        return None
+    fp = os.path.join(DATA, 'logs', os.path.basename(str(lg)))
+    try:
+        sz = os.path.getsize(fp)
+        with open(fp, 'rb') as f:
+            f.seek(max(0, sz - 400000))
+            tail = f.read().decode('utf-8', 'replace').splitlines()
+    except OSError:
+        return None
+    for ln in reversed(tail):
+        if '"type":"result"' not in ln.replace(' ', ''):
+            continue
+        try:
+            ev = json.loads(ln)
+        except ValueError:
+            continue
+        mu = (ev.get('modelUsage') or {}).values()
+        return {'input': sum(v.get('inputTokens', 0) for v in mu), 'output': sum(v.get('outputTokens', 0) for v in mu),
+                'cacheRead': sum(v.get('cacheReadInputTokens', 0) for v in mu), 'cacheWrite': sum(v.get('cacheCreationInputTokens', 0) for v in mu)}
+    return None
+
+
 def build_order(order, info, prog):
     files = order_files(order, info)
     pdf = xlsx = None
@@ -419,9 +445,27 @@ def build_order(order, info, prog):
                 runs.append({'s': h['startedAt'], 'e': h['finishedAt']})
         live = mainag.get('state') == 'running' and not lost(mainag, now)
         runs.append({'s': mainag['startedAt'], 'e': None if live else (mainag.get('finishedAt') or mainag.get('heartbeatAt'))})
+    # token đã dùng cho đơn: cộng usage của mọi việc giao cho đơn này (vẽ, làm tiếp, tự check đọc mù)
+    tk = {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0, 'n': 0, 'by': {}, 'miss': 0}
+    for j in prog.get('jobs', {}).values():
+        if j.get('order') != order:
+            continue
+        u = j.get('usage')
+        if not isinstance(u, dict):
+            u = _log_usage(j)               # việc cũ chưa ghi usage: đọc lại từ file log
+        if not isinstance(u, dict):
+            if j.get('kind') in (None, '', 'tiep', 'check') and j.get('status') in ('xong', 'loi'):
+                tk['miss'] += 1
+            continue
+        for k in ('input', 'output', 'cacheRead', 'cacheWrite'):
+            tk[k] += int(u.get(k) or 0)
+        tk['n'] += 1
+        kd = j.get('kind') if j.get('kind') in ('check', 'tiep') else 've'
+        tk['by'][kd] = tk['by'].get(kd, 0) + 1
     return {
         'order': order,
         'runs': runs,
+        'tokens': tk if (tk['n'] or tk['miss']) else None,
         'date': order_date(order, info['dir']),
         'customer': p_order.get('customer') or meta.get('customer', ''),
         'material': p_order.get('material') or meta.get('material', ''),
@@ -649,6 +693,36 @@ def add_followup(order, answers, model=''):
         return dict(jobs[jid], id=jid)
 
 
+def add_resume(order):
+    """Nút Tiếp tục trên thẻ agent: đơn bị dừng giữa chừng -> việc 'làm tiếp' vẽ các mã chưa xong (mã đã xong giữ nguyên)."""
+    o = next((x for x in snapshot(True)['orders'] if x['order'] == order), None)
+    if not o:
+        raise ValueError('Không thấy đơn này.')
+    todo = [c['code'] for c in o['codes'] if c.get('pstatus') != 'built' and not c.get('previewOk') and not c.get('manual')]
+    if not todo:
+        raise ValueError('Đơn này không còn mã nào chưa vẽ xong.')
+    p = os.path.join(WORK, o['path']) if o.get('path') else ''
+    if not p or not os.path.isdir(p):
+        raise ValueError('Không tìm thấy thư mục đơn trong AI_Work.')
+    with lock:
+        prog = load_json(PROGRESS, {})
+        jobs = prog.setdefault('jobs', {})
+        mine = [j for j in jobs.values() if j.get('order') == order and j.get('kind') in (None, '', 'tiep')]
+        if any(j.get('status') in ('moi', 'nhan') for j in mine):
+            raise ValueError('Đơn này đang có việc chờ hoặc đang chạy, bấm Dừng trước nếu muốn chạy lại.')
+        mine.sort(key=lambda j: j.get('at', ''))
+        model = (mine[-1].get('model') if mine else '') or ''
+        if model not in ('', 'opus', 'sonnet'):
+            model = ''
+        answers = {c: '(Tiếp tục việc vẽ bị dừng giữa chừng: vẽ mã này từ đầu theo bản vẽ gốc, không có thông tin bổ sung)' for c in todo}
+        jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_' + order + '_tiep'
+        jobs[jid] = {'kind': 'tiep', 'resume': True, 'path': p, 'order': order, 'subagents': 0, 'model': model, 'note': '', 'answers': answers,
+                     'refs': {}, 'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
+        save_json(PROGRESS, prog)
+        _cache['t'] = 0
+        return dict(jobs[jid], id=jid)
+
+
 def _ts(iso):
     try:
         return datetime.strptime(iso, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc).timestamp()
@@ -806,6 +880,93 @@ def _find_dxf_in_dir(info, fname):
     return hits[0] if hits else None
 
 
+def _bring_front(hint, cls=None, wait=15.0):
+    """Windows chặn chương trình chạy nền (server) đưa cửa sổ lên trước: tìm cửa sổ vừa mở theo tiêu đề (tên thư mục / tên file),
+    bấm nhả phím Alt (được Windows cho phép đổi cửa sổ trước) rồi SetForegroundWindow. Chạy ở luồng riêng, lỗi thì bỏ qua."""
+    if os.name != 'nt':
+        return
+
+    def run():
+        try:
+            import ctypes
+            from ctypes import wintypes as W
+            u = ctypes.windll.user32
+            h_low = hint.lower()
+
+            def find():
+                res = []
+                proto = ctypes.WINFUNCTYPE(W.BOOL, W.HWND, W.LPARAM)
+
+                def cb(h, _l):
+                    if u.IsWindowVisible(h):
+                        n = u.GetWindowTextLengthW(h)
+                        if n:
+                            b = ctypes.create_unicode_buffer(n + 1)
+                            u.GetWindowTextW(h, b, n + 1)
+                            if h_low in b.value.lower():
+                                if cls:
+                                    c = ctypes.create_unicode_buffer(256)
+                                    u.GetClassNameW(h, c, 256)
+                                    if c.value != cls:
+                                        return True
+                                res.append(h)
+                    return True
+                u.EnumWindows(proto(cb), 0)
+                return res[0] if res else None
+            t0 = time.time()
+            while time.time() - t0 < wait:
+                h = find()
+                if h:
+                    time.sleep(0.2)
+                    if u.IsIconic(h):
+                        u.ShowWindow(h, 9)          # SW_RESTORE
+                    u.keybd_event(0x12, 0, 0, 0)     # Alt xuống
+                    u.keybd_event(0x12, 0, 2, 0)     # Alt lên
+                    u.SetForegroundWindow(h)
+                    u.BringWindowToTop(h)
+                    return
+                time.sleep(0.3)
+        except Exception as e:
+            print('bring_front:', e)
+    threading.Thread(target=run, daemon=True).start()
+
+
+def open_order_dir(order):
+    """Bấm số đơn ở khung chi tiết: mở thư mục đơn bằng File Explorer (đơn để rời trong thư mục ngày thì mở thư mục ngày)."""
+    if not ORDER_RE.match(order or ''):
+        raise ValueError('Số đơn không hợp lệ.')
+    info = scan_orders().get(order)
+    if not info or not os.path.isdir(info['dir']):
+        raise ValueError('Không thấy thư mục đơn ' + order + '.')
+    if os.name != 'nt':
+        raise ValueError('Chỉ mở được thư mục khi web chạy trên Windows: ' + info['dir'])
+    os.startfile(info['dir'])
+    _bring_front(os.path.basename(info['dir'].rstrip('\\/')), cls='CabinetWClass', wait=6.0)
+    return info['dir']
+
+
+def open_part(order, code):
+    """Bấm mã trong khung chi tiết đơn: mở <mã>.dxf của đơn (file lẻ, kể cả đã đóng gói vào Gui) bằng phần mềm mặc định."""
+    if not ORDER_RE.match(order or '') or not CODE_RE.match(code or ''):
+        raise ValueError('Số đơn hoặc mã không hợp lệ.')
+    info = scan_orders().get(order)
+    if not info:
+        raise ValueError('Không thấy thư mục đơn ' + order + '.')
+    fp = None
+    if info.get('loose'):
+        p = os.path.join(info['dir'], code + '.dxf')
+        fp = p if os.path.isfile(p) else None
+    else:
+        fp = _find_dxf_in_dir(info, code + '.dxf')
+    if not fp:
+        raise ValueError('Không thấy file ' + code + '.dxf (mã có thể chỉ nằm trong file ALL).')
+    if os.name != 'nt':
+        raise ValueError('Chỉ mở được file khi web chạy trên Windows: ' + fp)
+    os.startfile(fp)
+    _bring_front(os.path.splitext(os.path.basename(fp))[0])
+    return fp
+
+
 def ensure_sua_loi(order, code):
     """Mã vừa chấm Sai: tạo <thư mục đơn>\\Sua_loi\\ và chép file AI đã vẽ thành <mã>F.dxf (không ghi đè). File T (đúng) do người dùng tự đặt vào."""
     if not ORDER_RE.match(order or '') or not CODE_RE.match(code or ''):
@@ -857,6 +1018,152 @@ def loi_info():
                     'folder': folder, 'files': files, 'hasT': code.upper() + 'T.DXF' in up, 'hasF': code.upper() + 'F.DXF' in up,
                     'rut': key in done, 'order': order, 'code': code, 'date': (o or {}).get('date', '')}
     return out
+
+
+def _scan_md(folder, applied=False, whole=False):
+    """Đọc các file .md trong một thư mục (đề xuất hoặc bài học): tên, đường dẫn, dòng đầu, các mã 26-xxxxxx nêu trong file."""
+    out = []
+    try:
+        names = [f for f in os.listdir(folder) if f.lower().endswith('.md')]
+    except OSError:
+        return out
+    for f in names:
+        fp = os.path.join(folder, f)
+        try:
+            with open(fp, 'r', encoding='utf-8') as fh:
+                txt = fh.read(40000)
+        except OSError:
+            continue
+        # mã của đề xuất/bài học: lấy ở dòng "Nguồn:" (quy ước file), không có thì ở 6 dòng đầu; mã chỉ được nhắc tới trong phần thử nghiệm không tính
+        src = txt if whole else next((l for l in txt.split('\n')[:20] if re.match(r'\s*\**\s*Nguồn', l, re.I)), '\n'.join(txt.split('\n')[:6]))
+        out.append({'name': f, 'at': iso(os.path.getmtime(fp)), 'head': txt[:3000], 'applied': applied,
+                    'codes': set(re.findall(r'(?<!\d)(26-\d{6})(?!\d)', src))})
+    return out
+
+
+def loi_history():
+    """Tab "Lịch Sử Lỗi": mỗi mã chấm Sai -> loại lỗi, file T/F trong Sua_loi, và giải pháp đã update chưa
+    (đề xuất đã áp dụng / đang chờ duyệt / chỉ có bài học / chưa rút kinh nghiệm)."""
+    props = _scan_md(SKILL_UPD) + _scan_md(os.path.join(SKILL_UPD, 'da_ap_dung'), True)
+    lessons = _scan_md(os.path.join(REPO, 'lessons', 'feedback'), whole=True)
+    rut_file = {x.get('key'): x.get('file') for x in (load_json(DA_RUT, []) or []) if isinstance(x, dict)}     # bài học ghi lúc rút kinh nghiệm
+    rows = []
+    for key, v in loi_info().items():
+        code = v['code']
+        own = [p for p in props if p['name'].startswith(code[3:])]     # đề xuất mang tên mã (vd 068185-...) là của chính mã này
+        mine = own or [p for p in props if code in p['codes']]           # không có thì lấy đề xuất gộp nêu mã ở dòng Nguồn
+        done = [p for p in mine if p['applied'] or proposal_kind(p['head']) == 'xong']
+        part = [p for p in mine if not p['applied'] and proposal_kind(p['head']) != 'xong' and re.search(r'ĐÃ ÁP DỤNG', p['head'].split('\n', 1)[0], re.I)]
+        wait = [p for p in mine if p not in done and p not in part]
+        les = list(dict.fromkeys(([rut_file[key]] if rut_file.get(key) else []) + [l['name'] for l in lessons if code in l['codes']]))
+        if done and not wait and not part:
+            st, txt = 'da', 'Đã update'
+        elif done or part:
+            st, txt = 'motphan', 'Đã update một phần'
+        elif wait:
+            k = proposal_kind(wait[0]['head'])
+            st, txt = 'cho', {'skill': 'Chờ Update Skill', 'script': 'Chờ Update Script', 'hq': 'Chờ đóng đề xuất'}.get(k, 'Chờ duyệt')
+        elif v['rut']:
+            st, txt = ('baihoc', 'Đã có bài học (agent đọc trước khi vẽ), không cần sửa skill') if les else ('khong', 'Đã rút KN, không có bài học hay đề xuất')
+        else:
+            st, txt = 'chua', 'Chưa rút kinh nghiệm' if v['hasT'] else 'Chưa rút KN (thiếu file T)'
+        rows.append({'key': key, 'order': v['order'], 'code': code, 'date': v.get('date', ''),
+                     'loai': list(dict.fromkeys(qa.norm_loai(x) for x in v['loai'])), 'loi': v['loi'],
+                     'hasT': v['hasT'], 'hasF': v['hasF'], 'folder': v['folder'], 'st': st, 'stText': txt,
+                     'hasC': (lambda c: bool(c) and not _old_auto_compare(c))(find_compare(v['folder'], code)),
+                     'props': [{'name': p['name'], 'at': p['at'], 'done': p in done, 'line': next((l.strip() for l in p['head'].split('\n') if l.strip()), '')[:200]} for p in mine], 'lessons': les})
+    rows.sort(key=lambda r: (r['date'] or '', r['key']), reverse=True)
+    return rows
+
+
+def find_compare(folder, code):
+    """File Compare đã có của mã: tìm trong Sua_loi trước, rồi thư mục đơn (cha của Sua_loi) và thư mục con tối đa 2 cấp.
+    Nhận tên <mã>Compare.dxf, <mã>_Compare.dxf, <mã> compare....dxf (không phân biệt hoa thường)."""
+    if not folder:
+        return None
+    pat = re.compile(r'^' + re.escape(code) + r'[ _-]?compare[^\\/]*\.dxf$', re.I)
+    try:
+        hit = next((f for f in os.listdir(folder) if pat.match(f)), None)
+        if hit:
+            return os.path.join(folder, hit)
+    except OSError:
+        pass
+    base = os.path.dirname(folder.rstrip('\\/'))
+    for root, dns, fns in os.walk(base):
+        if root[len(base):].count(os.sep) >= 2:
+            dns[:] = []
+        hit = next((f for f in fns if pat.match(f)), None)
+        if hit:
+            return os.path.join(root, hit)
+    return None
+
+
+def _old_auto_compare(fp):
+    """File Compare do bản cũ của compare_tf.py tạo (có lớp LABEL; còn dim hoặc còn dòng chú thích): tạo lại theo bản hiện tại.
+    File người dùng tự làm (không có lớp LABEL) thì giữ nguyên."""
+    try:
+        with open(fp, 'r', encoding='utf-8', errors='replace') as f:
+            txt = f.read()
+    except OSError:
+        return False
+    names = set(x.strip() for x in txt.splitlines())
+    if 'LABEL' not in names:
+        return False
+    # bản cũ: còn dim (chưa có lớp KHAC_NHAU) hoặc còn dòng chú thích dưới label (Phát 18/11 chỉ giữ True / False)
+    return 'KHAC_NHAU' not in names or any(k in txt for k in ('cho cùng hướng T', 'Màu hồng = khác nhau', 'Hai hình khớp nhau'))
+
+
+def compare_sualoi(order, code):
+    """Nút Compare (tab Lịch Sử Lỗi): chưa có <mã>Compare.dxf trong Sua_loi thì tạo bằng tools/compare_tf.py (F trái, T phải,
+    dim chỗ khác nhau, label False/True), rồi mở file bằng phần mềm mặc định. Đã có thì chỉ mở."""
+    import subprocess
+    v = loi_info().get(f'{order}_{code}')
+    if not v or not v.get('folder'):
+        raise ValueError('Không thấy thư mục Sua_loi của mã này.')
+    names = {f.upper(): f for f in os.listdir(v['folder'])}
+    have = find_compare(v['folder'], code)          # đã có file Compare (ở Sua_loi hoặc thư mục đơn): chỉ mở, không tạo lại
+    out = have or os.path.join(v['folder'], code + 'Compare.dxf')
+    if have and _old_auto_compare(have):            # bản dim cũ do web tạo: tạo lại (ghi đè) theo kiểu tô màu
+        have = None
+    created = False
+    if not have:
+        if not (v['hasT'] and v['hasF']):
+            raise ValueError('Cần đủ file ' + code + 'T.dxf và ' + code + 'F.dxf trong Sua_loi mới tạo được Compare.')
+        t = os.path.join(v['folder'], names[(code + 'T.DXF').upper()])
+        f = os.path.join(v['folder'], names[(code + 'F.DXF').upper()])
+        tool = os.path.join(REPO, 'tools', 'compare_tf.py')
+        if not os.path.isfile(tool):
+            raise ValueError('Thiếu công cụ ' + tool)
+        env = dict(os.environ, PYTHONIOENCODING='utf-8')
+        p = subprocess.run([sys.executable, '-X', 'utf8', tool, t, f, out], capture_output=True, timeout=90, env=env)
+        msg = (p.stdout or b'').decode('utf-8', 'replace').strip() + (p.stderr or b'').decode('utf-8', 'replace').strip()[-300:]
+        if p.returncode != 0 or not os.path.isfile(out):
+            raise ValueError('Tạo Compare lỗi: ' + (msg or 'mã thoát %s' % p.returncode))
+        created = True
+    if os.name != 'nt':
+        raise ValueError(('Đã tạo ' if created else 'Đã có ') + out + ' (chỉ mở tự động được khi web chạy trên Windows).')
+    os.startfile(out)
+    _bring_front(os.path.splitext(os.path.basename(out))[0])
+    return {'path': out, 'created': created}
+
+
+def open_sualoi(order, code, kind):
+    """Mở <mã>T.dxf hoặc <mã>F.dxf trong Sua_loi bằng phần mềm mặc định của máy (chỉ hai file này, không nhận đường dẫn tuỳ ý)."""
+    kind = str(kind or '').upper()
+    if kind not in ('T', 'F'):
+        raise ValueError('Chỉ mở được file T hoặc F.')
+    v = loi_info().get(f'{order}_{code}')
+    if not v or not v.get('folder'):
+        raise ValueError('Không thấy thư mục Sua_loi của mã này.')
+    name = next((f for f in v['files'] if f.upper() == (code + kind + '.DXF').upper()), None)
+    if not name:
+        raise ValueError(f'Chưa có file {code}{kind}.dxf trong Sua_loi.')
+    fp = os.path.join(v['folder'], name)
+    if os.name != 'nt':
+        raise ValueError('Chỉ mở được file khi web chạy trên Windows: ' + fp)
+    os.startfile(fp)
+    _bring_front(os.path.splitext(os.path.basename(fp))[0])
+    return fp
 
 
 def rutkn_status():
@@ -1321,6 +1628,8 @@ class H(BaseHTTPRequestHandler):
             return self.send_json(load_json(CHECKS, {}))
         if path == '/api/proposals':
             return self.send_json(list_proposals())
+        if path == '/api/loihistory':
+            return self.send_json(loi_history())
         if path == '/api/qa':
             return self.send_json(qa_info())
         if path == '/' or path == '':
@@ -1406,6 +1715,16 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json({'ok': True})
             if path == '/api/jobs/followup':
                 return self.send_json({'ok': True, 'job': add_followup(data.get('order'), data.get('answers'), data.get('model'))})
+            if path == '/api/compare_tf':
+                return self.send_json(dict({'ok': True}, **compare_sualoi(data.get('order'), data.get('code'))))
+            if path == '/api/openorder':
+                return self.send_json({'ok': True, 'path': open_order_dir(data.get('order'))})
+            if path == '/api/openpart':
+                return self.send_json({'ok': True, 'path': open_part(data.get('order'), data.get('code'))})
+            if path == '/api/openfile':
+                return self.send_json({'ok': True, 'path': open_sualoi(data.get('order'), data.get('code'), data.get('kind'))})
+            if path == '/api/jobs/resume':
+                return self.send_json({'ok': True, 'job': add_resume(data.get('order'))})
             if path == '/api/jobs/cancel':
                 import runner
                 runner.cancel(data.get('id', ''))

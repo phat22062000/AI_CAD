@@ -14,6 +14,7 @@ import os
 import sys
 
 import ezdxf
+from ezdxf import zoom
 from ezdxf.math import Vec3
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -61,6 +62,61 @@ def _attrs(e, src, dst):
 
 
 HL_LAYER, HL_COLOR = 'KHAC_NHAU', 6
+
+
+DIM_LAYER = 'Dim'
+DIM_DEFAULTS = {'dimfxl': 1.0, 'dimlfac': 1.0, 'dimtfac': 1.0, 'dimdsep': 46, 'dimtmove': 0, 'dimupt': 0}
+
+
+def add_dim_setup(doc):
+    """Lớp Dim (màu 5, nét 0.13) và Dimstyle DIM lấy đúng từ file tham khảo ThamKhaoDimStyle.dxf của Phát (18/11/2026),
+    để dùng ngay cho kích thước trên file Compare. Chỉ tạo sẵn, không tự dim."""
+    if DIM_LAYER not in doc.layers:
+        doc.layers.add(DIM_LAYER, color=5, lineweight=13)
+    if 'DIM' not in doc.dimstyles:
+        ds = doc.dimstyles.new('DIM', dxfattribs={
+            'dimscale': 1.5, 'dimasz': 2.0, 'dimexo': 0.0, 'dimdli': 10.0, 'dimexe': 1.0,
+            'dimtih': 0, 'dimtoh': 0, 'dimtad': 1, 'dimzin': 8, 'dimazin': 2,
+            'dimtxt': 4.0, 'dimcen': 0.0, 'dimgap': 0.625, 'dimtofl': 1, 'dimtix': 1, 'dimsoxd': 1,
+            'dimclrd': 5, 'dimclre': 5, 'dimclrt': 2, 'dimadec': 2, 'dimdec': 2, 'dimtdec': 2,
+            'dimlwd': 25, 'dimlwe': 25, 'dimtxsty': 'Standard'})
+        ds.set_arrows(blk=ezdxf.ARROWS.open, ldrblk=ezdxf.ARROWS.open)      # đầu mũi tên Open như file tham khảo
+    # Dimstyle hiện hành mặc định là DIM: đặt $DIMSTYLE và chép MỌI thông số của style sang các biến dim của header.
+    # Header phải trùng từng giá trị với style, lệch một biến là CAD báo "<style overrides>" thay vì DIM. File tham khảo không ghi 6 biến dưới
+    # nên dùng giá trị mặc định của CAD, đặt cả ở style lẫn header.
+    ds = doc.dimstyles.get('DIM')
+    for k, v in DIM_DEFAULTS.items():
+        ds.dxf.set(k, v)
+    doc.header['$DIMSTYLE'] = 'DIM'
+    doc.header['$CLAYER'] = DIM_LAYER      # layer hiện hành mặc định là Dim: vẽ gì thêm cũng nằm ở Dim
+    doc.header['$ORTHOMODE'] = 1           # luôn bật Ortho (F8)
+    for k, v in ds.dxf.all_existing_dxf_attribs().items():
+        if k.startswith('dim'):
+            try:
+                doc.header['$' + k.upper()] = v
+            except Exception:
+                pass
+    doc.header['$DIMBLK'] = '_OPEN'      # cùng tên mũi tên Open với style DIM (ezdxf tự đổi thành OPEN khi chép)
+    doc.header['$DIMLDRBLK'] = '_OPEN'
+
+
+def fit_view(doc, aspect=1.6, margin=1.1):
+    """Zoom Extents: khung nhìn hiện hành đặt giữa toàn bộ hình (cả False lẫn True), chừa lề `margin`.
+    CAD tính bề rộng nhìn thấy = chiều cao khung x tỉ lệ cửa sổ thật, nên chọn chiều cao đủ để cả bề rộng lẫn bề cao vừa khi cửa sổ có tỉ lệ >= `aspect`."""
+    from ezdxf import bbox
+    msp = doc.modelspace()
+    bb = bbox.extents(msp)
+    if not bb.has_data:
+        return
+    c, w, h = bb.center, bb.size.x, bb.size.y
+    vp = doc.viewports.get('*Active')[0]
+    vp.dxf.center = (c.x, c.y)
+    vp.dxf.height = max(h * margin, w * margin / aspect, 1.0)
+    vp.dxf.aspect_ratio = aspect
+    doc.header['$EXTMIN'] = (bb.extmin.x, bb.extmin.y, 0)
+    doc.header['$EXTMAX'] = (bb.extmax.x, bb.extmax.y, 0)
+    doc.header['$LIMMIN'] = (bb.extmin.x, bb.extmin.y)
+    doc.header['$LIMMAX'] = (bb.extmax.x, bb.extmax.y)
 
 
 def copy_into(src, msp, fn, mirror, dx, dy, flats, hl):
@@ -218,6 +274,7 @@ def build(tpath, fpath, out, tol=0.05):
     doc = ezdxf.new('R2010', setup=True)
     doc.header['$INSUNITS'] = 4
     doc.layers.add(HL_LAYER, color=HL_COLOR)
+    add_dim_setup(doc)
     msp = doc.modelspace()
     hlF = {fidx[k] for k in ub}
     hlT = {tidx[k] for k in ua}
@@ -228,6 +285,7 @@ def build(tpath, fpath, out, tol=0.05):
         doc.layers.add('LABEL', color=7)
     put_text(msp, 'False', th, (wf / 2, -3 * th), 'BOTTOM_CENTER')
     put_text(msp, 'True', th, (xT + wt / 2, -3 * th), 'BOTTOM_CENTER')
+    fit_view(doc)      # mở file là thấy cả hai hình nằm giữa khung hình, như lệnh Zoom Extents (ZOOM E)
     tmp = out + '.tmp'
     doc.saveas(tmp)
     os.replace(tmp, out)

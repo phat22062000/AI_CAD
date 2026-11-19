@@ -26,7 +26,7 @@ Mỗi lần ghi tự cập nhật `heartbeatAt`; quá 10 phút không ghi, trang
 
 ## 4. Mã bản vẽ: `parts <số đơn>_<mã>`
 **Làm TUẦN TỰ từng mã một, báo đúng lúc, LƯU NGAY file DXF của mã vừa xong (`<mã>.dxf` trong thư mục đơn) rồi mới sang mã kế. KHÔNG dựng nhiều mã bằng một script rồi báo hàng loạt cuối cùng** (người dùng giám sát tiến độ qua đèn L0 đến L3 của từng mã, báo dồn thì sơ đồ vô nghĩa).
-- Bắt đầu: `order=<số đơn> code=<mã> kind=phang|uon|... agent=<id agent> status=running level=0 startedAt=now flags='[]'`.
+- Bắt đầu: `order=<số đơn> code=<mã> kind=phang|uon|... agent=<id agent> status=running level=0 startedAt=now flags='[]' page=<số trang PDF của đơn (đếm từ 1) có bản vẽ của mã>`. Trang web dùng `page` để mở PDF đúng trang.
 - Qua từng bước: `level=1` (phân tích kích thước), `level=2` (dựng DXF), `level=3` (tự kiểm); `level=0` là đọc bản vẽ.
 - Vẽ xong: `status=built blank="<dài> x <rộng>" finishedAt=now flags='[...]'`. `flags` rỗng = Đã xong; có Flag (thiếu/chưa rõ dữ kiện) = Chờ, mỗi Flag là một câu tiếng Việt có số thứ tự.
 - Không vẽ được: `status=failed`.

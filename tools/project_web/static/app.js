@@ -138,11 +138,14 @@ function setOFilter(v){
 function renderJobs(){
   const JS = {moi:['check', 'Chờ agent nhận'], nhan:['dang', 'Agent đã nhận'], xong:['xong', 'Xong'], loi:['sai', 'Lỗi']};
   const jobs = (S.data.jobs || []).filter(j => j.status === 'moi' || j.status === 'nhan' || Date.now() - t(j.at) < 24 * 3600e3).slice(0, 8);
+  // runner chỉ chạy tối đa `parallel` việc cùng lúc (mặc định 1): việc mới phải chờ lượt, hiện số thứ tự và việc đang chiếm suất
+  const allJ = S.data.jobs || [], par = Math.max(1, +((S.data.runner || {}).parallel) || 1);
+  const busyJ = allJ.filter(j => j.status === 'nhan'), waitQ = allJ.filter(j => j.status === 'moi' && j.ui !== false).sort((a, b) => (a.at || '').localeCompare(b.at || '')).map(j => j.id);
   const jh = jobs.map(j => `<div class="qj">
-      ${chip(...(JS[j.status] || ['chua', j.status]))}
+      ${j.status === 'moi' && busyJ.length >= par ? chip('check', 'Chờ lượt ' + (waitQ.indexOf(j.id) + 1) + '/' + waitQ.length) : chip(...(JS[j.status] || ['chua', j.status]))}
       <span class="mono">${esc(j.order || '—')}</span>
       <span class="t2">${j.kind === 'check' ? 'tự check ' + (j.codes || []).length + ' mã' : j.kind === 'rutkn' ? 'rút kinh nghiệm ' + (j.items || []).length + ' mã' : j.kind === 'hoiquy' ? 'hồi quy ' + (j.items || []).length + ' mã' : j.kind === 'updskill' ? 'update skill ' + (j.items || []).length + ' đề xuất' : j.kind === 'updscript' ? 'update script ' + (j.items || []).length + ' đề xuất' : j.kind === 'tiep' ? 'làm tiếp ' + Object.keys(j.answers || {}).length + ' mã' : (j.plan ? Object.entries(j.plan.agents || {}).map(([a, m]) => (a === 'main' ? 'Chính' : a) + ' ' + m).join(', ') : (j.subagents ? j.subagents + ' subagent' : 'agent chính') + (j.model ? ' · ' + j.model : ''))}</span>
-      <span class="p" title="${esc(j.path)}">${esc(j.result || j.path)}</span>
+      <span class="p" title="${esc(j.status === 'moi' && busyJ.length >= par ? 'Agent đang bận việc khác, tới lượt sẽ tự nhận. ' + j.path : j.path)}">${esc(j.result || (j.status === 'moi' && busyJ.length >= par ? 'Agent đang bận: ' + busyJ.map(b => b.order || b.kind).join(', ') : j.path))}</span>
       <span class="mono qt">${hm(j.at)}</span>
       ${j.status !== 'nhan' ? `<button class="ib" data-deljob="${esc(j.id)}" title="Xoá khỏi hàng đợi"><svg class="i"><use href="#i-x"/></svg></button>`
         : j.by === 'auto' ? `<button class="btn btn-sec sm" data-canceljob="${esc(j.id)}" title="Dừng agent đang chạy việc này">Dừng</button>` : ''}
@@ -382,8 +385,6 @@ function orderDrawer(o){
   const flagHtml = flagged.length
     ? flagged.map(c => `<div class="fl-c">${c.flags.map((f, i) => `<div class="fl"><b class="mono">${i ? '' : esc(c.code)}</b><span>${esc(f)}</span></div>`).join('')}
         <textarea class="fl-ans" data-c="${esc(c.code)}" rows="3" ${busy ? 'disabled' : ''} placeholder="Trả lời Flag của mã ${esc(c.code)} để agent vẽ lại (vd: mặt kegaki là mặt trên, vẽ thêm tấm D)">${esc(draft[c.code] || '')}</textarea>
-        <div class="fl-ref">${(c.refs || []).map(n => `<span class="ref-chip" title="${esc(n)}"><span class="ell">${esc(n)}</span><button class="ib" data-refdel="${esc(c.code)}" data-order="${esc(o.order)}" data-name="${esc(n)}" ${busy ? 'disabled' : ''} title="Xoá file này"><svg class="i"><use href="#i-x"/></svg></button></span>`).join('')}
-          <label class="btn btn-sec sm ${busy ? 'dis' : ''}" title="Nạp file PDF hoặc DXF tham khảo (tối đa 25 MB/file) để agent đọc khi làm tiếp mã này">Đính kèm PDF / DXF tham khảo<input type="file" class="ref-file" hidden multiple accept=".pdf,.dxf" data-c="${esc(c.code)}" data-order="${esc(o.order)}" ${busy ? 'disabled' : ''}></label></div>
         <div><button class="btn btn-pri sm" data-pvok="1" data-code="${esc(c.code)}" data-order="${esc(o.order)}" title="Hình dựng hiện tại đã đúng: mã tính là xong, bỏ Flag, không cần check lại">Preview OK</button></div></div>`).join('')
     : o.flags.map(f => `<div class="fl"><span>${esc(f)}</span></div>`).join('');
   const nFlag = flagged.reduce((n, c) => n + c.flags.length, 0) || o.flags.length;
@@ -393,14 +394,14 @@ function orderDrawer(o){
     : fu.status === 'xong' ? 'Lần làm tiếp gần nhất đã xong' + (fu.result ? ': ' + fu.result : '.')
     : 'Lần làm tiếp gần nhất bị lỗi' + (fu.result ? ': ' + fu.result : '.');
   const pm = S.packMsg[o.order];
-  // đóng gói được khi có ít nhất 1 mã đã xong (không cần xong cả đơn); mã chưa xong bỏ qua, gửi khách nhiều đợt: đợt 1 vào Gui, đợt sau Gui_2, Gui_3...
+  // đóng gói được khi có ít nhất 1 mã đã xong (không cần xong cả đơn); mã chưa xong bỏ qua, gửi khách nhiều đợt: đợt 1 vào Gui\<đơn>, đợt sau Gui\<đơn>(1), (2)...
   const nReady = o.packReady || 0, nPacked = o.packed || 0, nWait = o.codes.length - nReady - nPacked;
   const loose = !(o.path || '').split('\\').pop().toLowerCase().startsWith(String(o.order).toLowerCase());     // file đơn để rời trong thư mục ngày, chưa có thư mục riêng <số đơn>: server không đóng gói được
   const packOff = nReady < 1 || o.running || loose;
   const packWhy = loose ? 'Đơn đang nằm rải trong thư mục ngày, chưa có thư mục riêng ' + o.order + '. Tạo thư mục ' + o.order + ' rồi chuyển toàn bộ file của đơn (PDF, xlsx, các file 26-xxxxxx.dxf, _ALL.dxf) vào đó' : o.running ? 'Agent đang chạy đơn này' : nPacked && nReady < 1 ? 'Các mã đã xong đều đã được đóng gói' : 'Chưa có mã nào xong để đóng gói';
   const packHtml = `<h3>Đóng gói</h3><div class="fl-send" style="margin-top:0">
       <button class="btn btn-pri" data-pack="${esc(o.order)}" ${packOff ? 'disabled' : ''} title="${packOff ? esc(packWhy) : ''}"><svg class="i"><use href="#i-folder"/></svg>Đóng gói${nReady ? ' ' + nReady + ' mã đã xong' : ''}</button>
-      <span class="t3">${packOff ? esc(packWhy) + (loose ? '.' : '. Mở khi có ít nhất 1 mã đã xong.') : 'CHUYỂN DXF của ' + nReady + ' mã đã xong (không có file ALL) vào thư mục Gui' + (nPacked ? ' kế tiếp (Gui_2, Gui_3... không ghi đè đợt trước)' : '') + ' và điền file Excel 納品書 (số đơn, kích thước phôi) cho TẤT CẢ mã của đơn.' + (nWait > 0 ? ' ' + nWait + ' mã chưa xong: không chuyển DXF, trong Excel chỉ điền số thứ tự + mã và tô xanh.' : '')}</span></div>
+      <span class="t3">${packOff ? esc(packWhy) + (loose ? '.' : '. Mở khi có ít nhất 1 mã đã xong.') : 'CHUYỂN DXF của ' + nReady + ' mã đã xong (không có file ALL) vào thư mục Gui' + (nPacked ? ' thành thư mục con mới ' + o.order + '(1), (2)... (không ghi đè đợt trước)' : '') + ' và điền file Excel 納品書 (số đơn, kích thước phôi) cho TẤT CẢ mã của đơn.' + (nWait > 0 ? ' ' + nWait + ' mã chưa xong: không chuyển DXF, trong Excel chỉ điền số thứ tự + mã và tô xanh.' : '')}</span></div>
     ${pm ? `<p class="hint ${pm.err ? 'err' : 'ok'}">${esc(pm.text)}${pm.path ? ` <button class="ib" data-copy="${esc(pm.path)}" title="Copy đường dẫn thư mục Gui"><svg class="i"><use href="#i-folder"/></svg></button>` : ''}</p>` : ''}`;
   const archHtml = (o.state === 'xong' || o.state === 'cho') ? `<h3>Phương án</h3><div class="fl-send" style="margin-top:0">
       <button class="btn btn-sec" data-arch="${esc(o.order)}">Lưu phương án và làm lại</button>
@@ -622,13 +623,13 @@ function renderQA(){
       ${(ups.skipped || []).map(c => `<div class="hint">Bỏ qua ${esc(c.proposal)}: ${esc(c.why)}</div>`).join('')}
       ${ups.backup ? `<p class="hint">Bản cũ đã sao lưu: <span class="mono">${esc(ups.backup)}</span> (thư mục tools) <button class="ib" data-copy="${esc(ups.backup)}" title="Copy đường dẫn"><svg class="i"><use href="#i-folder"/></svg></button></p>` : ''}</details>` : '';
   const chips = p => (p.orders || []).length || (p.codes || []).length ? ' <span class="mono t2">' + (p.orders || []).map(esc).join(', ') + ((p.orders || []).length && (p.codes || []).length ? ' · ' : '') + (p.codes || []).map(esc).join(', ') + '</span>' : '';
-  const kindTag = p => p.kind === 'hq' ? ' <span class="tag-part" style="background:var(--run-bg);color:var(--run-tx)" title="Đề xuất này không sửa gì thêm: bạn đóng khi đã xem xong">Chờ hồi quy</span>'
+  const kindTag = p => p.kind === 'hq' ? ' <span class="tag-part" style="background:var(--run-bg);color:var(--run-tx)" title="Chưa sửa gì: chờ hồi quy. Muốn áp dụng luôn không cần hồi quy thì tick ô chọn rồi bấm Update Skill; không thì đóng khi đã xem xong">Chờ hồi quy</span>'
     : p.kind === 'script' ? ' <span class="tag-part" title="' + esc(p.partial || 'Chỉ còn phần sửa script') + '">Chờ Update Script</span>'
     : p.partial ? ' <span class="tag-part" title="' + esc(p.partial) + '">Còn chờ: ' + esc(p.partial.slice(0, 40)) + '</span>' : '';
-  const propHtml = props.length ? `<h3>Đề xuất sửa skill chờ duyệt <span class="n">${props.length}</span></h3>` + props.map(p => `<details class="prop" data-k="${esc('p:' + p.name)}"><summary>${p.kind === 'skill' || p.kind === 'script' ? `<input type="checkbox" class="up-c" data-f="${esc(p.name)}" data-kind="${esc(p.kind)}" title="${p.kind === 'script' ? 'Chọn để áp dụng khi bấm Update Script' : 'Chọn để áp dụng khi bấm Update Skill'}" onclick="event.stopPropagation()"> ` : ''}<span class="mono">${esc(p.name)}</span>${chips(p)}${kindTag(p)} <span class="t3">${hm(p.at)}</span> <button class="ib" data-copy="${esc(p.path)}" title="Copy đường dẫn file"><svg class="i"><use href="#i-folder"/></svg></button> <button class="btn btn-sec sm" data-closeprop="${esc(p.name)}" title="Cất đề xuất này vào lessons\\skill-updates\\da_ap_dung (không xoá hẳn)">Đóng đề xuất</button></summary><div class="pp">${fmtProp(p.head)}</div></details>`).join('')  : '<p class="hint">Không có đề xuất nào chờ duyệt.</p>';
+  const propHtml = props.length ? `<h3>Đề xuất sửa skill chờ duyệt <span class="n">${props.length}</span></h3>` + props.map(p => `<details class="prop" data-k="${esc('p:' + p.name)}"><summary>${p.kind === 'skill' || p.kind === 'script' || p.kind === 'hq' ? `<input type="checkbox" class="up-c" data-f="${esc(p.name)}" data-kind="${esc(p.kind)}" title="${p.kind === 'script' ? 'Chọn để áp dụng khi bấm Update Script' : p.kind === 'hq' ? 'Chọn để Update Skill luôn đề xuất này, không cần chạy hồi quy' : 'Chọn để áp dụng khi bấm Update Skill'}" onclick="event.stopPropagation()"> ` : ''}<span class="mono">${esc(p.name)}</span>${chips(p)}${kindTag(p)} <span class="t3">${hm(p.at)}</span> <button class="ib" data-copy="${esc(p.path)}" title="Copy đường dẫn file"><svg class="i"><use href="#i-folder"/></svg></button> <button class="btn btn-sec sm" data-closeprop="${esc(p.name)}" title="Cất đề xuất này vào lessons\\skill-updates\\da_ap_dung (không xoá hẳn)">Đóng đề xuất</button></summary><div class="pp">${fmtProp(p.head)}</div></details>`).join('')  : '<p class="hint">Không có đề xuất nào chờ duyệt.</p>';
   const html = `<div class="panel"><div class="panel-h"><h2 style="margin:0">Rút kinh nghiệm</h2><div class="sp"></div>
       <button class="btn btn-sec" data-updscript ${ubusy || !nSc ? 'disabled' : ''} title="${esc(ubusy ? 'Đang có việc update skill hoặc update script' : !nSc ? 'Không có đề xuất nào còn phần sửa script' : 'Áp dụng phần script (tools) của các đề xuất đã chọn, thử trước và sau trên dữ liệu thật')}">Update Script${nSc ? ' (' + nSc + ')' : ''}</button>
-      <button class="btn btn-sec" data-updskill ${ubusy || !nSk ? 'disabled' : ''} title="${esc(ubusy ? 'Đang có việc update skill hoặc update script' : !nSk ? 'Không có đề xuất nào còn phần sửa SKILL.md/rules' : 'Áp dụng các đề xuất đã chọn vào SKILL.md và rules')}">Update Skill${nSk ? ' (' + nSk + ')' : ''}</button>
+      <button class="btn btn-sec" data-updskill ${ubusy || !(nSk + nHq) ? 'disabled' : ''} title="${esc(ubusy ? 'Đang có việc update skill hoặc update script' : !(nSk + nHq) ? 'Không có đề xuất nào còn phần sửa SKILL.md/rules' : 'Áp dụng các đề xuất đã chọn vào SKILL.md và rules (gồm cả đề xuất Chờ hồi quy nếu bạn tick, không cần hồi quy)')}">Update Skill${nSk + nHq ? ' (' + (nSk + nHq) + ')' : ''}</button>
       <button class="btn btn-pri" data-rutkn ${busy || !ready.length ? 'disabled' : ''} title="${esc(why)}"><svg class="i"><use href="#i-check"/></svg>Rút kinh nghiệm${ready.length ? ' ' + ready.length + ' mã' : ''}</button></div>
     <p class="hint" style="margin-top:0">${ready.length ? ready.length + ' mã Sai đã đủ file T và F, sẵn sàng so sánh.' : 'Chấm một mã Sai thì web tự tạo folder Sua_loi và chép file F; bạn đặt file T (bản đúng) vào, rồi bấm nút này.'} Agent chỉ ghi lỗi, bài học và nháp đề xuất, không sửa skill.</p>
     ${ready.length ? `<div class="od-flags">${ready.map(([k, v]) => `<div class="fl" style="grid-template-columns:max-content minmax(0,1fr)"><b class="mono" style="white-space:nowrap"><span style="color:var(--tx)">${esc(k.split('_')[0])}</span> · ${esc(k.split('_')[1] || k)}</b><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${ordInfo(k)} <span class="t3">có F và T</span>${v.folder ? ` <button class="ib" data-copy="${esc(v.folder)}" title="Copy đường dẫn folder Sua_loi"><svg class="i"><use href="#i-folder"/></svg></button>` : ''}</span></div>`).join('')}</div>` : ''}
@@ -732,6 +733,7 @@ function reviewCard(x){
   const head = `<div class="rv-h ${open ? 'open' : ''}" data-rv="${esc(o.order)}" title="${open ? 'Bấm để thu gọn' : 'Bấm để xem các mã trong đơn'}">
     <svg class="i chev"><use href="#i-chev"/></svg>
     <span class="jid">${o.order}</span><span class="t2">${dm(o.date)}</span><span class="t3 ell" style="max-width:260px">${esc(o.customer)}</span>
+    <button class="ib" data-openorder="${esc(o.order)}" title="Mở thư mục đơn ${esc(o.order)}"><svg class="i"><use href="#i-folder"/></svg></button>
     <span class="sp"></span>
     ${useLegacy ? `<span class="legacy">Đã chấm trước theo file ${o.legacy.ok}T${o.legacy.ng}F</span>` : ''}
     <span class="cnt">${n.cho ? chip('check', n.cho + ' Chờ') : ''}${n.dung ? chip('xong', n.dung + ' Đúng') : ''}${n.sai ? chip('sai', n.sai + ' Sai') : ''}</span>
@@ -822,13 +824,14 @@ function renderLSL(){
     const refs = (r.props || []).length ? r.props.map(p => p.name) : (r.lessons || []);
     const tip = (r.props || []).map(p => p.name + ': ' + p.line).concat((r.lessons || []).map(l => 'Bài học: ' + l)).join('\n');
     return `<div class="lsl-r">
-      <div><span class="mono"><b style="color:var(--tx)">${esc(r.order)}</b> · <b style="color:var(--warn-tx)">${esc(r.code)}</b></span>${r.date ? `<div class="t3" style="font-size:12px">${esc(r.date.split("-").reverse().join("/"))}</div>` : ''}</div>
+      <div><div style="display:flex;align-items:center;gap:6px;white-space:nowrap"><span class="mono"><b style="color:var(--tx)">${esc(r.order)}</b> · <b style="color:var(--warn-tx)">${esc(r.code)}</b></span><button class="ib" data-openorder="${esc(r.order)}" title="Mở thư mục đơn ${esc(r.order)}"><svg class="i"><use href="#i-folder"/></svg></button></div>${r.date ? `<div class="t3" style="font-size:12px">${esc(r.date.split("-").reverse().join("/"))}</div>` : ''}</div>
       <div title="${esc((r.loi || []).join('\n\n'))}">${r.loai.length ? `<div class="lo">${r.loai.map(l => `<span>${esc(l)}</span>`).join('')}</div>` : ((r.loi || [])[0] ? `<div class="t3" style="font-size:12.5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">Chưa phân loại: ${esc(r.loi[0])}</div>` : '<span class="t3">Chưa phân loại, chưa ghi lỗi cụ thể</span>')}</div>
-      <div class="fb"><button class="btn btn-sec sm" data-cmp="${esc(r.code)}" data-order="${esc(r.order)}" data-hasc="${r.hasC ? 1 : 0}" ${r.hasC || (r.hasT && r.hasF) ? '' : 'disabled'} title="${r.hasC ? 'Mở file ' + esc(r.code) + 'Compare.dxf' : r.hasT && r.hasF ? 'Tạo file so sánh T/F (dim chỗ khác nhau) rồi mở' : 'Cần đủ file T và F trong Sua_loi'}" style="font-family:inherit">Compare</button>${fbtn(r, 'T')}${fbtn(r, 'F')}</div>
+      <div class="fb"><button class="ib" data-cmp="${esc(r.code)}" data-order="${esc(r.order)}" data-hasc="${r.hasC ? 1 : 0}" ${r.hasC || (r.hasT && r.hasF) ? '' : 'disabled'} title="${r.hasC ? 'Mở file ' + esc(r.code) + 'Compare.dxf' : r.hasT && r.hasF ? 'Tạo file Compare (F trái, T phải) rồi mở' : 'Cần đủ file T và F trong Sua_loi'}"><img src="dxf-icon.png?v=3" alt="DXF" draggable="false"></button></div>
+      <div class="fb"><button class="ib" data-pdf="${esc(r.code)}" data-order="${esc(r.order)}" title="Mở PDF của đơn ${esc(r.order)} ở trang có mã ${esc(r.code)}"><img src="pdf-icon.svg?v=1" alt="PDF" draggable="false"></button></div>
       <div class="up" title="${esc(tip)}">${chip(cls, lab)}<span class="t3" style="font-size:12px">${esc(r.stText !== lab ? r.stText : '')}${refs.length ? (r.stText !== lab ? ' · ' : '') + esc(refs.map(n => n.replace(/\.md$/, '')).join(', ')) : ''}</span></div>
     </div>`;
   }).join('');
-  jtHTML($('#lsl'), rows.length ? `<div class="lsl"><div class="lsl-r lsl-h"><div>Số đơn · Số mã</div><div>Loại lỗi</div><div>File DXF</div><div>Giải pháp</div></div>${body}</div>`
+  jtHTML($('#lsl'), rows.length ? `<div class="lsl"><div class="lsl-r lsl-h"><div>Số đơn · Số mã</div><div>Loại lỗi</div><div>File DXF</div><div>File PDF</div><div>Giải pháp</div></div>${body}</div>`
     : `<div class="empty">${all.length ? 'Không có mã nào khớp bộ lọc.' : 'Chưa có mã nào bị chấm Sai.'}</div>`);
 }
 
@@ -849,6 +852,8 @@ function render(){
 window.addEventListener('hashchange', render);
 
 document.addEventListener('click', e => {
+  const ob = e.target.closest('.rv-h [data-openorder]');    // nút Folder trên thẻ đơn (Đánh Giá AI): mở thư mục đơn, không sổ/thu gọn thẻ
+  if (ob) { api('/api/openorder', {order:ob.dataset.openorder}).then(() => toast('Đã mở thư mục đơn ' + ob.dataset.openorder), e2 => toast(e2.message)); return; }
   const rh = e.target.closest('.rv-h[data-rv]');   // bấm tên đơn -> sổ ra / thu gọn các mã của đơn
   if (rh) { const id = rh.dataset.rv; S.rOpen.has(id) ? S.rOpen.delete(id) : S.rOpen.add(id); return renderReview(); }
   const rr = e.target.closest('.rv-r');
@@ -882,8 +887,12 @@ document.addEventListener('click', e => {
     return;
   }
   if (b.dataset.cmp) {
-    const op = b.dataset.hasc === '1' ? 'mở' : 'tạo'; b.disabled = true; b.textContent = 'Đang ' + op + '…'; toast('Đang ' + op + ' file Compare...');
-    api('/api/compare_tf', {order:b.dataset.order, code:b.dataset.cmp}).then(r => { b.disabled = false; b.textContent = 'Compare'; toast((r.created ? 'Đã tạo và mở ' : 'Đã mở ') + b.dataset.cmp + 'Compare.dxf'); const l = $('#lsl'); if (l) l._h = null; load(); }, e2 => { b.disabled = false; b.textContent = 'Compare'; toast(e2.message); const l = $('#lsl'); if (l) l._h = null; load(); });
+    const op = b.dataset.hasc === '1' ? 'mở' : 'tạo'; b.disabled = true; toast('Đang ' + op + ' file Compare...');      // nút là biểu tượng ảnh: không đổi chữ trong nút
+    api('/api/compare_tf', {order:b.dataset.order, code:b.dataset.cmp}).then(r => { b.disabled = false; toast((r.created ? 'Đã tạo và mở ' : 'Đã mở ') + b.dataset.cmp + 'Compare.dxf'); const l = $('#lsl'); if (l) l._h = null; load(); }, e2 => { b.disabled = false; toast(e2.message); const l = $('#lsl'); if (l) l._h = null; load(); });
+    return;
+  }
+  if (b.dataset.pdf) {   // biểu tượng PDF (Lịch Sử Lỗi): mở PDF của đơn đúng trang chứa mã
+    api('/api/openpdf', {order:b.dataset.order, code:b.dataset.pdf}).then(r => toast('Đã mở PDF ' + b.dataset.order + ', trang ' + r.page + (r.sure ? '' : ' (đoán theo thứ tự mã, agent chưa ghi trang)')), e2 => toast(e2.message));
     return;
   }
   if (b.dataset.openf) {
@@ -905,7 +914,7 @@ document.addEventListener('click', e => {
     setOFilter(b.dataset.f); return renderProgress();
   }
   if (b.id === 'o-more') { S.oLimit += 60; return renderProgress(); }
-  if (b.dataset.pack) {   // Đóng gói các mã đã xong: thư mục Gui (đợt 1) hoặc Gui_N (đợt sau) + file Excel
+  if (b.dataset.pack) {   // Đóng gói các mã đã xong: thư mục Gui\<đơn> (đợt 1) hoặc Gui\<đơn>(N) (đợt sau) + file Excel
     const order = b.dataset.pack;
     b.disabled = true; S.packMsg[order] = {text: 'Đang đóng gói (điền Excel mất vài giây)...'}; renderDrawer();
     api('/api/package', {order}).then(r => {
@@ -942,9 +951,10 @@ document.addEventListener('click', e => {
     return;
   }
   if (b.dataset.updskill != null) {   // Update Skill: áp dụng các đề xuất đã chọn
-    const files = [...document.querySelectorAll('#qa .up-c[data-kind="skill"]')].filter(c => c.checked).map(c => c.dataset.f);
+    const files = [...document.querySelectorAll('#qa .up-c[data-kind="skill"], #qa .up-c[data-kind="hq"]')].filter(c => c.checked).map(c => c.dataset.f);     // gồm cả đề xuất Chờ hồi quy được tick (update luôn, không cần hồi quy)
     if (!files.length) { toast('Chưa chọn đề xuất nào'); return; }
-    if (!confirm('Update skill theo ' + files.length + ' đề xuất?\n\n' + files.join('\n') + '\n\nAgent sẽ sửa SKILL.md và rules (nâng version nếu sửa SKILL.md), sao lưu bản cũ trước, rồi ghi lại từng dòng đã đổi lên trang. Không sửa script, không ghi vào thư mục đơn.')) return;
+    const hqSel = [...document.querySelectorAll('#qa .up-c[data-kind="hq"]')].filter(c => c.checked).length;
+    if (!confirm('Update skill theo ' + files.length + ' đề xuất?\n\n' + files.join('\n') + (hqSel ? '\n\n' + hqSel + ' đề xuất đang Chờ hồi quy sẽ được áp dụng LUÔN, không chờ hồi quy.' : '') + '\n\nAgent sẽ sửa SKILL.md và rules (nâng version nếu sửa SKILL.md), sao lưu bản cũ trước, rồi ghi lại từng dòng đã đổi lên trang. Không sửa script, không ghi vào thư mục đơn.')) return;
     b.disabled = true;
     api('/api/jobs/updskill', {files}).then(() => { toast('Đã gửi việc update skill'); load(true); }, e2 => { b.disabled = false; toast(e2.message); });
     return;

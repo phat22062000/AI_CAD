@@ -177,5 +177,46 @@
   "nguyen_nhan": "Hai nguyên nhân: (1) nhãn 2-Ø4.5 và 2-M4 mỗi nhãn có đầu mũi tên chạm đúng một lỗ nhưng F gán theo cặp lỗ gần nhãn; cách F suy luận là suy đoán. (2) Lỗ Ø4 dung sai và rãnh (R2) có chữ tay フライス (phay) khoanh tròn; F tự Flag chưa rõ phay sau laser nhưng vẫn vẽ cả hai, T không vẽ; ý nghĩa phay-sau-laser suy ra từ T chứ chưa có lời Phát",
   "nguon": "T/F",
   "khop": 87.0
+ },
+ "521119-09_26-069990": {
+  "loi": [
+   "Tổng chiều dài phôi: F vẽ 100 x 99.82, T vẽ 100 x 97.465 (F dài hơn 2.355).",
+   "Hai đường uốn DASHED: F ở y = 60 và 55.82, T ở y = 58.76 và 54.58 (cùng cách nhau 4.18; F lệch 1.24 ở cả hai đường).",
+   "Hai lỗ dài R3 trên cánh nghiêng và hai góc bo R0.5 đầu cánh nghiêng: F và T cùng vị trí tính từ đầu tự do (8.5 và 26.5), chỉ khác toạ độ y vì phôi F dài hơn 2.355."
+  ],
+  "loai": [
+   "Sai độ giãn dài",
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-19T04:11:35Z",
+  "nguyen_nhan": "Suy đoán: AI lấy nguyên 60 + 44 - 4.18 (kích thước danh nghĩa) cho chỗ uốn 75° (uốn 105°, R0.6, t3.2), còn T dùng kích thước ngoài hiệu chỉnh (60 và 44 đều bớt khoảng 1.15).",
+  "nguon": "T/F",
+  "khop": 42.3
+ },
+ "521116-14_26-068416": {
+  "loi": [
+   "Hai rãnh 20x5 ở đáy: F vẽ tổng dài 15 (tâm cung R2.5 tại x = 248.8 và 258.8, y = 15 và 69), T vẽ tổng dài 20 (tâm cung x = 246.3 và 261.3).",
+   "Hai lỗ M3 trên cánh nghiêng tại (67.21; 160.62) và (10.38; 135.82): F vẽ φ3.4, T vẽ φ2.5."
+  ],
+  "loai": [
+   "Sai kích thước lỗ"
+  ],
+  "at": "2026-11-19T04:50:48Z",
+  "nguyen_nhan": "Rãnh: script vẽ lại dựng cung ở cx ± 5 thay vì cx ± 7.5 (log, lần vẽ đầu đúng); lỗ M3: suy đoán, AI đọc 通し穴 M3 là lỗ thông φ3.4 thay vì lỗ mồi ren φ2.5.",
+  "nguon": "T/F",
+  "khop": 58.3
+ },
+ "521116-14_26-068417": {
+  "loi": [
+   "Hai rãnh 20x5 ở đáy: F vẽ tổng dài 15 (tâm cung R2.5 tại x = 10 và 20, y = 15 và 69), T vẽ tổng dài 20 (tâm cung x = 7.5 và 22.5).",
+   "Hai lỗ M3 trên cánh nghiêng tại (201.59; 160.62) và (258.42; 135.82): F vẽ φ3.4, T vẽ φ2.5."
+  ],
+  "loai": [
+   "Sai kích thước lỗ"
+  ],
+  "at": "2026-11-19T04:50:50Z",
+  "nguyen_nhan": "Rãnh: script vẽ lại dựng cung ở cx ± 5 thay vì cx ± 7.5 (log, lần vẽ đầu đúng); lỗ M3: suy đoán, AI đọc 通し穴 M3 là lỗ thông φ3.4 thay vì lỗ mồi ren φ2.5.",
+  "nguon": "T/F",
+  "khop": 58.3
  }
 }

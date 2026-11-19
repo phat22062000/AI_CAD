@@ -110,5 +110,25 @@
    }
   ],
   "skipped": []
+ },
+ {
+  "id": "20261119122109_updskill",
+  "archived": [
+   "068416-068417-lo-toshi-ana-m3-cho-hoi-quy.md"
+  ],
+  "at": "2026-11-19T05:21:37Z",
+  "before": "2026.11.19-1",
+  "after": "2026.11.19-2",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261119122109_updskill",
+  "changes": [
+   {
+    "proposal": "068416-068417-lo-toshi-ana-m3-cho-hoi-quy.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "148",
+    "old": "khoanh quanh 4-M5: laser chỉ cắt φ2.5, không phải φ4.2): ghi chú tay thắng bảng. Trước khi vẽ,",
+    "new": "khoanh quanh 4-M5: laser chỉ cắt φ2.5): ghi chú tay thắng bảng. Nhãn 通し穴 Mx mà DXF khách không có vòng ký hiệu, không ghi chú tay, không chữ サラ/ザグリ: coi là lỗ ren, vẽ lỗ mồi và Flag 1 ghi cả φ lỗ thông (mục 2). Trước khi vẽ,"
+   }
+  ],
+  "skipped": []
  }
 ]

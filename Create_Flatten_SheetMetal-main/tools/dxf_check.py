@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """dxf_check.py - kiểm tra DXF đầu ra của skill dxf-sheetmetal (file riêng 26-xxxxxx.dxf và file <đơn>_ALL.dxf).
 Dùng: python3 dxf_check.py FILE.dxf [--template [--tpl Template.dxf]] [--mat SS|SUS|AL|CU --t 3.2]
-       [--expect yeucau.csv] [--src THU_MUC_DON] [--order 064301,064302] [--mirror 064157:064158] [--single THU_MUC] [--png out.png]
+       [--expect yeucau.csv] [--src THU_MUC_DON] [--order 064301,064302] [--mirror 064157:064158] [--single THU_MUC] [--png out.png] [--slot 20x5 ...]
 expect.csv: code,X,Y[,mat,t] (X/Y của CAD依頼書). Mã thoát 1 nếu có LỖI.
 Chi tiết chữ コ/U (hai cánh ngoài cùng bằng nhau): CẢNH BÁO nếu số lỗ/φ hai cánh khác nhau.
+Rãnh/lỗ dài (2 LINE song song + 2 nửa tròn): in THÔNG TIN tổng dài x rộng; --slot NxM (lặp được, ghi chú 長穴): LỖI nếu hình có rãnh mà không rãnh nào khớp (sai số 0.01).
 Mặc định chỉ kiểm hình dạng; so cấu trúc file với Template (CRLF, header, owner 6F, handle...) chỉ chạy khi có --template."""
 import sys, re, math, argparse, os, unicodedata, subprocess
 from collections import defaultdict
 import ezdxf
 
 TOL = 1e-3
+SLOTS = []  # [(tổng dài, rộng)] từ --slot
 OUT = {'LỖI': [], 'CẢNH BÁO': [], 'THÔNG TIN': []}
 CNT = defaultdict(int)
 def rep(lv, msg):
@@ -266,6 +268,22 @@ def check_part(name, items, mat, t, is_all):
     for lp, _ in polys:
         for s, _f in lp:
             if s.t == 'ARC': radii[round(s.r, 3)] += 1
+    # rãnh/lỗ dài (đề xuất 068416-068417): vòng trong gồm 2 LINE song song bằng nhau + 2 ARC nửa tròn cùng R; in tổng dài = tâm-tâm + 2R
+    slots = []
+    for lp, _ in polys[1:]:
+        ls, ac = [s for s, _f in lp if s.t == 'LINE'], [s for s, _f in lp if s.t == 'ARC']
+        if len(lp) != 4 or len(ls) != 2: continue
+        (A, B), (c1, c2) = ls, ac
+        LA, LB = math.hypot(A.q[0] - A.p[0], A.q[1] - A.p[1]), math.hypot(B.q[0] - B.p[0], B.q[1] - B.p[1])
+        if abs(LA - LB) > 0.01 or LA < 1e-6 or abs(c1.r - c2.r) > 0.01: continue
+        if abs((A.q[0] - A.p[0]) * (B.q[1] - B.p[1]) - (A.q[1] - A.p[1]) * (B.q[0] - B.p[0])) / (LA * LB) > 1e-3: continue
+        if any(abs(((s.a1 - s.a0) % 360) - 180) > 0.5 for s in (c1, c2)): continue
+        if abs(math.hypot(c1.c[0] - c2.c[0], c1.c[1] - c2.c[1]) - LA) > 0.01: continue
+        R = (c1.r + c2.r) / 2
+        slots.append(((c1.c[0] + c2.c[0]) / 2, (c1.c[1] + c2.c[1]) / 2, LA + 2 * R, 2 * R, LA))
+    for x, y, L, Wd_, D in slots: I('%s: rãnh tâm %s, tổng dài %s x rộng %s (tâm-tâm %s)' % (name, P((x, y)), f(L), f(Wd_), f(D)))
+    if slots and SLOTS and not any(abs(L - n) < 0.01 and abs(Wd_ - m) < 0.01 for _x, _y, L, Wd_, _d in slots for n, m in SLOTS):
+        E('%s: rãnh ghi %s nhưng DXF có %s' % (name, ' / '.join('%sx%s' % (f(n), f(m)) for n, m in SLOTS), ', '.join('%s x %s' % (f(L), f(Wd_)) for _x, _y, L, Wd_, _d in slots)))
     rexp = laser_r(mat, t) if mat else None
     if sharp_cvx:
         lst = ', '.join('%s %s°' % (P(p), f(a)) for p, a in sharp_cvx[:6])
@@ -531,8 +549,13 @@ def main():
     ap.add_argument('--mat', choices=['SS', 'SUS', 'AL', 'CU']); ap.add_argument('--t', type=float)
     ap.add_argument('--expect'); ap.add_argument('--order'); ap.add_argument('--mirror', action='append', default=[])
     ap.add_argument('--single'); ap.add_argument('--png')
+    ap.add_argument('--slot', action='append', default=[], help='rãnh ghi chú NxM (tổng dài x rộng), lặp được; LỖI nếu DXF có rãnh mà không rãnh nào khớp')
     ap.add_argument('--src', help='thư mục đơn chứa PDF bản vẽ/依頼 và DXF khách (mặc định: thư mục của FILE); đối chiếu kỳ vọng từ nguồn')
     a = ap.parse_args()
+    for sl in a.slot:
+        m = re.fullmatch(r'(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)', sl.strip())
+        if m: SLOTS.append((float(m.group(1)), float(m.group(2))))
+        else: ap.error('--slot %r: dùng dạng NxM, ví dụ 20x5' % sl)
     is_all = a.file.upper().endswith('_ALL.DXF')
     exp = {}
     if a.expect:

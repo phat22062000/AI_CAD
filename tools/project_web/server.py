@@ -48,7 +48,7 @@ LEGACY_RE = re.compile(r'^(\d+)T-?(\d+)F$', re.I)
 REF_DIR = 'Tham_Khao'     # <thư mục đơn>\Tham_Khao\<mã>\ = PDF/DXF tham khảo người dùng nạp cho agent làm tiếp (không phải Output, không tính vào đơn)
 REF_EXT = ('.pdf', '.dxf')
 REF_MAX = 25 * 1024 * 1024
-PACK_RE = re.compile(r'^Gui(?:_\d+)?[\\/]', re.I)      # DXF đã chuyển vào Gui (đợt 1), Gui_2 (đợt 2)...
+PACK_RE = re.compile(r'^Gui(?:_\d+)?[\\/]', re.I)      # DXF đã chuyển vào Gui\<đơn> (đợt 1), Gui\<đơn>(1) (đợt 2)... (bản cũ: Gui_2...)
 NS = '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
 lock = threading.Lock()
 
@@ -308,7 +308,7 @@ def build_order(order, info, prog):
             mt = os.path.getmtime(p)
         except OSError:
             continue
-        if not PACK_RE.match(rel) and not rel.lower().startswith(SUA_LOI.lower() + os.sep.lower()) and not rel.lower().startswith(SUA_LOI.lower() + '/'):      # Gui/Gui_N do đóng gói tạo, Sua_loi do rút kinh nghiệm: không tính là agent đang làm
+        if not PACK_RE.match(rel) and not rel.lower().startswith(SUA_LOI.lower() + os.sep.lower()) and not rel.lower().startswith(SUA_LOI.lower() + '/'):      # Gui (các đợt) do đóng gói tạo, Sua_loi do rút kinh nghiệm: không tính là agent đang làm
             tlast = max(tlast, mt)
         stem, ext = os.path.splitext(name)
         if ext.lower() == '.pdf' and stem == order:
@@ -836,7 +836,7 @@ def delete_variant(order, dest):
 
 
 def package_order(order, overwrite=False):
-    """Đóng gói các mã ĐÃ XONG của đơn (không cần xong cả đơn): thư mục Gui (đợt 1) hoặc Gui_2, Gui_3... (các đợt sau),
+    """Đóng gói các mã ĐÃ XONG của đơn (không cần xong cả đơn): thư mục con của Gui: Gui/<đơn> (đợt 1), Gui/<đơn>(1), Gui/<đơn>(2)... (các đợt sau),
     mỗi đợt gồm DXF các mã đã xong (không có file ALL) + file Excel 納品書 điền TẤT CẢ mã của đơn (mã chưa xong tô xanh, trống kích thước).
     Mã chưa xong/có Flag/tự làm không bị chuyển DXF."""
     o = next((x for x in snapshot(True)['orders'] if x['order'] == order), None)
@@ -965,6 +965,63 @@ def open_part(order, code):
     os.startfile(fp)
     _bring_front(os.path.splitext(os.path.basename(fp))[0])
     return fp
+
+
+def _pdf_viewer():
+    """Phần mềm PDF mặc định của Windows (đọc registry) để mở đúng trang bằng /A page=N; không tìm được thì None."""
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice') as k:
+            prog = winreg.QueryValueEx(k, 'ProgId')[0]
+        with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, prog + r'\shell\open\command') as k:
+            cmd = winreg.QueryValueEx(k, '')[0]
+        m = re.match(r'\s*"([^"]+)"', cmd) or re.match(r'\s*(\S+)', cmd)
+        return m.group(1) if m and os.path.isfile(m.group(1)) else None
+    except Exception:
+        return None
+
+
+def pdf_page_of(order, code, codes, npages):
+    """Trang PDF chứa mã: agent ghi `page` khi vẽ mã (parts); đơn cũ chưa có thì đoán theo thứ tự nếu số trang = số mã. Trả (trang, chắc_chắn)."""
+    pp = load_json(PROGRESS, {}).get('parts', {}).get(f'{order}_{code}', {})
+    try:
+        pg = int(pp.get('page'))
+        if 1 <= pg <= max(npages, 1):
+            return pg, True
+    except (TypeError, ValueError):
+        pass
+    if codes and npages == len(codes) and code in codes:
+        return codes.index(code) + 1, False
+    return 1, False
+
+
+def open_pdf(order, code):
+    """Bấm biểu tượng PDF ở Lịch Sử Lỗi: mở PDF của đơn ở đúng trang chứa mã (PDF scan, không tìm theo chữ được: dùng trang agent đã ghi hoặc đoán theo thứ tự)."""
+    if not ORDER_RE.match(order or '') or not CODE_RE.match(code or ''):
+        raise ValueError('Số đơn hoặc mã không hợp lệ.')
+    info = scan_orders().get(order)
+    if not info:
+        raise ValueError('Không thấy thư mục đơn ' + order + '.')
+    fp = next((p for rel, p in order_files(order, info) if os.path.basename(rel).lower() == order.lower() + '.pdf'), None)
+    if not fp:
+        raise ValueError('Không thấy file ' + order + '.pdf của đơn.')
+    o = next((x for x in snapshot()['orders'] if x['order'] == order), None)
+    codes = [c['code'] for c in (o or {}).get('codes', [])]
+    try:
+        import pymupdf
+        npages = len(pymupdf.open(fp))
+    except Exception:
+        npages = 0
+    page, sure = pdf_page_of(order, code, codes, npages)
+    if os.name != 'nt':
+        raise ValueError('Chỉ mở được file khi web chạy trên Windows: ' + fp)
+    import subprocess
+    viewer = _pdf_viewer()
+    if viewer and page > 1:
+        subprocess.Popen([viewer, '/A', f'page={page}', fp])
+    else:
+        os.startfile(fp)
+    return {'path': fp, 'page': page, 'sure': sure, 'pages': npages}
 
 
 def ensure_sua_loi(order, code):
@@ -1425,13 +1482,14 @@ def qa_info():
 def add_updskill_job(files=None):
     """Nút "Update Skill" (người dùng bấm = lệnh "update skill"): agent áp dụng các đề xuất còn chờ vào SKILL.md/rules, sao lưu trước, ghi nhật ký dòng đã đổi.
     files = tên file đề xuất muốn áp dụng; không chọn thì áp dụng mọi đề xuất còn chờ."""
-    pend = {p['name']: p for p in list_proposals(50) if p['pending'] and p['kind'] == 'skill'}
-    names = [f for f in (files or list(pend)) if f in pend]
+    # đề xuất 'hq' (Chờ hồi quy) chỉ được áp dụng khi người dùng tick chọn rõ (Update luôn, không cần hồi quy); không chọn gì thì chỉ áp dụng đề xuất 'skill'
+    pend = {p['name']: p for p in list_proposals(50) if p['pending'] and p['kind'] in ('skill', 'hq')}
+    names = [f for f in (files or [n for n, p in pend.items() if p['kind'] == 'skill']) if f in pend]
     if not names:
         raise ValueError('Không có đề xuất nào còn phần sửa SKILL.md/rules để áp dụng.')
     if _dup_job('updskill') or _dup_job('updscript'):
         raise ValueError('Đã có việc update skill hoặc update script đang chờ hoặc đang chạy.')
-    items = [{'name': n, 'path': pend[n]['path'], 'orders': pend[n]['orders'], 'codes': pend[n]['codes']} for n in names]
+    items = [{'name': n, 'path': pend[n]['path'], 'orders': pend[n]['orders'], 'codes': pend[n]['codes'], **({'hq': True} if pend[n]['kind'] == 'hq' else {})} for n in names]
     with lock:
         prog = load_json(PROGRESS, {})
         jobs = prog.setdefault('jobs', {})
@@ -1721,6 +1779,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json({'ok': True, 'path': open_order_dir(data.get('order'))})
             if path == '/api/openpart':
                 return self.send_json({'ok': True, 'path': open_part(data.get('order'), data.get('code'))})
+            if path == '/api/openpdf':
+                return self.send_json(dict({'ok': True}, **open_pdf(data.get('order'), data.get('code'))))
             if path == '/api/openfile':
                 return self.send_json({'ok': True, 'path': open_sualoi(data.get('order'), data.get('code'), data.get('kind'))})
             if path == '/api/jobs/resume':

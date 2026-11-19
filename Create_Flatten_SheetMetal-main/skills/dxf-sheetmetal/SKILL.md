@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.18-1"
+  version: "2026.11.19-2"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -100,12 +100,12 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Nguồn độ giãn, theo thứ tự:
   1. Số ghi tay trên bản vẽ (ví dụ "37+60-5.2=91.8"); khác bảng vẫn dùng số tay và Flag 10. Khách có quy định giãn riêng trong file quy tắc khách thì áp dụng trước khi xét bảng, và phải tìm số tay tương ứng trên toàn trang.
   2. Bảng `Bang_Do_Gian_Asahi.xlsx` (khách 646 dùng `Bang_Do_Gian_AICOKU ALPHA.xlsx`) CHỈ cho chỗ uốn 90°.
-  3. Góc uốn khác 90° (kể cả > 90°, ví dụ 110°): KHÔNG dùng bảng, không lấy số 90°; độ giãn do người dùng cung cấp, chưa có thì hỏi. Không tự suy giãn bằng công thức, hệ số K hay nội suy từ bảng 90°. Trước khi kết luận thiếu giãn phải đã quét toàn trang tìm ghi chú tay (mục 1 bước 4); vẫn không có thì Flag 16 và hỏi, không vẽ số tạm.
+  3. Góc uốn khác 90° (kể cả > 90°, ví dụ 110°): KHÔNG dùng bảng, không lấy số 90°; độ giãn do người dùng cung cấp, chưa có thì hỏi. Không tự suy giãn bằng công thức, hệ số K hay nội suy từ bảng 90°. Trước khi kết luận thiếu giãn phải đã quét toàn trang tìm ghi chú tay (mục 1 bước 4); vẫn không có thì Flag 16 và hỏi, không vẽ số tạm. Có giãn rồi (số tay hay do người dùng cung cấp) vẫn phải xét tiếp hiệu chỉnh kích thước ngoài của chỗ uốn có góc giữa hai cánh ≤ 85° ở dòng "Chỗ uốn có góc giữa hai cánh ≤ 85°" bên dưới.
 - Tra bảng: xác định khoảng chiều dài uốn của mã (hàng 曲げ長さ) trước, rồi mới đọc giãn ở cột tương ứng; ô độ dày không gộp có thể phủ nhiều cột.
 - Kích thước ở chỗ uốn: phóng to đầu đường gióng để xác định đi qua góc trong hay ngoài. Kích thước trong phải đổi sang ngoài trước khi tính phôi (ngoài = trong + t/tan(α/2) mỗi cánh, α là góc trong giữa hai cánh); không xác định được thì Flag 7.
 - Đường gióng kích thước chiều cao/dài cánh: PHẢI phóng ≥ 300 dpi đầu đường gióng ở MỖI chỗ uốn để xác định điểm bắt đầu là góc trong (mặt trong cánh gặp mặt trong tấm) hay góc ngoài. Hai góc lệch t/tan(α/2) (t3, 111°: 2.07 mm) nên bản vẽ 1:2 nhìn thường không thấy. Kích thước trong thì đổi sang ngoài (+ t/tan(α/2)) TRƯỚC khi tính phôi, đồng thời tính lại các số nối tiếp từ cùng đường gióng (ví dụ 132, 71 tính từ đường 34) theo điểm thật đường đó chạm. Không phân biệt được thì Flag 7, không tự chọn. Ví dụ 26-067785 (đơn 521111-25, SUS304 t3): 34 là góc trong chỗ uốn 1, bản đầu coi là ngoài nên phôi ngắn 4.16 (523.16 thay vì 527.32).
 - Xác định góc uốn TỪNG chỗ từ hình chiếu cạnh (ví dụ ghi 70° lệch = uốn 110°). Góc ghi trên hình chưa chắc là góc uốn: góc giữa hai mặt tấm ở hình cạnh/mặt cắt là góc uốn; góc giữa hai cạnh biên của cánh ở hình bằng/hình nhìn thẳng cánh là góc biên dạng (ví dụ đầu cánh vát), không làm đổi góc uốn. Ví dụ 26-063561/62 (天板, SUS304 2B t1.5): 4 ghi chú 135° là góc đầu cánh vát, uốn 90°, giãn 2.64. Chưa chắc thì hỏi, không tự kết luận góc uốn khác 90°.
-- Chỗ uốn góc ≤ 85° (cánh nghiêng; Asahi và AICOKU ALPHA): không dùng kích thước danh nghĩa (ví dụ 80/150) làm kích thước ngoài.
+- Chỗ uốn có góc giữa hai cánh ≤ 85° (cánh nghiêng; mọi khách; "góc" là góc ghi trên hình giữa hai cánh, ví dụ hình ghi 75° thì áp dụng): không dùng kích thước danh nghĩa (ví dụ 80/150, 60/44) làm kích thước ngoài, kể cả khi giãn đã có số ghi tay.
   - R trong: t < 6 → 0.6; t ≥ 6 → 6. Offset ra đúng t được R ngoài (t3.2: 3.8; t ≥ 6: 6 + t), đo kích thước ngoài hiệu chỉnh mỗi cánh từ hình học thực (cánh nghiêng đo dọc mặt ngoài). Giá trị hiệu chỉnh thay đổi theo bản vẽ, không phải hằng số.
   - Phôi = ngoài hiệu chỉnh + ngoài hiệu chỉnh - giãn (giãn do người dùng cung cấp theo từng yêu cầu, không tự tra theo góc). Chưa có giãn hoặc không dựng được hiệu chỉnh thì hỏi và Flag 16.
   - Góc > 90°: dùng kích thước danh nghĩa (kích thước ngoài + kích thước ngoài - độ giãn).
@@ -145,7 +145,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   - Sau khi vẽ, đếm lỗ từng tấm, đối chiếu mọi ghi chú (không tấm nào thiếu/thừa, không lỗ nào ở 2 tấm).
   - Chi tiết chữ コ/U có hai cánh giống nhau: lỗ hoặc chi tiết chỉ thấy ở một cánh trong hình cạnh thì MẶC ĐỊNH cả hai cánh đều có (đối xứng), trừ khi bản vẽ ghi rõ "một bên". Số lượng "n-φx" chỉ là số lỗ trong hình đang xem, không phải tổng cho cả chi tiết; ghi nhận trong bảng 'lỗ → tấm' là "mỗi cánh n lỗ" và vẽ đủ cả hai cánh (kiểm tra bằng hình chiếu khác nếu có).
   - Hai chi tiết cùng hình dạng/kích thước (ví dụ hai tấm nắp 300 x 200) mà ghi chú lỗ/ren/"固定" chỉ trỏ tới MỘT chi tiết (theo đầu mũi tên hoặc ký hiệu ②③): chỉ chi tiết đó có lỗ, chi tiết còn lại vẽ TRƠN. CẤM vẽ "tạm giống mã kia"; không rõ chi tiết nào thì Flag 5 và vẽ ở trạng thái không thêm lỗ.
-- Lỗ taro: vẽ lỗ mồi theo `Quy_Tac_Lo_Moi.md` (M6 → φ5, M8 → φ6.8), TRỪ KHI bản vẽ có ghi chú tay về lỗ mồi (ví dụ 「下穴φ2.5 レーザー → 穴あけ → タップ」 khoanh quanh 4-M5: laser chỉ cắt φ2.5, không phải φ4.2): ghi chú tay thắng bảng. Trước khi vẽ, quét mọi ghi chú tay cạnh từng nhóm lỗ n-Mx/n-φ và ghi vào bảng 'lỗ → tấm' (cột φ vẽ + nguồn: bảng / ghi chú tay). Một tấm có từ hai nhãn ren khác cỡ trỏ tới (kể cả nét tay nối nhãn xuống tấm) mà số lỗ thấy trên tấm không khớp một nhãn: tách từng lỗ theo ký hiệu lỗ và nét nối; không phân biệt được thì Flag 5, không gán cả nhóm theo nhãn gần nhất.
+- Lỗ taro: vẽ lỗ mồi theo `Quy_Tac_Lo_Moi.md` (M6 → φ5, M8 → φ6.8), TRỪ KHI bản vẽ có ghi chú tay về lỗ mồi (ví dụ 「下穴φ2.5 レーザー → 穴あけ → タップ」 khoanh quanh 4-M5: laser chỉ cắt φ2.5): ghi chú tay thắng bảng. Nhãn 通し穴 Mx mà DXF khách không có vòng ký hiệu, không ghi chú tay, không chữ サラ/ザグリ: coi là lỗ ren, vẽ lỗ mồi và Flag 1 ghi cả φ lỗ thông (mục 2). Trước khi vẽ, quét mọi ghi chú tay cạnh từng nhóm lỗ n-Mx/n-φ và ghi vào bảng 'lỗ → tấm' (cột φ vẽ + nguồn: bảng / ghi chú tay). Một tấm có từ hai nhãn ren khác cỡ trỏ tới (kể cả nét tay nối nhãn xuống tấm) mà số lỗ thấy trên tấm không khớp một nhãn: tách từng lỗ theo ký hiệu lỗ và nét nối; không phân biệt được thì Flag 5, không gán cả nhóm theo nhãn gần nhất.
 - Lỗ nhỏ: so đường kính (kể cả lỗ mồi) với "Lỗ nhỏ nhất" trong `Quy_Tac_Laser.md` mục 2 theo vật liệu và độ dày. Nhỏ hơn, hoặc lỗ có ghi chú tay ピアス khoanh riêng quanh lỗ đó, thì vẽ POINT (piercing) tại tâm lỗ, layer 0, thay CIRCLE. Tem/chữ PIERCING đầu trang KHÔNG áp cho mọi lỗ ren: lỗ ren có lỗ mồi ≥ lỗ nhỏ nhất vẫn vẽ CIRCLE lỗ mồi. Ví dụ 26-059668 (t12, 6-M6 PIERCING, mồi φ5 < 6): 6 POINT. Ví dụ 521030-12 (tem PIERCING, ghi tay chỉ khoanh M12 t16): M12 POINT; 4-M8 t12 mồi φ6.8 (≥ 6) và M6 t6 mồi φ5 (≥ 3) vẽ CIRCLE (lần đầu vẽ POINT cho mọi lỗ ren là sai). Khách có quy định riêng trong `DS_Khach_Hang.md` (ví dụ 875: lỗ nhỏ hơn độ dày làm lỗ trắng) thì theo khách; chưa rõ thì hỏi.
 - Màu POINT: mặc định trắng; có dấu THROUGH HOLE/đột xuyên hoặc khách quy định piercing là lỗ xuyên (`DS_Khach_Hang.md`) thì POINT Xanh lá (`62 = 3` ngay sau layer `8`).
 
@@ -220,7 +220,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   14. Tổng các kích thước trong chuỗi Dim khác với kích thước tổng.
   15. Chân dim kích thước bị lệch.
   16. Thiếu độ giãn dài.
-  17. Có bất kì lỗ tròn nào (tính cả lỗ mồi) trong tấm nhỏ hơn 1/2 độ dày của tấm đó.
+  17. Lỗ tròn (tính cả lỗ mồi) trong tấm nhỏ hơn 1/2 độ dày của tấm đó.
   18. Kích thước có dung sai (trừ trường hợp dung sai dương và dung sai âm băng nhau).
   19. Gọc nhọn quá bé không thể laser R.
   20. Thiếu DXF khách (PDF có ghi DATA nhưng không có DXF khách): áp cho TẤT CẢ mã thuộc trang đó.Không dựng hình vội phải đợi DXF khách.
@@ -241,7 +241,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Chuỗi kích thước: mọi chuỗi không cộng đủ tổng đã đo pixel từng điểm đầu/cuối và ghi kết quả; cặp gương đã đo vị trí lỗ riêng từng tấm; Flag 14/15 đã ghi nếu còn lệch.
 - Số gạch bỏ/sửa tay: mỗi số mới đã ghép với số cũ nó thay (ghi bảng cũ → mới); khoảng cách từng đoạn trong file khớp số ghi giữa hai vạch (không chỉ khớp tổng).
 - Kegaki: lập bảng (tấm nhận × chi tiết hàn lên): vẽ/bỏ, lý do, từng cạnh vết trùng mép tấm hay nằm trong tấm, số đo pixel kiểm ≥ 2 hình (≤ 1 mm). Không tấm nào có chi tiết hàn lên mà chưa xét.
-- So kích thước phôi với CAD依頼書 và công thức giãn; cạnh thẳng áp cả Ox và Oy; số entity hợp lý (cung nửa tròn là 1 ARC; các cung tiếp nối cùng tâm cùng bán kính gộp làm 1); mọi góc lõm vách–tấm đã xét điều kiện rạch Green và đường uốn ngắt/chạy hết ở cánh có khe theo mục 6 (trừ 2 ngoại lệ mục 6: đầu cánh vát 135°, relief góc của khách); kiểm file theo mục 11.2 bước 8.
+- So kích thước phôi với CAD依頼書 và công thức giãn; cạnh thẳng áp cả Ox và Oy; số entity hợp lý (cung nửa tròn là 1 ARC; các cung tiếp nối cùng tâm cùng bán kính gộp làm 1); mọi góc lõm vách–tấm đã xét điều kiện rạch Green và đường uốn ngắt/chạy hết ở cánh có khe theo mục 6 (trừ 2 ngoại lệ mục 6: đầu cánh vát 135°, relief góc của khách); kiểm file theo mục 11.2 bước 8. Mỗi chỗ uốn ghi góc giữa hai cánh; góc ≤ 85° thì đã đo kích thước ngoài hiệu chỉnh mỗi cánh từ hình học thực (mục 5), không để kích thước danh nghĩa trong công thức phôi.
 
 ## 13. Chạy song song (đơn từ 4 chi tiết)
 - Đơn ≥ 4 chi tiết chạy song song (tối đa 2-3 subagent) theo `/mnt/project-files/tools/sheetmetal_kit/README.md`; đơn ≤ 3 làm tuần tự.

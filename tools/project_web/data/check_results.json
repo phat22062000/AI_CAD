@@ -18,5 +18,68 @@
    "dxf_check"
   ],
   "scriptAt": "2026-11-18T07:19:50Z"
+ },
+ "521119-09": {
+  "items": [
+   {
+    "code": "26-069990",
+    "level": "canhbao",
+    "text": "Ghi chú viết bằng tay không chắc chắn về nghĩa: ký hiệu カ/力 trong vòng tròn sau '伸び 4.18' và '1つ' cạnh mã vạch không rõ nghĩa (đã đọc 4.18 làm giãn, file dùng 4.18: phôi 100 x 99.82, 2 đường uốn cách 4.18).",
+    "src": "ai"
+   }
+  ],
+  "info": {
+   "26-070167": "Đối chiếu DXF khách: không đối chiếu được",
+   "26-069990": "Đối chiếu DXF khách: không đối chiếu được"
+  },
+  "scriptErr": [],
+  "scriptRan": [
+   "doi_chieu_khach",
+   "dxf_check"
+  ],
+  "scriptAt": "2026-11-19T03:22:50Z",
+  "at": "2026-11-19T03:31:41Z"
+ },
+ "521116-14": {
+  "items": [
+   {
+    "code": "26-068416",
+    "level": "canhbao",
+    "text": "không có cạnh thẳng áp Oy (chọn hướng có cạnh trên cả Ox và Oy, mục 10)",
+    "src": "script",
+    "tool": "dxf_check"
+   },
+   {
+    "code": "26-068416",
+    "level": "loi",
+    "text": "Sai kích thước lỗ (bao gồm cả lỗ mồi): 2 lỗ dài trên cánh đáy, PDF ghi 長穴 20x5 (tay; đo pixel ~20 dài x 5 rộng, tâm cách mép cuối cánh 15); file vẽ dài 15 x 5 (đoạn thẳng 10 + 2 R2.5, từ 7.5 đến 22.5 tính từ mép cuối cánh). Đề xuất dài 20 (từ 5 đến 25).",
+    "src": "ai"
+   },
+   {
+    "code": "26-068416",
+    "level": "canhbao",
+    "text": "Ghi chú viết bằng tay không chắc chắn về nghĩa: bảng in コーナーカット 3mm nhưng hình không đánh dấu góc nào; file bo R3 ở 4 góc lồi (2 góc đầu cánh, F, G), quy tắc laser SPCC 3.2 là R0.5. Chưa rõ R hay C và góc nào.",
+    "src": "ai"
+   },
+   {
+    "code": "26-068416",
+    "level": "canhbao",
+    "text": "Chuỗi kích thước không cộng đủ tổng, hoặc điểm đầu/cuối của số kích thước không phân biệt được sau khi đã đo pixel: tai nghiêng ghi 47/30/92°/83° không khép cùng 20/85/136/170; file D-E=46.2, góc E 94.6°, F 87.5°, E lệch ~0.8 mm so với 47/20.",
+    "src": "ai"
+   }
+  ],
+  "info": {
+   "26-068416": "Đối chiếu DXF khách: không có DXF khách",
+   "26-068417": "Đối chiếu DXF khách: không có DXF khách",
+   "26-068929": "Đối chiếu DXF khách: không có DXF khách",
+   "26-068783": "Đối chiếu DXF khách: không có DXF khách"
+  },
+  "scriptErr": [],
+  "scriptRan": [
+   "doi_chieu_khach",
+   "dxf_check"
+  ],
+  "scriptAt": "2026-11-19T03:38:16Z",
+  "at": "2026-11-19T03:50:02Z"
  }
 }

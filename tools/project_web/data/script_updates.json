@@ -17,5 +17,24 @@
    }
   ],
   "skipped": []
+ },
+ {
+  "id": "20261119120236_updscript",
+  "archived": [
+   "068416-068417-ranh-tong-dai.md"
+  ],
+  "at": "2026-11-19T05:06:09Z",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\script_backup\\20261119120236_updscript",
+  "changes": [
+   {
+    "proposal": "068416-068417-ranh-tong-dai.md",
+    "file": "tools\\dxf_check.py",
+    "lines": "7, 14, 268-286 (check_part), --slot trong main",
+    "old": "(thêm mới)",
+    "new": "Nhận dạng rãnh = vòng trong gồm 2 LINE song song bằng nhau + 2 ARC nửa tròn cùng R; in THÔNG TIN '<mã>: rãnh tâm (x; y), tổng dài L x rộng W (tâm-tâm D)' (L = D + 2R). Thêm --slot NxM (lặp được): LỖI 'rãnh ghi NxM nhưng DXF có ...' nếu hình có rãnh mà không rãnh nào khớp (sai số 0.01).",
+    "test": "36 file: F 068416/068417 với --slot 20x5 báo LỖI (15x5), thoát 1; T không báo, thoát 0; 32 file ALL chỉ thêm dòng THÔNG TIN rãnh, LỖI/CẢNH BÁO và mã thoát không đổi; thời gian 33.2s -> 32.2s."
+   }
+  ],
+  "skipped": []
  }
 ]

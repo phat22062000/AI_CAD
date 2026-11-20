@@ -130,5 +130,131 @@
    }
   ],
   "skipped": []
+ },
+ {
+  "id": "20261120115612_updskill",
+  "archived": [
+   "069742-goc-lom-xien-r3-cho-hoi-quy.md"
+  ],
+  "at": "2026-11-20T04:56:36Z",
+  "before": "2026.11.19-2",
+  "after": "2026.11.20-1",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261120115612_updskill",
+  "changes": [
+   {
+    "proposal": "069742-goc-lom-xien-r3-cho-hoi-quy.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "158",
+    "old": "- Góc đã vát C (135°) và góc lõm không bo (trừ thép ≥ 19t). Vát C vẽ thành đoạn chéo.",
+    "new": "- Góc đã vát C (135°) và góc lõm không bo (trừ thép ≥ 19t; trừ bản vẽ có ghi chú chung R trong cho chỗ uốn, kiểu 内側R3: góc lõm nơi cạnh xiên gặp gờ xét bo theo ghi chú đó, không rõ góc nào thì Flag 3). Vát C vẽ thành đoạn chéo."
+   }
+  ],
+  "skipped": []
+ },
+ {
+  "id": "20261120142805_updskill",
+  "archived": [],
+  "at": "2026-11-20T07:28:30Z",
+  "before": "2026.11.20-1",
+  "after": "2026.11.20-1",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261120142805_updskill",
+  "changes": [],
+  "skipped": [
+   {
+    "proposal": "070496-070497-070498-gan-vat-c3-kegaki.md",
+    "why": "Mâu thuẫn dòng 170 của SKILL.md dxf-sheetmetal: dòng đó nói tấm chạm một cạnh thì vẽ đúng đường chạm thật, không suy vết từ độ dày tấm; câu đề xuất lại nói vết trên tấm nằm trên tấm khác còn cộng độ dày tấm đỡ và đóng kín đầu vát. Phần 'tìm ghi chú C/R ở mọi hình chiếu trước khi áp R laser' còn chồng với dòng 160. Không tự chọn bên; chưa sửa SKILL.md, cần người quyết định. Phần (a) script: không có đề xuất."
+   }
+  ]
+ },
+ {
+  "id": "20261120143026_updskill",
+  "archived": [],
+  "at": "2026-11-20T07:30:43Z",
+  "before": "2026.11.20-1",
+  "after": "2026.11.20-1",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261120143026_updskill",
+  "changes": [],
+  "skipped": [
+   {
+    "proposal": "070496-070497-070498-gan-vat-c3-kegaki.md",
+    "why": "Mâu thuẫn với SKILL.md dòng 170 (\"không suy vết từ độ dày tấm\" so với đề xuất \"vết trên tấm nằm trên tấm khác còn cộng độ dày tấm đỡ\") và chồng với dòng 160 (tìm ghi chú R ở hình khác trước khi áp R laser). Quy tắc: có mâu thuẫn thì dừng, không tự chọn bên; cần Phát quyết định rồi viết lại đề xuất."
+   }
+  ]
+ },
+ {
+  "id": "20261120143400_updskill",
+  "archived": [],
+  "at": "2026-11-20T07:34:00Z",
+  "before": "2026.11.20-1",
+  "after": "2026.11.20-2",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261120143400_updskill",
+  "changes": [
+   {
+    "proposal": "(Phát yêu cầu trong luồng 26-070498, phần biên C3)",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "158",
+    "old": "- Góc đã vát C (135°) và góc lõm không bo (trừ thép ≥ 19t; trừ bản vẽ có ghi chú chung R trong cho chỗ uốn, kiểu 内側R3: góc lõm nơi cạnh xiên gặp gờ xét bo theo ghi chú đó, không rõ góc nào thì Flag 3). Vát C vẽ thành đoạn chéo.",
+    "new": "- Góc đã vát C (135°) và góc lõm không bo (trừ thép ≥ 19t; trừ bản vẽ có ghi chú chung R trong cho chỗ uốn, kiểu 内側R3: góc lõm nơi cạnh xiên gặp gờ xét bo theo ghi chú đó, không rõ góc nào thì Flag 3). Vát C vẽ thành đoạn chéo. TRƯỚC khi áp R laser cho góc lồi của biên, lập bảng từng góc (đỉnh | ghi chú C/R ở MỌI hình chiếu kể cả hình phụ, gồm chữ nhỏ có mũi tên ngắn sát chỗ tiếp giáp tấm khác, như C3 cạnh C30 | kết luận); góc chưa có kết luận thì đọc lại bản vẽ, không áp R mặc định."
+   }
+  ],
+  "skipped": []
+ },
+ {
+  "id": "20261120143900_updskill",
+  "archived": [],
+  "at": "2026-11-20T07:41:00Z",
+  "before": "2026.11.20-2",
+  "after": "2026.11.20-3",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261120143900_updskill",
+  "changes": [
+   {
+    "proposal": "070496-070497-070498-gan-vat-c3-kegaki.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "168",
+    "old": "- CHỈ kegaki phần tiếp xúc thật giữa hai chi tiết. Không chắc phần nào tiếp xúc thì xem thêm hình 3D (đâu chồng lên đâu, mặt nào áp mặt nào) trước khi quyết định vẽ hay bỏ. Dấu hiệu có vùng chồng: một chi tiết ghi cùng lúc tổng dài và phần nhô ra (hiệu số là phần chồng dưới chi tiết khác).",
+    "new": "- CHỈ kegaki phần tiếp xúc thật giữa hai chi tiết. Không chắc phần nào tiếp xúc thì xem thêm hình 3D (đâu chồng lên đâu, mặt nào áp mặt nào) trước khi quyết định vẽ hay bỏ. Dấu hiệu có vùng chồng: một chi tiết ghi cùng lúc tổng dài và phần nhô ra (hiệu số là phần chồng dưới chi tiết khác). Chi tiết hàn áp TOÀN BỘ mặt vào tấm nhận (gân; khác dòng 170 là chỉ chạm một cạnh) mà đầu áp có vát C hoặc bo R thì phần vát không tiếp xúc: vết ngắn đi đúng cạnh vát và đóng kín đầu đó, không kéo tới mép tấm kề; vết trên tấm đứng trên tấm đỡ bắt đầu từ mặt tấm đỡ (cách mép đúng độ dày tấm đỡ) rồi lùi thêm đúng số C."
+   }
+  ],
+  "skipped": []
+ },
+ {
+  "id": "20261120144238_updskill",
+  "archived": [
+   "070723-070724-goc-kich-thuoc-mep-tab.md"
+  ],
+  "at": "2026-11-20T07:42:58Z",
+  "before": "2026.11.20-3",
+  "after": "2026.11.20-4",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261120144238_updskill",
+  "changes": [
+   {
+    "proposal": "070723-070724-goc-kich-thuoc-mep-tab.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "33",
+    "old": "  - PHẢI tính từ chuỗi kích thước ghi trên bản vẽ, tính từ một mép chuẩn. Bản vẽ lắp (lỗ ghi kích thước tới tấm khác): quy đổi qua kích thước các tấm liên quan.",
+    "new": "  - PHẢI tính từ chuỗi kích thước ghi trên bản vẽ, tính từ một mép chuẩn. Gốc của mỗi kích thước là chân đường gióng thực của nó: các kích thước song song có chung chân gióng thì cùng gốc, KHÔNG lấy gốc là mép tab/bậc nhỏ nằm gần cạnh cần định vị (kích thước riêng của tab là một đoạn khác). Xác định hai chân gióng trước khi tính; dựng xong đo ngược từ cạnh vừa vẽ về đúng đường gióng gốc. Bản vẽ lắp (lỗ ghi kích thước tới tấm khác): quy đổi qua kích thước các tấm liên quan."
+   }
+  ],
+  "skipped": []
+ },
+ {
+  "id": "20261120154449_updskill",
+  "archived": [
+   "070728-kich-thuoc-tam-duong-uon-phia-tam.md"
+  ],
+  "at": "2026-11-20T08:45:29Z",
+  "before": "2026.11.20-4",
+  "after": "2026.11.20-5",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261120154449_updskill",
+  "changes": [
+   {
+    "proposal": "070728-kich-thuoc-tam-duong-uon-phia-tam.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "112",
+    "old": "- Đường uốn: mỗi chỗ uốn 2 LINE DASHED (không vẽ 1 đường giữa). Đường 1 cách mép phôi bên này = ngoài cánh bên này; đường 2 cách mép bên kia = ngoài cánh bên kia; khoảng giữa = giãn. Ví dụ L 37 + 60, giãn 5.2, phôi 91.8: đường tại 37 và 31.8. Nhiều chỗ uốn (chữ U...): mỗi cặp đặt tại (vị trí giữa ± giãn/2), vị trí giữa = ngoài cánh - giãn/2 tính từ mép xa.",
+    "new": "- Đường uốn: mỗi chỗ uốn 2 LINE DASHED (không vẽ 1 đường giữa). Đường 1 cách mép phôi bên này = ngoài cánh bên này; đường 2 cách mép bên kia = ngoài cánh bên kia; khoảng giữa = giãn. Ví dụ L 37 + 60, giãn 5.2, phôi 91.8: đường tại 37 và 31.8. Nhiều chỗ uốn (chữ U...): mỗi cặp đặt tại (vị trí giữa ± giãn/2), vị trí giữa = ngoài cánh - giãn/2 tính từ mép xa. Mỗi chỗ uốn có hai đường nên phải chọn đúng phía làm gốc: kích thước chiều cao cánh đo từ đường phía cánh; kích thước thuộc chuỗi của tấm (bề rộng tấm, ô cắt/bậc/khe ở mép tấm, vị trí lỗ ghi từ mép ngoài của tấm) đo từ đường phía tấm (cách mép cánh = ngoài cánh - giãn), chênh nhau đúng một độ giãn. Dựng xong đo ngược về đúng đường phía tấm."
+   }
+  ],
+  "skipped": []
  }
 ]

@@ -319,6 +319,10 @@ body.od-open{overflow:hidden}
 .job-h,.job>.path{cursor:pointer}
 .job-h:hover{background:var(--sunk)}
 .fl-ref{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tpl-chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px}      /* mẫu câu: các nút viên thuốc phía trên ô trả lời, bấm để dán xuống ô */
+.tpl-chip{padding:6px 14px;border-radius:999px;border:1px solid var(--line-2);background:transparent;color:var(--tx-2);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.tpl-chip:hover{background:var(--sunk);color:var(--tx);border-color:var(--tx-3)}
+.tpl-chip[disabled]{opacity:.5;cursor:default}
 .ref-chip{display:inline-flex;align-items:center;gap:2px;max-width:100%;padding:2px 2px 2px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line-2);font:500 12px var(--mono);color:var(--tx)}
 .ref-chip .ell{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
 .ref-chip .ib{width:20px;height:20px}
@@ -424,6 +428,7 @@ label.btn{cursor:pointer}
 .cd-note:focus{border-color:var(--run);box-shadow:0 0 0 3px color-mix(in srgb,var(--run) 18%,transparent)}
 .od-flags .fl-c{display:flex;flex-direction:column;gap:6px;padding-bottom:10px;border-bottom:1px solid color-mix(in srgb,var(--warn-tx) 25%,transparent)}
 .od-flags .fl-c:last-child{border-bottom:0;padding-bottom:0}
+.od-flags:has(.fl-c){background:none;padding:0}      /* khung Flag trả lời được: bỏ nền vàng, giữ chữ vàng (mã và nội dung Flag) */
 .fl-ans{width:100%;resize:vertical;min-height:64px;border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;background:var(--panel);color:var(--tx);font-size:13px;line-height:1.5;outline:0}
 .fl-ans:focus{border-color:var(--run);box-shadow:0 0 0 3px color-mix(in srgb,var(--run) 18%,transparent)}
 .fl-ans:disabled{opacity:.6}

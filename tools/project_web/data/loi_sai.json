@@ -218,5 +218,110 @@
   "nguyen_nhan": "Rãnh: script vẽ lại dựng cung ở cx ± 5 thay vì cx ± 7.5 (log, lần vẽ đầu đúng); lỗ M3: suy đoán, AI đọc 通し穴 M3 là lỗ thông φ3.4 thay vì lỗ mồi ren φ2.5.",
   "nguon": "T/F",
   "khop": 58.3
+ },
+ "521118-06_26-069742": {
+  "loi": [
+   "Góc lõm (330.69; 128.64) nơi cạnh xiên 122.6 gặp gờ rộng 12: F vẽ góc nhọn, T bo cung R3.",
+   "Góc lõm (312.69; 133.9) nơi cạnh xiên 168 gặp gờ rộng 12: F vẽ góc nhọn, T bo cung R3.",
+   "Gờ rộng 12 phía phải lệch trục X: F x 314.96 đến 326.96, T x 315.69 đến 327.69 (lệch 0.73).",
+   "Khe 18.3 cạnh gờ lệch X: F cung R3 tâm (329.96; 15) và (348.26; 15), T tâm (330.83; 15) và (349.13; 15) (lệch 0.87); cung đầu khe xiên F tâm (367.14; 15), T (367.24; 15).",
+   "Cửa sổ tam giác 92.5: cạnh phải F x 314.96 trùng đường với cạnh gờ, T x 314.93 và gờ ở x 315.69 (hở 0.76); cạnh T nghiêng nhẹ khoảng 0.1 độ, F thẳng lý tưởng."
+  ],
+  "loai": [
+   "Thiếu góc bo R",
+   "Sai vị trí lỗ"
+  ],
+  "at": "2026-11-20T04:46:52Z",
+  "nguyen_nhan": "Suy đoán: bản vẽ chỉ có ghi chú chung 内側R3 (mọi chỗ uốn không chỉ định bo trong R3) và hai góc xiên gặp gờ vẽ nhọn không số R, F không bo; lệch 0.7 đến 0.9 mm của cụm khe phải chưa có bằng chứng từ bản vẽ",
+  "nguon": "T/F",
+  "khop": 48.5
+ },
+ "521120-07_26-070496": {
+  "loi": [
+   "Kegaki gân ③ trên tấm nền (x 89 đến 95): T vẽ khung kín 6 x 47 (y 39 đến 86, cách mép y = 89 là 3), F vẽ 6 x 50 chạy tới mép y = 89 và thiếu đường đóng đầu (89; 86)-(95; 86)."
+  ],
+  "loai": [
+   "Sai kegaki"
+  ],
+  "at": "2026-11-20T06:26:37Z",
+  "nguyen_nhan": "Bỏ sót C3 của gân ③ ghi ở hình chiếu đáy: F áp R2 laser mặc định cho góc đó và dựng vết kegaki đủ cạnh gân; số liệu T khớp vết ngắn đi 3 (suy ra từ T, chưa có xác nhận bằng lời).",
+  "nguon": "T/F",
+  "khop": 85.7
+ },
+ "521120-07_26-070497": {
+  "loi": [
+   "Kegaki gân ③ trên tấm đứng (x 44 đến 50): T vẽ khung kín 6 x 32 (y 9 đến 41, tức độ dày 6 cộng 3), F vẽ 6 x 35 (y 6 đến 41)."
+  ],
+  "loai": [
+   "Sai kegaki"
+  ],
+  "at": "2026-11-20T06:26:37Z",
+  "nguyen_nhan": "Bỏ sót C3 của gân ③ ghi ở hình chiếu đáy: F áp R2 laser mặc định cho góc đó và dựng vết kegaki đủ cạnh gân; số liệu T khớp vết ngắn đi 3 (suy ra từ T, chưa có xác nhận bằng lời).",
+  "nguon": "T/F",
+  "khop": 76.9
+ },
+ "521120-07_26-070498": {
+  "loi": [
+   "Góc gân ghi C3 (góc dưới trái, tâm (2; 2) của F): T vẽ đoạn vát (0; 3)-(3; 0), F vẽ cung R2 tâm (2; 2) nối hai cạnh thay vì vát 3 x 3."
+  ],
+  "loai": [
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-20T06:26:37Z",
+  "nguyen_nhan": "Bỏ sót C3 của gân ③ ghi ở hình chiếu đáy: F áp R2 laser mặc định cho góc đó và dựng vết kegaki đủ cạnh gân; số liệu T khớp vết ngắn đi 3 (suy ra từ T, chưa có xác nhận bằng lời).",
+  "nguon": "T/F",
+  "khop": 62.5
+ },
+ "521120-07_26-070499": {
+  "loi": [
+   "Kegaki gân trên tấm đáy (y 29.5 đến 35.5): T vẽ x từ 4 đến 50 (lùi 0.22 khỏi đường uốn x = 50.22), F vẽ 4 đến 50.22 chạm đường uốn.",
+   "Kegaki gân trên tấm đứng: T vẽ x từ 60.22 đến 90.44 (lùi 0.22 khỏi đường uốn x = 60), F vẽ 60 đến 90.44; T có thêm các đường đóng đầu (T 24 entity, F 22)."
+  ],
+  "loai": [
+   "Sai kegaki"
+  ],
+  "at": "2026-11-20T06:26:38Z",
+  "nguyen_nhan": "Suy đoán: bản đúng lùi vết 0.22 mm khỏi đường uốn, không đọc được từ bản vẽ; lệch nhỏ cỡ dung sai vẽ, chưa có bằng chứng.",
+  "nguon": "T/F",
+  "khop": 78.3
+ },
+ "521120-15_26-070723": {
+  "loi": [
+   "Bậc khoét R20 bên phải: F đặt cạnh ngang ở y = 147.86 (cách mép trên 55), T đặt ở y = 132.86 (cách mép trên 70, tức 55 tính từ vết kegaki y = 77.86).",
+   "Cạnh đứng x = 240 và cung R20 F dừng ở y = 167.86 / tâm (260; 167.86), T ở y = 152.86 / tâm (260; 152.86): cả bậc khoét lệch lên 15 mm so với T; vòng R0.5 ở x = 340 lệch tương ứng (F 147.36, T 132.36). Các lỗ, bo R10, kegaki, khung bao 340 x 202.86 khớp."
+  ],
+  "loai": [
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-20T07:34:06Z",
+  "nguyen_nhan": "Kích thước 55 có đường gióng dưới trùng đường uốn (cùng gốc với 125 và 120), F lấy 55 từ mép tab nhô 15 mm nên bậc khoét lệch 15 mm.",
+  "nguon": "T/F",
+  "khop": 75.0
+ },
+ "521120-15_26-070724": {
+  "loi": [
+   "Bậc khoét R20 bên phải (cặp gương của 070723): F đặt cạnh ngang ở y = 55 (cách mép dưới 55), T đặt ở y = 70 (55 tính từ vết kegaki y = 125 phía trên, tức cách mép dưới 70).",
+   "Cạnh đứng x = 240 và cung R20 F dừng ở y = 35 / tâm (260; 35), T ở y = 50 / tâm (260; 50): cả bậc khoét lệch 15 mm so với T; vòng R0.5 ở x = 340 lệch tương ứng (F 55.5, T 70.5). Các lỗ, bo R10, kegaki, khung bao 340 x 202.86 khớp."
+  ],
+  "loai": [
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-20T07:34:06Z",
+  "nguyen_nhan": "Kích thước 55 có đường gióng dưới trùng đường uốn (cùng gốc với 125 và 120), F lấy 55 từ mép tab nhô 15 mm nên bậc khoét lệch 15 mm.",
+  "nguon": "T/F",
+  "khop": 75.0
+ },
+ "521120-17_26-070728": {
+  "loi": [
+   "Ô cắt góc ở 4 góc (sâu 10): F đặt cạnh đứng của ô tại x = 15 và x = 680.72 (tức 5 tính từ đường uốn phía cánh x = 10 / 685.72), T đặt tại x = 12.86 và x = 682.86 (5 tính từ đường uốn phía tấm x = 7.86 / 687.86, chân kích thước 680): ô cắt F rộng hơn T đúng 2.14 (bằng độ giãn) mỗi bên.",
+   "Vòng R0.5 ở đáy ô cắt: F tâm x = 15.5 và 680.22, T tâm x = 13.36 và 682.36; mép dưới/trên F từ x = 15.5 tới 680.22 (664.72), T từ 13.36 tới 682.36 (669). Khung bao 695.72 x 460, lỗ (không có), đường uốn và kegaki khớp, nên kiểm khung bao không bắt được."
+  ],
+  "loai": [
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-20T08:13:10Z",
+  "nguyen_nhan": "Kích thước 5 thuộc chuỗi 680 của tấm (chân 680 là mép ngoài danh nghĩa = đường uốn phía tấm, cách mép phôi 10 - 2.14 = 7.86), F lại tính 5 từ đường uốn phía cánh (cách mép phôi đúng 10) nên ô cắt lệch đúng độ giãn 2.14.",
+  "nguon": "T/F",
+  "khop": 41.7
  }
 }

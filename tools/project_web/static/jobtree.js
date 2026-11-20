@@ -69,9 +69,10 @@ function jtCurrent(codes, by, now) {
   return open.reduce((best, c) => (best === null || jtStage(by[c]) > jtStage(by[best]) ? c : best), null);
 }
 function jtMood(w, codes, by, live) {
-  if (!live || w.state === 'WAIT') return 'sleep';
+  if (w.state === 'WAIT' || (!live && w.state !== 'DONE')) return 'sleep';
   if (w.state === 'DONE') {
-    return codes.every((c) => ['PASS', 'MANUAL'].includes((by[c] || {}).status)) ? 'ok' : 'review';   // as in the approved demo
+    if (codes.every((c) => ['PASS', 'MANUAL'].includes((by[c] || {}).status))) return 'ok';
+    return w.quiet ? 'sleep' : 'review';   // PREVIEW: sau 3 phút không phản hồi thì đổi sang "Chờ"
   }
   if (w.act_at && Date.now() / 1000 - w.act_at > JT_IDLE_S) return 'sleep';
   return JT_MOODS[w.mood] ? w.mood : 'think';

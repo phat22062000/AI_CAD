@@ -7,6 +7,7 @@ const LS = {get(k, d){try{const v = localStorage.getItem(k); return v == null ? 
 
 const ST = {chua:'Chưa làm', dang:'Đang làm', xong:'Đã xong', cho:'Đang chờ khách trả lời', tay:'Tự làm', thieu:'Thiếu file'};
 const RV = {cho:'Chờ check', dung:'Đúng', sai:'Sai'};
+const FU_TPLS = ['Đã có file trả lời của khách hàng'];      // mẫu câu chọn ở phía trên ô trả lời Flag, chọn mới dán xuống ô
 const S = {data:null, reviews:{}, oFilter:'all', oDate:(() => {const t = new Date(), p = n => String(n).padStart(2, '0'); return {d:p(t.getDate()), m:p(t.getMonth() + 1), y:String(t.getFullYear())}})(), oQ:'', sel:null, rsel:null, rOpen:new Set(), drafts:{}, plan:null, manual:null, compare:{}, packMsg:{}, oLimit:60,
            lsl:[], lFilter:'all', lQ:'', rFilter:LS.get('pw-rf','cho'), rDate:{d:'', m:'', y:''}, rQ:'', cGroup:LS.get('pw-cg','ngay')};
 
@@ -175,6 +176,7 @@ function renderProgress(){
   // agents: một sơ đồ cho mỗi đơn có agent chạy (hoặc xong trong 12 giờ qua)
   const runs = buildRuns();
   $('#a-n').textContent = runs.filter(r => r.status === 'RUNNING').length;
+  notifyDone(runs);
   patchRunning(runs);
 
   // filters
@@ -200,6 +202,26 @@ function renderProgress(){
 /* ---------- sơ đồ agent (jobtree.js của dashboard mẫu) ---------- */
 // Dữ liệu tiến độ (orders/agents/parts như CLAUDE.md) -> dạng "run" mà jobtree.js vẽ.
 const secs = iso => iso ? Math.round(t(iso) / 1000) : null;
+const DONE_QUIET_MS = 3 * 60e3;
+// Đơn vừa chuyển từ đang chạy sang xong: đưa trang giám sát lên trên màn hình (cửa sổ trình duyệt + thông báo + nháy tiêu đề tab)
+const liveSeen = new Map(); const baseTitle = document.title;
+function notifyDone(runs){
+  let hit = null;
+  runs.forEach(r => {
+    if (liveSeen.get(r.id) === true && r.status !== 'RUNNING') hit = r;
+    liveSeen.set(r.id, r.status === 'RUNNING');
+  });
+  if (!hit) return;
+  const allPass = hit.codes_status.length && hit.codes_status.every(c => c.status === 'PASS' || c.status === 'MANUAL');
+  const label = allPass ? 'Xong · PASS' : 'Xong · cần xem';
+  try { window.focus(); } catch (e) {}
+  fetch('/api/raise', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'}).catch(() => {});
+  try { if ('Notification' in window && Notification.permission === 'granted') new Notification(label + ' · đơn ' + hit.job); } catch (e) {}
+  toast(label + ' · đơn ' + hit.job);
+  document.title = '✔ ' + label + ' ' + hit.job;
+  const back = () => { document.title = baseTitle; window.removeEventListener('focus', back); };
+  window.addEventListener('focus', back);
+}
 function buildRuns(){
   const now = Date.now(), byOrder = new Map();
   S.data.agents.forEach(a => { if (a.order) (byOrder.get(a.order) || byOrder.set(a.order, []).get(a.order)).push(a); });
@@ -209,7 +231,7 @@ function buildRuns(){
     const last = Math.max(...ags.map(a => t(a.finishedAt || a.heartbeatAt || a.startedAt) || 0));
     if (!live && now - last > 12 * 3600e3) return;
     const o = S.data.orders.find(x => x.order === order) || {order, codes:[], path:'', customer:''};
-    if (!live && o.state === 'xong') return;     // đơn đã xong hoàn toàn: ẩn, chỉ hiện đơn đang chạy hoặc đang chờ
+    if (!live && o.state === 'xong' && now - last > DONE_QUIET_MS) return;     // đơn xong hết (PASS): hiện thêm 3 phút để người dùng thấy, sau đó ẩn
     const main = ags.find(a => a.kind === 'main') || {};
     const subs = ags.filter(a => a.kind !== 'main');
     const codes_status = o.codes.map(c => ({
@@ -219,7 +241,7 @@ function buildRuns(){
       flags:c.flags.length,
     }));
     const wk = a => ({name:a.name || a.id, model:a.model || '', effort:a.effort || '', codes:a.codes || [],
-      state:a.state === 'running' && !a.lost ? 'RUN' : a.state === 'running' ? 'WAIT' : 'DONE',
+      state:a.state === 'running' && !a.lost ? 'RUN' : a.state === 'running' ? 'WAIT' : 'DONE', quiet:!live && now - last > DONE_QUIET_MS,   // quiet: xong quá 3 phút không ai phản hồi -> robot PREVIEW đổi sang "Chờ"
       now:a.current ? [a.current] : (a.kind === 'main' ? (o.codes.filter(c => c.pstatus === 'running').sort((x, y) => (y.startedAt || '').localeCompare(x.startedAt || ''))[0] ? [o.codes.filter(c => c.pstatus === 'running').sort((x, y) => (y.startedAt || '').localeCompare(x.startedAt || ''))[0].code] : []) : []), mood:a.mood, act:a.act || (a.kind === 'main' ? a.phase : ''), act_at:secs(a.actAt || a.heartbeatAt)});
     // Đơn có subagent mà agent chính cũng tự vẽ mã (theo phân công): hiện thêm một làn "Agent chính" cùng các subagent
     const jp = (S.data.jobs || []).filter(j => j.order === order && j.plan && j.kind !== 'tiep').sort((x, y) => (x.at || '').localeCompare(y.at || '')).pop();
@@ -384,7 +406,8 @@ function orderDrawer(o){
   const flagged = o.codes.filter(c => c.flags.length);
   const flagHtml = flagged.length
     ? flagged.map(c => `<div class="fl-c">${c.flags.map((f, i) => `<div class="fl"><b class="mono">${i ? '' : esc(c.code)}</b><span>${esc(f)}</span></div>`).join('')}
-        <textarea class="fl-ans" data-c="${esc(c.code)}" rows="3" ${busy ? 'disabled' : ''} placeholder="Trả lời Flag của mã ${esc(c.code)} để agent vẽ lại (vd: mặt kegaki là mặt trên, vẽ thêm tấm D)">${esc(draft[c.code] || '')}</textarea>
+        <div class="tpl-chips">${FU_TPLS.map(t => `<button type="button" class="tpl-chip" data-tpl="${esc(t)}" data-c="${esc(c.code)}" ${busy ? 'disabled' : ''} title="Bấm để dán câu này vào ô trả lời bên dưới">${esc(t)}</button>`).join('')}</div>
+        <textarea class="fl-ans" data-c="${esc(c.code)}" rows="3" ${busy ? 'disabled' : ''}>${esc(draft[c.code] || '')}</textarea>
         <div><button class="btn btn-pri sm" data-pvok="1" data-code="${esc(c.code)}" data-order="${esc(o.order)}" title="Hình dựng hiện tại đã đúng: mã tính là xong, bỏ Flag, không cần check lại">Preview OK</button></div></div>`).join('')
     : o.flags.map(f => `<div class="fl"><span>${esc(f)}</span></div>`).join('');
   const nFlag = flagged.reduce((n, c) => n + c.flags.length, 0) || o.flags.length;
@@ -412,6 +435,20 @@ function orderDrawer(o){
       <button class="btn btn-pri" data-fu="${esc(o.order)}" ${busy ? 'disabled' : ''}><svg class="i"><use href="#i-check"/></svg>Gửi cho agent làm tiếp</button>
       <span class="t3">${busy ? '' : (cli ? 'Agent tự chạy ngay, chỉ vẽ lại các mã bạn đã trả lời.' : 'Đưa vào hàng đợi; nói với agent "Xử lý hàng đợi" để chạy.')}</span>
     </div>${fuMsg ? `<p class="hint">${esc(fuMsg)}</p>` : ''}` : '';
+  // Làm lại một mã BẤT KỲ (kể cả mã đã xong / đã giao khách) theo thông tin bổ sung của khách
+  const rd = (S.redoDraft = S.redoDraft || {})[o.order] || {};
+  const rdc = o.codes.find(c => c.code === rd.code) || {}, rdFiles = rdc.refs || [], rdOff = busy || !rd.code;
+  const redoHtml = o.codes.length ? `<h3>Làm lại mã với thông tin bổ sung</h3>
+      <div class="fl-c">
+        <div class="fl-ref" style="flex-wrap:nowrap">
+          <select class="rd-code" ${busy ? 'disabled' : ''} title="Mã cần làm lại" style="flex:none;width:auto;max-width:100%"><option value="">Chọn mã cần làm lại…</option>${o.codes.map(c => `<option value="${esc(c.code)}" ${rd.code === c.code ? 'selected' : ''}>${esc(c.code)}${c.packed ? ' (đã đóng gói)' : c.state === 'xong' ? ' (đã xong)' : ''}</option>`).join('')}</select>
+          <button type="button" class="btn btn-sec sm" style="flex:none" data-refpick="${esc(rd.code || '')}" data-order="${esc(o.order)}" ${rdOff ? 'disabled' : ''} title="${rd.code ? 'Mở thư mục đơn để chọn file PDF hoặc DXF khách gửi (tối đa 25 MB/file)' : 'Chọn mã trước'}">Đính kèm PDF/DXF</button><input type="file" class="ref-file" hidden multiple accept=".pdf,.dxf" data-c="${esc(rd.code || '')}" data-order="${esc(o.order)}" ${rdOff ? 'disabled' : ''}></div>
+        ${rdFiles.length ? `<div class="fl-ref" style="margin-top:6px">${rdFiles.map(n => `<span class="ref-chip" title="${esc(n)}"><span class="ell">${esc(n)}</span><button class="ib" data-refdel="${esc(rd.code)}" data-order="${esc(o.order)}" data-name="${esc(n)}" ${busy ? 'disabled' : ''} title="Xoá file này"><svg class="i"><use href="#i-x"/></svg></button></span>`).join('')}</div>` : ''}
+        <div class="fl-send" style="margin-top:6px">
+          <button class="btn btn-pri" data-redo="${esc(o.order)}" ${rdOff || !rdFiles.length ? 'disabled' : ''}><svg class="i"><use href="#i-redo"/></svg>Làm lại mã này</button>
+          <span class="t3">${busy ? 'Đang có việc làm tiếp của đơn này, chờ xong rồi gửi.' : !rd.code ? '' : !rdFiles.length ? 'Đính kèm ít nhất một file của khách.' : ''}</span>
+        </div>${fuMsg ? `<p class="hint">${esc(fuMsg)}</p>` : ''}
+      </div>` : '';
   return `<div class="od-h">
       <button class="jid opo" data-openorder="${esc(o.order)}" title="Mở thư mục đơn">${esc(o.order)}</button>${chip(o.state, ST[o.state])}${o.urgent ? `<span class="tag t-warn">${esc(o.urgent)}</span>` : ''}
       <span class="sp"></span><button class="ib" data-odclose title="Đóng (Esc)"><svg class="i"><use href="#i-x"/></svg></button>
@@ -427,7 +464,7 @@ function orderDrawer(o){
         ${o.user ? kv('Người chạy', esc(o.user)) : ''}
         ${kv('Agent', o.agents.length ? o.agents.map(esc).join(', ') : '—')}
         ${kv('Thời gian', `${tm.txt}${tm.tip ? ` <span class="t3">(${esc(tm.tip)})</span>` : ''}`)}
-        ${kv('Token đã dùng', o.tokens && o.tokens.n ? `<b>${fmtTok(o.tokens.input + o.tokens.output + o.tokens.cacheRead + o.tokens.cacheWrite)}</b> <span class="t3">(ra ${fmtTok(o.tokens.output)} · vào ${fmtTok(o.tokens.input)} · cache đọc ${fmtTok(o.tokens.cacheRead)} · cache ghi ${fmtTok(o.tokens.cacheWrite)}; ${[['ve', 'vẽ'], ['tiep', 'làm tiếp'], ['check', 'check']].filter(([k]) => o.tokens.by[k]).map(([k, n]) => n + ' ' + o.tokens.by[k] + ' lần').join(', ')}${o.tokens.miss ? '; ' + o.tokens.miss + ' lần chạy chưa có số liệu' : ''})</span>` : o.tokens ? '<span class="t3">Có ' + o.tokens.miss + ' lần chạy nhưng chưa có số liệu (đang chạy, bị dừng giữa chừng hoặc mất file log)</span>' : '<span class="t3">Chưa có số liệu (đơn chưa chạy qua nút giao việc của web)</span>')}
+        ${kv('Chi phí', o.tokens && o.tokens.n ? `<b>${(o.tokens.cost || 0).toFixed(2).replace('.', ',')} USD</b> <span class="t3">(${[['ve', 'vẽ'], ['tiep', 'làm tiếp'], ['check', 'check']].filter(([k]) => o.tokens.by[k]).map(([k, n]) => n + ' ' + o.tokens.by[k] + ' lần').join(', ')}${o.tokens.miss ? '; ' + o.tokens.miss + ' lần chạy chưa có số liệu' : ''})</span>` : o.tokens ? '<span class="t3">Có ' + o.tokens.miss + ' lần chạy nhưng chưa có số liệu (đang chạy, bị dừng giữa chừng hoặc mất file log)</span>' : '<span class="t3">Chưa có số liệu (đơn chưa chạy qua nút giao việc của web)</span>')}
         ${kv('File', `${o.hasAll ? 'Đã có file ALL' : 'Chưa có file ALL'}${o.partFiles ? ' · ' + o.partFiles + ' file DXF riêng' : ''}${o.pdf ? ' · có PDF' : ''}`)}
         ${kv('File mới nhất', hm(o.lastFileAt))}
       </dl>
@@ -435,6 +472,7 @@ function orderDrawer(o){
       ${codes ? `<table class="od-t"><thead><tr><th>Mã</th><th>Dày</th><th>Kích thước</th><th>Trạng thái</th></tr></thead><tbody>${codes}</tbody></table>`
         : '<div class="empty">Không đọc được danh sách mã (thiếu file 依頼.xlsx).</div>'}
       ${nFlag ? `<h3>Flag <span class="n">${nFlag}</span></h3><div class="od-flags">${flagHtml}</div>${fuHtml}` : ''}
+      ${redoHtml}
       ${checkBlock(o)}
       ${packHtml}
       ${archHtml}
@@ -537,8 +575,10 @@ function fillDate(sel, dates, cur){
 /* ---------- MỤC 2: ĐÁNH GIÁ AI ---------- */
 // Một đơn đã xong: nếu đã có chấm từng mã thì dùng; nếu chưa và có file NTMF cũ thì dùng số liệu đó.
 function reviewOrders(){
-  return S.data.orders.filter(o => o.state === 'xong' && o.codes.length).map(o => {
-    const rows = o.codes.map(c => {   // gồm cả mã người dùng tự làm (có thể AI làm sai nên mới tự làm) để tính vào đánh giá
+  // Mã xong (state xong / tay) vào Lưu trữ ngay, đơn chưa xong hết vẫn hiện với các mã đã xong; mã còn lại tự vào khi xong
+  const fin = o => o.codes.filter(c => c.state === 'xong' || c.state === 'tay');
+  return S.data.orders.filter(o => (o.state === 'xong' && o.codes.length) || fin(o).length).map(o => {
+    const rows = (o.state === 'xong' ? o.codes : fin(o)).map(c => {   // gồm cả mã người dùng tự làm (có thể AI làm sai nên mới tự làm) để tính vào đánh giá
       const r = S.reviews[o.order + '_' + c.code];
       return {code:c.code, manual:!!c.manual, thick:c.thick, material:c.material, size:c.size, status:r ? r.status : 'cho', note:r ? r.note : '', by:r ? r.by : '', at:r ? r.at : ''};
     });
@@ -991,12 +1031,41 @@ document.addEventListener('click', e => {
     api('/api/sualoi', {order, code}).then(r => { toast(r.result.ok ? (r.result.created ? 'Đã tạo Sua_loi và chép file F' : 'Sua_loi đã có file F') : r.result.why); load(true); }, e2 => toast(e2.message));
     return;
   }
+  if (b.dataset.tpl) {   // bấm mẫu câu -> dán vào ô trả lời của mã đó (nối thêm nếu ô đã có chữ)
+    const ta = [...document.querySelectorAll('#od .fl-ans')].find(x => x.dataset.c === b.dataset.c);
+    if (ta && S.sel) {
+      if (!ta.value.includes(b.dataset.tpl)) ta.value = ta.value.trim() ? ta.value.trim() + '\n' + b.dataset.tpl : b.dataset.tpl;
+      (S.drafts[S.sel] = S.drafts[S.sel] || {})[b.dataset.c] = ta.value; ta.focus();
+    }
+    return;
+  }
+  if (b.dataset.refpick != null) {   // Đính kèm PDF/DXF: server mở hộp chọn file của Windows ngay tại thư mục đơn
+    if (!b.dataset.refpick) return;
+    const inp = b.parentElement.querySelector('.ref-file');
+    b.disabled = true; toast('Chọn file trong hộp thoại vừa mở (có thể nằm sau cửa sổ trình duyệt)...');
+    api('/api/ref/pick', {order:b.dataset.order, code:b.dataset.refpick}).then(r => { b.disabled = false; toast(r.names.length ? 'Đã đính kèm ' + r.names.join(', ') : 'Không chọn file nào'); load(true); },
+      e2 => { b.disabled = false; if (inp && /JSON|Unexpected|404|not found/i.test(String(e2.message))) { inp.click(); return; } toast(e2.message); });     // server cũ chưa có tính năng này: dùng hộp chọn file của trình duyệt
+    return;
+  }
+  if (b.dataset.redo) {   // làm lại một mã bất kỳ theo file PDF/DXF khách gửi
+    const order = b.dataset.redo, rd = (S.redoDraft || {})[order] || {};
+    const od = S.data.orders.find(x => x.order === order), rc = ((od && od.codes) || []).find(c => c.code === rd.code);
+    if (!rd.code) return toast('Chưa chọn mã cần làm lại');
+    if (!rc || !(rc.refs || []).length) return toast('Chưa đính kèm file của khách');
+    if (!confirm('Làm lại mã ' + rd.code + ' của đơn ' + order + ' theo ' + rc.refs.length + ' file khách gửi?\n\n' + rc.refs.join('\n') + '\n\nAgent vẽ lại mã này (tốn token như vẽ một mã). Bản đã đóng gói trong Gui giữ nguyên; bản mới ghi vào thư mục đơn.')) return;
+    b.disabled = true;
+    const model = LS.get('pw-model', 'opus');
+    api('/api/jobs/followup', {order, answers:{[rd.code]: ''}, model, redo:true}).then(() => { delete S.redoDraft[order]; toast('Đã gửi làm lại mã ' + rd.code); load(true); },
+      e2 => { b.disabled = false; toast(e2.message); });
+    return;
+  }
   if (b.dataset.fu) {   // gửi các trả lời Flag cho agent làm tiếp
     const order = b.dataset.fu, answers = {};
     Object.entries(S.drafts[order] || {}).forEach(([c, t]) => { if (t.trim()) answers[c] = t.trim(); });
     const od = S.data.orders.find(x => x.order === order);
     ((od && od.codes) || []).forEach(c => { if (c.flags.length && c.refs && c.refs.length && !(c.code in answers)) answers[c.code] = ''; });   // mã chỉ đính kèm file tham khảo, không ghi chú
     if (!Object.keys(answers).length) return toast('Chưa nhập trả lời hoặc đính kèm file cho mã nào');
+    if (!confirm('Gửi cho agent làm tiếp ' + Object.keys(answers).length + ' mã?\n\n' + Object.entries(answers).map(([c, t]) => c + ': ' + t.slice(0, 80)).join('\n') + '\n\nMã không muốn làm thì xoá chữ trong ô trả lời của mã đó.')) return;
     b.disabled = true;
     const model = (document.querySelector('#od .fl-model') || {}).value || 'opus';
     LS.set('pw-model', model);
@@ -1264,7 +1333,10 @@ function setTheme(v){
 setTheme(LS.get('pw-theme', 'system'));
 if (!location.hash) location.hash = '#/tien-do';
 load();
-setInterval(() => { if (!document.hidden) load(); }, 15000);
+setInterval(() => load(), 5000);   // luôn tải (kể cả khi tab bị ẩn) để biết đơn vừa xong mà nhảy giao diện lên
+document.addEventListener('change', e => {   // nhớ mã đã chọn trong "Làm lại mã" khi trang tự làm mới
+  if (e.target && e.target.classList && e.target.classList.contains('rd-code') && S.sel) { ((S.redoDraft = S.redoDraft || {})[S.sel] = S.redoDraft[S.sel] || {}).code = e.target.value; renderDrawer(); }
+});
 document.addEventListener('change', e => {   // nhớ ô chọn đề xuất khi trang tự làm mới
   const c = e.target && e.target.closest && e.target.closest('.up-c');
   if (c) { S.upOff = S.upOff || new Set(); S.upOff[c.checked ? 'delete' : 'add'](c.dataset.f); }

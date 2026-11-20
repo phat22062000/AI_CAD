@@ -252,6 +252,45 @@ def add_ref(order, code, name, b64):
     return n
 
 
+def pick_refs(order, code):
+    """Nút "Đính kèm PDF/DXF": mở hộp chọn file của Windows ngay tại thư mục đơn (trình duyệt không cho trang web chọn thư mục mở sẵn),
+    rồi chép các file đã chọn vào <thư mục đơn>\\Tham_Khao\\<mã>\\ (chỉ chép, không đụng file gốc). Trả về danh sách tên đã chép."""
+    import subprocess
+    info = scan_orders().get(order or '')
+    d = _ref_path(info, code)
+    if not d:
+        raise ValueError('Không tìm thấy thư mục đơn hoặc mã không hợp lệ.')
+    if os.name != 'nt':
+        raise ValueError('Chỉ mở được hộp chọn file khi web chạy trên Windows.')
+    script = (
+        "[Console]::OutputEncoding=[Text.Encoding]::UTF8;"
+        "Add-Type -AssemblyName System.Windows.Forms;"
+        "$o=New-Object Windows.Forms.Form;$o.TopMost=$true;$o.ShowInTaskbar=$false;$o.StartPosition='CenterScreen';$o.Size=New-Object Drawing.Size(1,1);$o.Opacity=0;$o.Show();"
+        "$f=New-Object Windows.Forms.OpenFileDialog;$f.InitialDirectory=$env:AICAD_DIR;$f.Multiselect=$true;"
+        "$f.Title='Chọn file PDF/DXF của khách cho mã '+$env:AICAD_CODE;$f.Filter='PDF/DXF (*.pdf;*.dxf)|*.pdf;*.dxf';"
+        "if($f.ShowDialog($o) -eq 'OK'){$f.FileNames|ForEach-Object{[Console]::Out.WriteLine($_)}};$o.Close()")
+    env = dict(os.environ, AICAD_DIR=info['dir'], AICAD_CODE=code)
+    p = subprocess.run(['powershell', '-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-Command', script],
+                       capture_output=True, env=env, timeout=600)
+    picked = [x.strip() for x in (p.stdout or b'').decode('utf-8', 'replace').splitlines() if x.strip()]
+    if not picked:
+        return []                                 # bấm Huỷ
+    names = []
+    for src in picked:
+        n = _safe_name(os.path.basename(src))
+        if not n.lower().endswith(REF_EXT) or not os.path.isfile(src):
+            continue
+        if os.path.getsize(src) > REF_MAX:
+            raise ValueError(n + ' lớn hơn 25 MB.')
+        os.makedirs(d, exist_ok=True)
+        if n not in os.listdir(d) and len(os.listdir(d)) >= 10:
+            raise ValueError('Mỗi mã tối đa 10 file tham khảo, hãy xoá bớt.')
+        shutil.copy2(src, os.path.join(d, n))
+        names.append(n)
+    _cache['t'] = 0
+    return names
+
+
 def del_ref(order, code, name):
     info = scan_orders().get(order or '')
     d = _ref_path(info, code)
@@ -290,8 +329,28 @@ def _log_usage(j):
             continue
         mu = (ev.get('modelUsage') or {}).values()
         return {'input': sum(v.get('inputTokens', 0) for v in mu), 'output': sum(v.get('outputTokens', 0) for v in mu),
-                'cacheRead': sum(v.get('cacheReadInputTokens', 0) for v in mu), 'cacheWrite': sum(v.get('cacheCreationInputTokens', 0) for v in mu)}
+                'cacheRead': sum(v.get('cacheReadInputTokens', 0) for v in mu), 'cacheWrite': sum(v.get('cacheCreationInputTokens', 0) for v in mu),
+                'costUSD': round(float(ev.get('total_cost_usd') or 0), 4)}
     return None
+
+
+_logs_cache = {'t': 0, 'v': {}}
+
+
+def _order_logs():
+    """{số đơn: [(tên file log, 've'|'tiep'|'check')]} từ thư mục data/logs (tên <14 số>_<đơn>[_tiep|_check].jsonl). Cache 5 giây."""
+    if time.time() - _logs_cache['t'] < 5:
+        return _logs_cache['v']
+    out = {}
+    try:
+        for fn in os.listdir(os.path.join(DATA, 'logs')):
+            m = re.match(r'^\d{14}_(\d{6}-\d{2})(?:_(tiep|check))?\.jsonl$', fn)
+            if m:
+                out.setdefault(m.group(1), []).append((fn, m.group(2) or 've'))
+    except OSError:
+        pass
+    _logs_cache.update(t=time.time(), v=out)
+    return out
 
 
 def build_order(order, info, prog):
@@ -446,22 +505,37 @@ def build_order(order, info, prog):
         live = mainag.get('state') == 'running' and not lost(mainag, now)
         runs.append({'s': mainag['startedAt'], 'e': None if live else (mainag.get('finishedAt') or mainag.get('heartbeatAt'))})
     # token đã dùng cho đơn: cộng usage của mọi việc giao cho đơn này (vẽ, làm tiếp, tự check đọc mù)
-    tk = {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0, 'n': 0, 'by': {}, 'miss': 0}
+    tk = {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0, 'cost': 0.0, 'n': 0, 'by': {}, 'miss': 0}
     for j in prog.get('jobs', {}).values():
         if j.get('order') != order:
             continue
         u = j.get('usage')
-        if not isinstance(u, dict):
-            u = _log_usage(j)               # việc cũ chưa ghi usage: đọc lại từ file log
+        if not isinstance(u, dict) or ('costUSD' not in u and j.get('log')):
+            u = _log_usage(j) or u          # việc cũ chưa ghi usage (hoặc chưa có chi phí): đọc lại từ file log
         if not isinstance(u, dict):
             if j.get('kind') in (None, '', 'tiep', 'check') and j.get('status') in ('xong', 'loi'):
                 tk['miss'] += 1
             continue
         for k in ('input', 'output', 'cacheRead', 'cacheWrite'):
             tk[k] += int(u.get(k) or 0)
+        tk['cost'] += float(u.get('costUSD') or 0)
         tk['n'] += 1
         kd = j.get('kind') if j.get('kind') in ('check', 'tiep') else 've'
         tk['by'][kd] = tk['by'].get(kd, 0) + 1
+    # việc đã bị xoá khỏi progress.json (hoặc bản ghi cụt không có order): đọc token thẳng từ file log của đơn
+    known = {os.path.basename(str(j.get('log') or (jid + '.jsonl'))) for jid, j in prog.get('jobs', {}).items() if j.get('order') == order and isinstance(j.get('usage'), dict)}
+    for lg, kd in _order_logs().get(order, []):
+        if lg in known:
+            continue
+        u = _log_usage({'log': lg})
+        if not isinstance(u, dict) or not any(u.values()):
+            continue                        # log lỗi đăng nhập (401) hoặc chưa kết thúc: không có token
+        for k in ('input', 'output', 'cacheRead', 'cacheWrite'):
+            tk[k] += int(u.get(k) or 0)
+        tk['cost'] += float(u.get('costUSD') or 0)
+        tk['n'] += 1
+        tk['by'][kd] = tk['by'].get(kd, 0) + 1
+    tk['cost'] = round(tk['cost'], 2)
     return {
         'order': order,
         'runs': runs,
@@ -527,7 +601,7 @@ def snapshot(force=False):
             agents.append(a)
         agents.sort(key=lambda a: (a.get('state') != 'running', a.get('startedAt') or ''), reverse=False)
         jobs = [dict(j, id=k) for k, j in prog.get('jobs', {}).items()
-                if not (j.get('order') and j['order'] not in found and j.get('status') not in ('moi', 'nhan'))]   # việc đang chờ/đang chạy luôn hiện (thư mục đơn có thể chưa chép vào AI_Work)
+                if not j.get('hidden') and not (j.get('order') and j['order'] not in found and j.get('status') not in ('moi', 'nhan'))]   # việc đang chờ/đang chạy luôn hiện (thư mục đơn có thể chưa chép vào AI_Work)
         jobs.sort(key=lambda j: j.get('at', ''), reverse=True)
         rn = sys.modules.get('runner')
         data = {'orders': orders, 'agents': agents, 'jobs': jobs[:50], 'generatedAt': now_iso(),
@@ -654,8 +728,9 @@ def add_job(path, subagents=0, note='', model='', plan=None):
         return dict(jobs[jid], id=jid)
 
 
-def add_followup(order, answers, model=''):
-    """Người dùng trả lời Flag trong khung chi tiết đơn -> việc 'làm tiếp': chỉ vẽ lại các mã được trả lời."""
+def add_followup(order, answers, model='', redo=False):
+    """Người dùng trả lời Flag trong khung chi tiết đơn -> việc 'làm tiếp': chỉ vẽ lại các mã được trả lời.
+    redo=True: LÀM LẠI mã bất kỳ (kể cả mã đã xong/đã giao khách) theo thông tin bổ sung của khách; bắt buộc có thông tin bổ sung."""
     if not isinstance(answers, dict):
         raise ValueError('Dữ liệu trả lời không hợp lệ.')
     answers = {str(c).strip(): str(t).strip()[:1000] for c, t in answers.items()}     # mã chỉ có file tham khảo (không ghi chú) vẫn giữ, lọc bên dưới
@@ -678,7 +753,7 @@ def add_followup(order, answers, model=''):
             refs[c['code']] = [os.path.join(p, REF_DIR, c['code'], f) for f in c['refs']]
     answers = {c: (t or '(không ghi chú, chỉ có file tham khảo đính kèm)') for c, t in answers.items() if t or c in refs}
     if not answers:
-        raise ValueError('Chưa nhập thông tin bổ sung cho mã nào.')
+        raise ValueError('Chưa nhập thông tin bổ sung hoặc đính kèm file của khách cho mã nào.')
     with lock:
         prog = load_json(PROGRESS, {})
         jobs = prog.setdefault('jobs', {})
@@ -688,6 +763,8 @@ def add_followup(order, answers, model=''):
         jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_' + order + '_tiep'
         jobs[jid] = {'kind': 'tiep', 'path': p, 'order': order, 'subagents': 0, 'model': model, 'note': '', 'answers': answers,
                      'refs': refs, 'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
+        if redo:
+            jobs[jid]['redo'] = True
         save_json(PROGRESS, prog)
         _cache['t'] = 0
         return dict(jobs[jid], id=jid)
@@ -995,6 +1072,22 @@ def pdf_page_of(order, code, codes, npages):
     return 1, False
 
 
+def raise_window():
+    """Đơn vừa xong: đưa cửa sổ trình duyệt đang mở trang giám sát lên trên màn hình (tìm theo tiêu đề 'AI CAD')."""
+    if os.name != 'nt':
+        return False
+    import subprocess, base64
+    try:
+        # Khớp theo đầu tiêu đề trang web ("AI CAD · Giám Sát ..."), KHÔNG khớp cửa sổ console "AI CAD - Quan ly Project". Truyền lệnh dạng Base64 để giữ dấu tiếng Việt.
+        cmd = "(New-Object -ComObject WScript.Shell).AppActivate('AI CAD · Giám Sát') | Out-Null"
+        enc = base64.b64encode(cmd.encode('utf-16-le')).decode()
+        subprocess.Popen(['powershell', '-NoProfile', '-WindowStyle', 'Hidden', '-EncodedCommand', enc],
+                         creationflags=0x08000000)
+        return True
+    except Exception:
+        return False
+
+
 def open_pdf(order, code):
     """Bấm biểu tượng PDF ở Lịch Sử Lỗi: mở PDF của đơn ở đúng trang chứa mã (PDF scan, không tìm theo chữ được: dùng trang agent đã ghi hoặc đoán theo thứ tự)."""
     if not ORDER_RE.match(order or '') or not CODE_RE.match(code or ''):
@@ -1124,12 +1217,16 @@ def loi_history():
             st, txt = ('baihoc', 'Đã có bài học (agent đọc trước khi vẽ), không cần sửa skill') if les else ('khong', 'Đã rút KN, không có bài học hay đề xuất')
         else:
             st, txt = 'chua', 'Chưa rút kinh nghiệm' if v['hasT'] else 'Chưa rút KN (thiếu file T)'
-        rows.append({'key': key, 'order': v['order'], 'code': code, 'date': v.get('date', ''),
+        les_at = {l['name']: l['at'] for l in lessons}
+        up_at = max([p['at'] for p in mine] + [les_at[n] for n in les if n in les_at], default='')     # lúc giải pháp của lỗi được update gần nhất (đề xuất hoặc bài học)
+        rows.append({'key': key, 'order': v['order'], 'code': code, 'date': v.get('date', ''), 'upAt': up_at,
                      'loai': list(dict.fromkeys(qa.norm_loai(x) for x in v['loai'])), 'loi': v['loi'],
                      'hasT': v['hasT'], 'hasF': v['hasF'], 'folder': v['folder'], 'st': st, 'stText': txt,
                      'hasC': (lambda c: bool(c) and not _old_auto_compare(c))(find_compare(v['folder'], code)),
                      'props': [{'name': p['name'], 'at': p['at'], 'done': p in done, 'line': next((l.strip() for l in p['head'].split('\n') if l.strip()), '')[:200]} for p in mine], 'lessons': les})
-    rows.sort(key=lambda r: (r['date'] or '', r['key']), reverse=True)
+    # mặc định: lỗi CHƯA xử lý xong (chua / cho / motphan, giống bộ lọc "Chưa xử lý xong") luôn ở trên đầu, mới nhất trước theo ngày đơn;
+    # bên dưới là lỗi đã xử lý (da / baihoc / khong), giải pháp được update gần nhất nằm trên
+    rows.sort(key=lambda r: (r['st'] in ('chua', 'cho', 'motphan'), (r['date'] or '') if r['st'] in ('chua', 'cho', 'motphan') else (r['upAt'] or ''), r['date'] or '', r['key']), reverse=True)
     return rows
 
 
@@ -1235,7 +1332,7 @@ def proposal_pending(head):
     h = head or ''
     if re.search(r'CÒN CHỜ', h, re.I):
         return True
-    return bool(re.search(r'CHỜ PHÁT DUYỆT', h, re.I)) and not re.search(r'ĐÃ ÁP DỤNG', h, re.I)
+    return bool(re.search(r'CHỜ PHÁT DUYỆT', h, re.I)) and not re.search(r'ĐÃ ÁP DỤNG', h.split('\n', 1)[0], re.I)
 
 
 def proposal_kind(head):
@@ -1591,7 +1688,10 @@ def del_job(jid):
             raise ValueError('Không có việc này.')
         if j.get('status') == 'nhan':
             raise ValueError('Agent đã nhận việc này, không xoá được.')
-        del prog['jobs'][jid]
+        if j.get('status') in ('xong', 'loi') and isinstance(j.get('usage'), dict):
+            j['hidden'] = True              # việc đã chạy xong: chỉ ẩn khỏi hàng đợi, giữ lại để còn tính "Token đã dùng"
+        else:
+            del prog['jobs'][jid]
         save_json(PROGRESS, prog)
         _cache['t'] = 0
 
@@ -1768,13 +1868,17 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json({'ok': True, 'job': add_job(data.get('path'), data.get('subagents'), data.get('note'), data.get('model'), data.get('plan'))})
             if path == '/api/ref/upload':
                 return self.send_json({'ok': True, 'name': add_ref(data.get('order'), data.get('code'), data.get('name'), data.get('data'))})
+            if path == '/api/ref/pick':
+                return self.send_json({'ok': True, 'names': pick_refs(data.get('order'), data.get('code'))})
             if path == '/api/ref/delete':
                 del_ref(data.get('order'), data.get('code'), data.get('name'))
                 return self.send_json({'ok': True})
             if path == '/api/jobs/followup':
-                return self.send_json({'ok': True, 'job': add_followup(data.get('order'), data.get('answers'), data.get('model'))})
+                return self.send_json({'ok': True, 'job': add_followup(data.get('order'), data.get('answers'), data.get('model'), data.get('redo') is True)})
             if path == '/api/compare_tf':
                 return self.send_json(dict({'ok': True}, **compare_sualoi(data.get('order'), data.get('code'))))
+            if path == '/api/raise':
+                return self.send_json({'ok': raise_window()})
             if path == '/api/openorder':
                 return self.send_json({'ok': True, 'path': open_order_dir(data.get('order'))})
             if path == '/api/openpart':

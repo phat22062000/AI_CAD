@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.19-2"
+  version: "2026.11.20-5"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -30,7 +30,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Độ chính xác: tính đủ chữ số, không làm tròn giữa chừng; kết quả giữ ≥ 2 chữ số thập phân.
 - Kích thước cộng/trừ: đọc hết từng số rồi cộng, không lấy số lớn nhất.
 - Chuỗi kích thước (lỗ, chi tiết hàn, mép, thanh, kegaki):
-  - PHẢI tính từ chuỗi kích thước ghi trên bản vẽ, tính từ một mép chuẩn. Bản vẽ lắp (lỗ ghi kích thước tới tấm khác): quy đổi qua kích thước các tấm liên quan.
+  - PHẢI tính từ chuỗi kích thước ghi trên bản vẽ, tính từ một mép chuẩn. Gốc của mỗi kích thước là chân đường gióng thực của nó: các kích thước song song có chung chân gióng thì cùng gốc, KHÔNG lấy gốc là mép tab/bậc nhỏ nằm gần cạnh cần định vị (kích thước riêng của tab là một đoạn khác). Xác định hai chân gióng trước khi tính; dựng xong đo ngược từ cạnh vừa vẽ về đúng đường gióng gốc. Bản vẽ lắp (lỗ ghi kích thước tới tấm khác): quy đổi qua kích thước các tấm liên quan.
   - Kích thước thiếu: tính qua chuỗi của chi tiết lân cận (tấm khác, thanh, ống, tổng kích thước), KHÔNG giả định (kể cả số tròn, "nằm giữa", "đối xứng"); số đo pixel chỉ để kiểm tra. Không có chuỗi nào thì KHÔNG đo ảnh để vẽ: báo thiếu kích thước và Flag 3 (mục 0).
   - Bài nhiều tấm lắp ghép mà PDF chỉ có 1 bản vẽ dim chung cho tất cả: LUÔN tính mọi vị trí (lỗ, mép, kegaki) của từng tấm bằng chuỗi kích thước qua các tấm lân cận, KHÔNG được giả định. Không mượn vị trí lỗ/đường tâm của tấm khác làm kích thước.
   - Lỗ chỉ có khoảng tâm–tâm (không ghi tới đầu): tìm chuỗi qua chi tiết khác tới mép chuẩn, KHÔNG chia đều phần dư.
@@ -109,7 +109,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   - R trong: t < 6 → 0.6; t ≥ 6 → 6. Offset ra đúng t được R ngoài (t3.2: 3.8; t ≥ 6: 6 + t), đo kích thước ngoài hiệu chỉnh mỗi cánh từ hình học thực (cánh nghiêng đo dọc mặt ngoài). Giá trị hiệu chỉnh thay đổi theo bản vẽ, không phải hằng số.
   - Phôi = ngoài hiệu chỉnh + ngoài hiệu chỉnh - giãn (giãn do người dùng cung cấp theo từng yêu cầu, không tự tra theo góc). Chưa có giãn hoặc không dựng được hiệu chỉnh thì hỏi và Flag 16.
   - Góc > 90°: dùng kích thước danh nghĩa (kích thước ngoài + kích thước ngoài - độ giãn).
-- Đường uốn: mỗi chỗ uốn 2 LINE DASHED (không vẽ 1 đường giữa). Đường 1 cách mép phôi bên này = ngoài cánh bên này; đường 2 cách mép bên kia = ngoài cánh bên kia; khoảng giữa = giãn. Ví dụ L 37 + 60, giãn 5.2, phôi 91.8: đường tại 37 và 31.8. Nhiều chỗ uốn (chữ U...): mỗi cặp đặt tại (vị trí giữa ± giãn/2), vị trí giữa = ngoài cánh - giãn/2 tính từ mép xa.
+- Đường uốn: mỗi chỗ uốn 2 LINE DASHED (không vẽ 1 đường giữa). Đường 1 cách mép phôi bên này = ngoài cánh bên này; đường 2 cách mép bên kia = ngoài cánh bên kia; khoảng giữa = giãn. Ví dụ L 37 + 60, giãn 5.2, phôi 91.8: đường tại 37 và 31.8. Nhiều chỗ uốn (chữ U...): mỗi cặp đặt tại (vị trí giữa ± giãn/2), vị trí giữa = ngoài cánh - giãn/2 tính từ mép xa. Mỗi chỗ uốn có hai đường nên phải chọn đúng phía làm gốc: kích thước chiều cao cánh đo từ đường phía cánh; kích thước thuộc chuỗi của tấm (bề rộng tấm, ô cắt/bậc/khe ở mép tấm, vị trí lỗ ghi từ mép ngoài của tấm) đo từ đường phía tấm (cách mép cánh = ngoài cánh - giãn), chênh nhau đúng một độ giãn. Dựng xong đo ngược về đúng đường phía tấm.
   - Độ dài cặp DASHED = bề rộng chỗ uốn thật, tức đoạn có vật liệu liền qua chỗ uốn (bề rộng của cánh hẹp hơn). Cả 2 đường cùng đầu mút. Phần cánh rộng hơn nhô ra ngoài bề rộng này không vẽ đường uốn, dù vẫn nằm trong phôi.
 - Nét đứt ở hình bằng (平面図) của chi tiết uốn cách mép ngoài đúng t (KHÔNG phải giãn/2); kích thước ghi từ nét đứt tính từ đúng đường đó. Quy đổi điểm trên phần phẳng: u (trên phôi, từ mép tự do cánh đầu) = y (trên hình bằng, từ mặt ngoài cánh đầu) + (ngoài cánh - giãn). Ví dụ 26-060232 (t3.2, mũ 13 + 102 + 13, giãn 5.5): u = y + 7.5; nét đứt cánh xa ở y = 98.8. Lỗ trên cánh vẫn đo từ mép tự do cánh.
 
@@ -155,7 +155,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
   - Inox/khác: ≤ 6 → R0.5; ≥ 7 → không bo. Nhôm: ≤ 6 → R0.5: ≥ 7 → không bo. Đồng/đồng thau: ≤ 5 → R0.5.
 - R0.5 là mặc định, không tự thay. Khi góc lồi quá nhỏ (cạnh kề quá ngắn, cung R0.5 không có chỗ tiếp tuyến) Flag 19 (mục 11.4). Chú thích 直角逃がし (ø hoặc R) chỉ vào góc lõm vuông của biên (kể cả bản OUTLINE ONLY): vẽ relief tại góc đó, vòng tâm tại đỉnh góc đường kính = số ghi, hai cạnh nối vào vòng qua cung tiếp tuyến (không có số R cung nối thì Flag 3); không xác định được góc nào hoặc số góc không khớp "n-" thì Flag 5.
 - Góc nhìn thấy bo cong trên hình nhưng không có số R: KHÔNG coi là góc nhọn rồi bo R0.5 như thường, KHÔNG tự điền R theo ghi chú lân cận. Zoom ≥ 200 dpi từng góc; góc bo cong mà thiếu số thì Flag 3 (nêu vị trí góc, 'bo cong, không ghi số R'), vẫn vẽ tạm R0.5 để file không hở và ghi rõ 'tạm' trong Flag; chờ người dùng cung cấp R.
-- Góc đã vát C (135°) và góc lõm không bo (trừ thép ≥ 19t). Vát C vẽ thành đoạn chéo.
+- Góc đã vát C (135°) và góc lõm không bo (trừ thép ≥ 19t; trừ bản vẽ có ghi chú chung R trong cho chỗ uốn, kiểu 内側R3: góc lõm nơi cạnh xiên gặp gờ xét bo theo ghi chú đó, không rõ góc nào thì Flag 3). Vát C vẽ thành đoạn chéo. TRƯỚC khi áp R laser cho góc lồi của biên, lập bảng từng góc (đỉnh | ghi chú C/R ở MỌI hình chiếu kể cả hình phụ, gồm chữ nhỏ có mũi tên ngắn sát chỗ tiếp giáp tấm khác, như C3 cạnh C30 | kết luận); góc chưa có kết luận thì đọc lại bản vẽ, không áp R mặc định.
 - Vẽ ARC tiếp tuyến 2 cạnh, cắt ngắn 2 cạnh tại tiếp điểm. Kích thước bản vẽ là kích thước chưa bo.
 - Ghi chú "n-Rx" có thể ở NHIỀU hình chiếu, mỗi nơi là n góc riêng. Bắt buộc lập bảng (ghi chú | hình | số góc), cộng mọi hình chiếu, đối chiếu với số góc lồi thực tế. Góc có ghi chú bo theo bản vẽ; chỉ góc chưa có ghi chú mới áp bảng laser. Góc cùng loại với góc đã có R mà chưa gán thì tìm lại ghi chú ở hình khác trước khi áp R laser. "(n-Rx)" trong ngoặc ở hình mặt cắt thường là R uốn, không phải R góc phôi.
 - Đối chiếu bán kính (BẮT BUỘC mọi mã, kể cả hình lấy từ DXF khách; khung bao đúng không chứng minh R đúng, phải đối chiếu từng cung.
@@ -165,7 +165,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 ## 9. Kegaki (vạch dấu ケガキ: LINE Đỏ 62 = 1, layer 0; `Quy_Tac_Laser.md` mục 5)
 - Vẽ khi: có chỉ thị KEGAKI/ケガキ, có ký hiệu ヨ khoanh tròn (ký hiệu hàn nội bộ, thường cạnh mã vạch), hoặc khách yêu cầu vạch vị trí hàn (ví dụ khách 851,676). Tìm ヨ kỹ cạnh mã vạch và khung tên TỪNG trang; có ヨ thì mọi tấm nhận hàn đều có kegaki.
 - Vẽ vết (footprint) của tấm hàn lên tấm nhận (tấm có mặt bị tấm khác hàn lên), xác định quan hệ lắp ráp từ các hình chiếu. Tấm chỉ hàn bằng cạnh vào tấm khác thì không có kegaki.
-- CHỈ kegaki phần tiếp xúc thật giữa hai chi tiết. Không chắc phần nào tiếp xúc thì xem thêm hình 3D (đâu chồng lên đâu, mặt nào áp mặt nào) trước khi quyết định vẽ hay bỏ. Dấu hiệu có vùng chồng: một chi tiết ghi cùng lúc tổng dài và phần nhô ra (hiệu số là phần chồng dưới chi tiết khác).
+- CHỈ kegaki phần tiếp xúc thật giữa hai chi tiết. Không chắc phần nào tiếp xúc thì xem thêm hình 3D (đâu chồng lên đâu, mặt nào áp mặt nào) trước khi quyết định vẽ hay bỏ. Dấu hiệu có vùng chồng: một chi tiết ghi cùng lúc tổng dài và phần nhô ra (hiệu số là phần chồng dưới chi tiết khác). Chi tiết hàn áp TOÀN BỘ mặt vào tấm nhận (gân; khác dòng 170 là chỉ chạm một cạnh) mà đầu áp có vát C hoặc bo R thì phần vát không tiếp xúc: vết ngắn đi đúng cạnh vát và đóng kín đầu đó, không kéo tới mép tấm kề; vết trên tấm đứng trên tấm đỡ bắt đầu từ mặt tấm đỡ (cách mép đúng độ dày tấm đỡ) rồi lùi thêm đúng số C.
 - Chi tiết hàn chỉ được bỏ kegaki khi MỌI cạnh của vết (footprint) đều trùng mép ngoài tấm nhận (định vị được theo mép). Còn bất kỳ cạnh vết nào nằm bên trong tấm (đầu mút ống/thanh, mặt xa của ống/thanh, mép tấm hàn) thì VẼ các cạnh đó; cạnh trùng mép tấm thì bỏ. Ống/thanh vuông không cắt laser vẫn tạo vết kegaki trên tấm laser nhận hàn. Ví dụ 26-065615 (khách 851): ống 30 sát mép đầu trái tấm nhưng đầu ống nằm cách mép trên tấm 26.8, phải vẽ 2 LINE (x = 30 và y = 38.2); lần đầu bỏ kegaki là sai.
 - Tấm hàn chạm mặt nhận chỉ bằng một cạnh (tấm ngang đặt lên mặt nghiêng, tựa trên tấm gia cường): vẽ ĐÚNG đường chạm thật, không suy vết từ độ dày tấm. Tấm chỉ chạm tại một cạnh thì chỉ 1 LINE (x từ đầu tới cuối tấm); tấm gia cường/gân hàn bằng cạnh dài thì khung kín bề dày x chiều dài tiếp xúc.
 - Chỉ vẽ đoạn nằm trong phôi: đoạn trùng mép phôi hoặc trùng đường uốn DASHED thì bỏ. Đường uốn cũng chỉ vẽ trong bề rộng chỗ uốn, không kéo theo bề rộng cánh nhô ra.

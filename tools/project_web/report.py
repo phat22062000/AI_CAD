@@ -5,7 +5,7 @@ Cách dùng:
   py report.py <orders|agents|parts|jobs> <id> key=value [key=value ...]
   py report.py jobs          (liệt kê việc giao trên trang còn chờ)
   py report.py review <số đơn>_<mã> status=sai note="..."   (chỉ khi người dùng góp ý trong app)
-  py report.py loi <số đơn>_<mã> "lỗi 1" "lỗi 2" [loai="Sai kích thước lỗ"] [nguyen_nhan="..."] [nguon="T/F|script|đọc mù|Phát"] [khop=87.5]   (lỗi cụ thể của mã Sai sau khi so file T/F, hiện trong popup mã; loai= là loại lỗi, có thể lặp)
+  py report.py loi <số đơn>_<mã> "lỗi 1" "lỗi 2" [loai="Sai kích thước lỗ"] [nguyen_nhan="..."] [update="..."] [nguon="T/F|script|đọc mù|Phát"] [khop=87.5]   (lỗi cụ thể của mã Sai sau khi so file T/F, hiện trong popup mã; loai= là loại lỗi, có thể lặp)
   py report.py check <số đơn> "<mã>|loi|<tên lỗi>: <chi tiết>" "<mã>|canhbao|<tên cảnh báo>: <chi tiết>"   (kết quả nút Tự check; không có mục nào = không phát hiện lỗi; ghi đè phần agent báo, giữ phần script)
   py report.py updscript <job id> <file.json>   (nhật ký các thay đổi script khi bấm nút Update Script)
   py report.py updskill <job id> <file.json>   (nhật ký các dòng đã đổi khi bấm nút Update Skill)
@@ -63,10 +63,12 @@ def main(argv):
             d = server.load_json(server.LOI_SAI, {})
             rest = [a for a in argv[3:] if a.strip()]
             loai = [a[5:].strip() for a in rest if a.startswith('loai=') and a[5:].strip()]
-            opt = {k: next((a[len(k) + 1:].strip() for a in rest if a.startswith(k + '=')), '') for k in ('nguyen_nhan', 'nguon', 'khop')}
-            item = {'loi': [a for a in rest if not a.startswith(('loai=', 'nguyen_nhan=', 'nguon=', 'khop='))], 'loai': loai, 'at': server.now_iso()}
+            opt = {k: next((a[len(k) + 1:].strip() for a in rest if a.startswith(k + '=')), '') for k in ('nguyen_nhan', 'update', 'nguon', 'khop')}
+            item = {'loi': [a for a in rest if not a.startswith(('loai=', 'nguyen_nhan=', 'update=', 'nguon=', 'khop='))], 'loai': loai, 'at': server.now_iso()}
             if opt['nguyen_nhan']:
                 item['nguyen_nhan'] = opt['nguyen_nhan']      # nguyên nhân gốc (ghi rõ "suy đoán" nếu không có bằng chứng)
+            if opt['update']:
+                item['update'] = opt['update']                # nội dung update cần đổi để không tái phạm (1 câu ngắn: đích + sửa gì)
             item['nguon'] = opt['nguon'] or 'T/F'             # nguồn phát hiện: T/F | script | đọc mù | Phát
             try:
                 item['khop'] = float(opt['khop'].rstrip('%'))  # tỉ lệ entity khớp T (diff_tf.py, trường ty_le_khop)

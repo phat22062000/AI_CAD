@@ -323,5 +323,99 @@
   "nguyen_nhan": "Kích thước 5 thuộc chuỗi 680 của tấm (chân 680 là mép ngoài danh nghĩa = đường uốn phía tấm, cách mép phôi 10 - 2.14 = 7.86), F lại tính 5 từ đường uốn phía cánh (cách mép phôi đúng 10) nên ô cắt lệch đúng độ giãn 2.14.",
   "nguon": "T/F",
   "khop": 41.7
+ },
+ "521120-23_26-070761": {
+  "loi": [
+   "Hai lỗ φ5 ở cánh 2-5キリ: F đặt tại x = 61.86 và 261.86, T đặt tại x = 59.86 và 259.86 (cùng y = 101.72); F lệch +2 mm cả hai lỗ, cách đầu phải 8 thay vì 10 ghi trên bản vẽ."
+  ],
+  "loai": [
+   "Sai vị trí lỗ"
+  ],
+  "at": "2026-11-20T10:03:21Z",
+  "nguyen_nhan": "Suy đoán: F lấy gốc kích thước lỗ lệch 2 mm (đúng độ dày tấm, cộng thêm 2 vào 17/200/10 hoặc lấy 19 của hình chiếu cánh kia); log không ghi lý do.",
+  "nguon": "T/F",
+  "khop": 96.4
+ },
+ "521120-23_26-070762": {
+  "loi": [
+   "Hai lỗ φ5 ở cánh 2-5キリ: F đặt tại x = 8 và 208, T đặt tại x = 10 và 210 (cùng y = 101.72); F lệch 2 mm cả hai lỗ, cách đầu trái 8 thay vì 10 ghi trên bản vẽ (cặp gương của 26-070761).",
+   "Đường uốn phía tấm x = 227: F vẽ từ y = 19.86 đến 89.86, T vẽ đến y = 89.72 (ngắn hơn 0.14); T của 26-070761 không có chênh này nên có thể là sai lệch nhỏ phía T."
+  ],
+  "loai": [
+   "Sai vị trí lỗ",
+   "Sai độ giãn dài"
+  ],
+  "at": "2026-11-20T10:03:21Z",
+  "nguyen_nhan": "Suy đoán: cùng cặp gương với 26-070761, F lấy gốc kích thước lỗ lệch 2 mm (độ dày tấm); đoạn đường uốn lệch 0.14 chưa có bằng chứng, nhiều khả năng do T.",
+  "nguon": "T/F",
+  "khop": 94.5
+ },
+ "521125-01_26-071141": {
+  "loi": [
+   "Chuỗi lỗ: F đặt cả 19 lỗ φ22/φ28 và 2 lỗ φ6 lệch +1 mm theo x so với T (ví dụ φ22 đầu x = 39, T x = 38; φ6 x = 375, T x = 374), cùng y, đúng bước 36/50; cách mép phải của F chỉ 61 trong khi bản vẽ ghi 62 từ lỗ φ6 tới mép phôi 436."
+  ],
+  "loai": [
+   "Sai vị trí lỗ"
+  ],
+  "at": "2026-11-25T04:31:21Z",
+  "nguyen_nhan": "Lỗ: Suy đoán, lệch đồng loạt 1 mm do gốc chuỗi 62 + 26 + 22 + 8x36 không đóng về mép phôi 436, không có bằng chứng thêm.",
+  "nguon": "T/F",
+  "khop": 55.2
+ },
+ "521125-01_26-071155": {
+  "loi": [
+   "Chuỗi lỗ: F đặt cả 19 lỗ φ22/φ28 lệch +1 mm theo x so với T (ví dụ φ22 đầu x = 39, T x = 38; φ28 x = 349 và 399, T x = 348 và 398), cùng y, đúng bước; chuỗi 62 + 26 + 22 + 8x36 tính từ mép phôi 436 cho lỗ đầu x = 38."
+  ],
+  "loai": [
+   "Sai vị trí lỗ"
+  ],
+  "at": "2026-11-25T04:31:24Z",
+  "nguyen_nhan": "Lỗ: Suy đoán, lệch đồng loạt 1 mm do gốc chuỗi không đóng về mép phôi 436, không có bằng chứng thêm.",
+  "nguon": "T/F",
+  "khop": 52.9
+ },
+ "521125-01_26-071162": {
+  "loi": [
+   "Relief 4 góc hộp: F khoét mỗi góc rộng 27.36 theo x và cao 28.86 theo y (hai cánh trái/phải lùi 1.5 mỗi đầu, chỉ dài 197, hai cánh trên/dưới dài 360); T khoét rộng 28.86 theo x và cao 27.36 theo y (hai cánh trên/dưới lùi 1.5 mỗi đầu, dài 357, hai cánh trái/phải giữ đủ 200).",
+   "Hệ quả: toàn bộ biên ngoài, cung R0.5, 8 đường uốn DASHED (chạy y 28.86 → 225.86 thay vì 30 → 224.72), 8 đường kegaki đỏ (bắt đầu y = 28.86 thay vì 27.36) và 8 đường rạch Green của F đều lệch 1.5 mm so với T."
+  ],
+  "loai": [
+   "Sai biên dạng ngoài",
+   "Sai độ giãn dài",
+   "Sai kegaki",
+   "Sai rạch Green"
+  ],
+  "at": "2026-11-25T04:31:28Z",
+  "nguyen_nhan": "F khoét đúng công thức cố định ở SKILL mục 6 (X = a, Y = a + t); T lấy ngược lại, tức cặp cánh nào lùi t phải theo bản vẽ chứ không theo trục X/Y. Lý do của khách chọn cặp cánh ở cạnh dài lùi là suy đoán (hình chữ thập tay cho thấy cánh cạnh dài hẹp hơn tấm giữa).",
+  "nguon": "T/F",
+  "khop": 14.3
+ },
+ "521125-01_26-071163": {
+  "loi": [
+   "Relief hộp có cánh nhô: khe giữa cánh nhô trái/phải và cánh dưới/trên, F rộng 27.36 theo x (cánh nhô tới x = 90 và 444.72), T rộng 28.86 theo x (cánh nhô tới x = 88.5 và 446.22); cung R0.5, 12 đường biên, đường uốn và Green đều lệch theo.",
+   "Rạch Green 8 chỗ: F điểm đầu cách mép khoét 3 mm (ví dụ (114.36; 84.36) → (117.21; 87.21)), T cách 6 mm (ví dụ (111.36; 81.36) → (117.21; 87.21)); SUS t1.5 chuẩn Piercing ngoài 6, dxf_check bắt được lỗi này với --mat SUS."
+  ],
+  "loai": [
+   "Sai biên dạng ngoài",
+   "Sai rạch Green"
+  ],
+  "at": "2026-11-25T04:31:31Z",
+  "nguyen_nhan": "Relief: F khoét X = a theo công thức cố định ở SKILL mục 6, T khoét a + t theo bản vẽ (cùng nguyên nhân với 26-071162). Rạch Green 3 thay vì 6: Suy đoán, có thể dùng bảng thép (≤3.2 → 3) cho SUS hoặc không chạy dxf_check với --mat SUS; không có bằng chứng.",
+  "nguon": "T/F",
+  "khop": 38.9
+ },
+ "521125-14_26-071234": {
+  "loi": [
+   "2 góc lõm cánh trái: F LINE biên 1.2, T rạch Green R0.5 + chéo"
+  ],
+  "loai": [
+   "Sai rạch Green",
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-25T09:50:49Z",
+  "nguyen_nhan": "Chép nét đỏ 1.2 của DXF khách làm LINE biên, không đổi thành rạch Green 3 entity",
+  "update": "Script: thêm kiểm khe cụt ≤2t và nét rạch khách vào dxf_check/doi_chieu_khach; SKILL chưa sửa (1 mẫu)",
+  "nguon": "T/F",
+  "khop": 86.7
  }
 }

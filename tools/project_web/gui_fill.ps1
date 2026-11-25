@@ -23,9 +23,20 @@ try {      # PID của Excel vừa mở (để dọn nếu Quit lỗi)
     $p =[uint32]0; [void][W.U]::GetWindowThreadProcessId([IntPtr]$xl.Hwnd, [ref]$p); $xlPid = [int]$p
 } catch { }
 try {
-    $wb = $xl.Workbooks.Open($j.template, 0, $false)
+    if (-not (Test-Path -LiteralPath $j.template)) { throw ('Không thấy file mẫu: ' + $j.template) }
+    for ($w = 0; $w -lt 20; $w++) { try { if ($xl.Ready) { break } } catch { }; Start-Sleep -Milliseconds 500 }     # chờ Excel khởi động xong
+    $wb = $xl.Workbooks.Open([string]$j.template, 0, $false)
+    if ($null -eq $wb) { Start-Sleep -Seconds 1; try { $wb = $xl.Workbooks.Item(1) } catch { $wb = $null } }       # Open đôi khi trả $null dù file đã mở
     if ($null -eq $wb) { throw 'Excel không mở được file mẫu (rejected: Excel báo lỗi bản quyền Product Activation Failed hoặc đang bận).' }
-    $ws = $wb.Worksheets.Item(1)
+    # PowerShell đôi khi trả $null cho $wb.Worksheets khi Excel còn bận/khởi động chậm (không báo lỗi COM): chờ rồi thử lại, không đọc được thì ném lỗi 'rejected' để vòng ngoài mở Excel mới
+    $ws = $null
+    for ($w = 0; $w -lt 10 -and $null -eq $ws; $w++) {
+        try { $ws = $wb.Worksheets.Item(1) } catch { $ws = $null }
+        if ($null -eq $ws) { try { $ws = $wb.Sheets.Item(1) } catch { $ws = $null } }
+        if ($null -eq $ws) { try { $ws = $xl.ActiveWorkbook.Worksheets.Item(1) } catch { $ws = $null } }
+        if ($null -eq $ws) { Start-Sleep -Milliseconds 700 }
+    }
+    if ($null -eq $ws) { throw ('rejected: Excel mở được file mẫu nhưng không đọc được sheet (Excel bận, file mẫu bị khoá hoặc đang ở chế độ Protected View). Mẫu: ' + $j.template) }
     # số hàng dữ liệu hiện có trong mẫu: từ hàng 6 đến hàng ngay trên dòng 合計 (cột B)
     $r = 6
     while ($ws.Cells.Item($r, 2).Text -ne '合計' -and $r -lt 400) { $r++ }

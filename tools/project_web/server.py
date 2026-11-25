@@ -1164,7 +1164,7 @@ def loi_info():
                 folder, files = None, []        # chưa có folder Sua_loi của đơn
         up = [f.upper() for f in files]
         out[key] = {'loi': [str(x) for x in (data.get(key) or {}).get('loi', [])], 'loai': [str(x) for x in (data.get(key) or {}).get('loai', [])],
-                    'nguyen_nhan': str((data.get(key) or {}).get('nguyen_nhan', '')), 'nguon': str((data.get(key) or {}).get('nguon', '')), 'khop': (data.get(key) or {}).get('khop'),
+                    'nguyen_nhan': str((data.get(key) or {}).get('nguyen_nhan', '')), 'update': str((data.get(key) or {}).get('update', '')), 'nguon': str((data.get(key) or {}).get('nguon', '')), 'khop': (data.get(key) or {}).get('khop'),
                     'folder': folder, 'files': files, 'hasT': code.upper() + 'T.DXF' in up, 'hasF': code.upper() + 'F.DXF' in up,
                     'rut': key in done, 'order': order, 'code': code, 'date': (o or {}).get('date', '')}
     return out

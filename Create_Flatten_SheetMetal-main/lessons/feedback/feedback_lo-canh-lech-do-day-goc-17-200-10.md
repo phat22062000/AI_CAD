@@ -1,0 +1,14 @@
+---
+name: feedback-lo-canh-lech-do-day-goc-17-200-10
+description: Lỗ trên cánh đo từ mặt ngoài cánh đứng: hai hình chiếu của hai cánh cho số khác nhau (19 và 17) thì dùng đúng chuỗi của cánh đang vẽ và đóng chuỗi tới đầu bên kia; lệch đúng độ dày 2 mm là dấu hiệu lấy nhầm gốc
+metadata:
+  node_type: memory
+  type: feedback
+  modified: 2026-11-20T17:10:00+07:00
+---
+
+Đơn 521120-23, mã 26-070761 và 26-070762 (cặp gương, SUS304 t2, giãn 2.14, phôi 269.86 x 109.72, 20/11/2026; so T/F bằng diff_tf.py, khung bao giống nhau): F đặt hai lỗ φ5 của cánh 2-5キリ lệch +2 mm so với T, cùng chiều, cùng y = 101.72. Mã 070761: F x = 61.86 và 261.86, T x = 59.86 và 259.86 (gốc = đường uốn phía tấm x = 42.86, cộng 17 và 217). Mã 070762 (gương): F x = 8 và 208, T x = 10 và 210. Bản vẽ hình chiếu của cánh này ghi 17 / 200 / (10), cộng đúng 227 (chuỗi đóng); F có lỗ cách đầu xa chỉ 8, chuỗi 19 + 200 + 8 = 227 không đúng với số (10) đã ghi. Hình chiếu của cánh đối diện (có 5キリ + 2-7キリ) ghi 19 từ mặt ngoài cánh đứng cho lỗ φ5 gần; hai số 19 và 17 thuộc hai cánh khác nhau. Mã 070762 còn một chênh nhỏ: đường uốn phía tấm x = 227, T ngắn hơn F 0.14 (T của 070761 không có chênh này, nhiều khả năng sai lệch phía T, không rút quy tắc từ đó). diff_tf: khớp 96.4% và 94.5%; kiểm khung bao không bắt được vì phôi giống nhau; không có DXF khách nên doi_chieu_khach.py không so được.
+
+**Why:** Suy đoán (không có bằng chứng trong log): F lấy gốc kích thước lỗ lệch đúng độ dày tấm 2 mm (cộng thêm 2 vào chuỗi 17 / 200 / 10, hoặc dùng số 19 của hình chiếu cánh đối diện làm điểm đầu rồi cộng 200). Cả hai cách cho 61.86 / 261.86 và đều hợp với số liệu; không phân biệt được. Chân dim 17 bắt đầu từ mặt ngoài cánh đứng (đo pixel 300 dpi: 17 mm = 81 px ở 4.79 px/mm, đúng chân gióng ngoài), còn 25 bắt đầu từ mặt trong; hai số nằm cạnh ghi chú "2" nên dễ lấy nhầm gốc. Chưa có đủ cơ sở để đề xuất sửa skill: các quy tắc SKILL dòng 33, 39, 45, 46 đã yêu cầu xác định chân gióng, đo pixel ≥ 2 hình chiếu và đóng chuỗi.
+
+**How to apply:** khi cánh có hai chuỗi kích thước ở hai hình chiếu khác nhau (hình chiếu trên và hình chiếu dưới của hai cánh), gán chuỗi theo từng cánh trước (cánh nào mang 2-5キリ, cánh nào mang 5キリ + 2-7キリ), không dùng số đầu của cánh này với bước nhảy của cánh kia. Lỗ gần mép cánh đứng: ghi rõ chân gióng là mặt ngoài hay mặt trong (khác nhau đúng độ dày), rồi cộng cả chuỗi tới đầu còn lại; chuỗi n / bước / (đầu) phải đóng đúng tổng (ở đây 17 + 200 + 10 = 227) và khoảng cách từ lỗ xa tới mép đầu bên kia phải đúng số trong ngoặc (10). Dựng xong đo ngược hai lỗ về mép phôi đầu xa và về đường uốn phía tấm. Chưa đề xuất sửa skill/script (nguyên nhân mới là suy đoán, chờ thêm mẫu hoặc Chạy hồi quy). Liên quan [[feedback-doc-ban-ve-khong-gia-dinh]], [[feedback-kich-thuoc-tam-do-tu-duong-uon-phia-tam]].

@@ -478,6 +478,13 @@ function orderDrawer(o){
       ${archHtml}
     </div>`;
 }
+/* Kết quả rút kinh nghiệm của 1 mã (Phát 25/11/2026): CHỈ 3 mục, viết ngắn: Sai ở chỗ nào (1 chỗ = 1 dòng, nhiều chỗ = gạch đầu dòng), Nguyên nhân, Cần update */
+function rutKQ(li){
+  const loi = li.loi || [];
+  if (!loi.length) return '';
+  const row = (h, v) => `<div class="rk-r"><b>${h}</b><div>${v}</div></div>`;
+  return `<div class="rk">${row('Sai ở chỗ nào', loi.length === 1 ? esc(loi[0]) : '<ul>' + loi.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>')}${row('Nguyên nhân', esc(li.nguyen_nhan || 'Chưa xác định'))}${row('Cần update', esc(li.update || 'Chưa ghi'))}</div>`;
+}
 /* khung chi tiết 1 mã bản vẽ (mục Đánh giá AI): xem thông tin + đổi Chờ check / Đúng / Sai */
 function codeDrawer(x, r){
   const o = x.o, c = o.codes.find(c => c.code === r.code) || {};
@@ -493,11 +500,9 @@ function codeDrawer(x, r){
         ${!li.hasF ? `<div style="margin-top:6px"><button class="btn btn-sec sm" data-sualoi="${esc(key)}" title="Chép file DXF AI đã vẽ cho mã này vào Sua_loi thành ${esc(r.code)}F.dxf">Chép file F vào Sua_loi</button></div>` : ''}
         ${li.hasF && !li.hasT ? `<p class="hint">Đã có file F. Chờ bạn đặt file ${esc(r.code)}T.dxf (bản đúng) vào folder này, sau đó bấm nút Rút kinh nghiệm ở đầu mục Đánh Giá AI.</p>` : ''}`
         : `<span class="t3">Chưa có folder Sua_loi.</span> <button class="btn btn-sec sm" data-sualoi="${esc(key)}" title="Tạo folder Sua_loi của đơn và chép file AI đã vẽ thành ${esc(r.code)}F.dxf">Tạo Sua_loi và chép file F</button>`}
-      <h3 style="color:var(--err-tx)">Lỗi sai cụ thể${(li.loai || []).length ? ' <span style="font-weight:500">· ' + li.loai.map(esc).join(', ') + '</span>' : ''}</h3>
-      ${(li.loi || []).length ? `<div class="od-flags" style="background:var(--err-bg);color:var(--err-tx)">${li.loi.map((t, i) => '<div>' + (i + 1) + '. ' + esc(t) + '</div>').join('')}</div>`
-        : '<p class="hint">' + (li.hasT && li.hasF ? 'Đã đủ file T và F. Bấm nút Rút kinh nghiệm ở đầu mục Đánh Giá AI để so sánh và rút lỗi.' : 'Chưa có phân tích (cần đủ file T và F).') + '</p>'}
-      ${li.nguyen_nhan ? `<p class="hint"><b>Nguyên nhân gốc:</b> ${esc(li.nguyen_nhan)}</p>` : ''}
-      ${(li.loi || []).length ? `<p class="hint">Nguồn phát hiện: ${esc(li.nguon || 'chưa ghi')}${typeof li.khop === 'number' ? ' · entity khớp bài đúng: ' + li.khop + '%' : ''}</p>` : ''}`;
+      <h3 style="color:var(--err-tx)">Rút kinh nghiệm</h3>
+      ${(li.loi || []).length ? rutKQ(li)
+        : '<p class="hint">' + (li.hasT && li.hasF ? 'Đã đủ file T và F. Bấm nút Rút kinh nghiệm ở đầu mục Đánh Giá AI để so sánh và rút lỗi.' : 'Chưa có phân tích (cần đủ file T và F).') + '</p>'}`;
   return `<div class="od-h">
       <button class="jid opo" data-openpart="${esc(r.code)}" data-order="${esc(o.order)}" title="Mở file ${esc(r.code)}.dxf">${esc(r.code)}</button>${chip(r.status === 'dung' ? 'xong' : r.status === 'sai' ? 'sai' : 'check', RV[r.status])}
       <span class="sp"></span><button class="ib" data-odclose title="Đóng (Esc)"><svg class="i"><use href="#i-x"/></svg></button>
@@ -637,6 +642,9 @@ function renderQA(){
   const busy = !!jb && (jb.status === 'moi' || jb.status === 'nhan');
   const msg = !jb ? '' : jb.status === 'moi' ? 'Đã gửi, đang chờ agent nhận.' : jb.status === 'nhan' ? 'Agent đang so file T/F và viết bài học (mất vài phút).'
     : jb.status === 'xong' ? 'Lần gần nhất xong ' + hm(jb.doneAt || jb.at) + (jb.result ? ': ' + jb.result : '.') : 'Lần gần nhất bị lỗi' + (jb.result ? ': ' + jb.result : '.');
+  // kết quả lần rút gần nhất: mỗi mã chỉ 3 mục (Sai ở chỗ nào, Nguyên nhân, Cần update)
+  const kq = jb && jb.status === 'xong' ? (jb.items || []).map(it => [it.key, (S.loi || {})[it.key]]).filter(([k, v]) => v && (v.loi || []).length) : [];
+  const kqHtml = kq.length ? `<h3>Kết quả rút kinh nghiệm <span class="n">${kq.length}</span> <span class="t3" style="font-weight:400">${hm(jb.doneAt || jb.at)}</span></h3>${kq.map(([k, v]) => `<div class="rk-m"><b class="mono"><span style="color:var(--tx)">${esc(k.split('_')[0])}</span> · ${esc(k.split('_')[1] || k)}</b>${rutKQ(v)}</div>`).join('')}` : '';
   const why = busy ? 'Đang có việc rút kinh nghiệm' : !ready.length ? 'Chưa có mã Sai nào đủ file T và F' : '';
   const state = v => !v.folder ? 'chưa có folder Sua_loi' : !v.hasF ? 'chưa có file F' : 'đã có F, chờ file T';
   const ordInfo = k => { const o = (S.data.orders || []).find(x => x.order === (k.split('_')[0])); return o ? ' <span class="t3">· ' + dm(o.date) + (o.customer ? ' · ' + esc(o.customer) : '') + '</span>' : ''; };
@@ -673,7 +681,7 @@ function renderQA(){
       <button class="btn btn-pri" data-rutkn ${busy || !ready.length ? 'disabled' : ''} title="${esc(why)}"><svg class="i"><use href="#i-check"/></svg>Rút kinh nghiệm${ready.length ? ' ' + ready.length + ' mã' : ''}</button></div>
     <p class="hint" style="margin-top:0">${ready.length ? ready.length + ' mã Sai đã đủ file T và F, sẵn sàng so sánh.' : 'Chấm một mã Sai thì web tự tạo folder Sua_loi và chép file F; bạn đặt file T (bản đúng) vào, rồi bấm nút này.'} Agent chỉ ghi lỗi, bài học và nháp đề xuất, không sửa skill.</p>
     ${ready.length ? `<div class="od-flags">${ready.map(([k, v]) => `<div class="fl" style="grid-template-columns:max-content minmax(0,1fr)"><b class="mono" style="white-space:nowrap"><span style="color:var(--tx)">${esc(k.split('_')[0])}</span> · ${esc(k.split('_')[1] || k)}</b><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${ordInfo(k)} <span class="t3">có F và T</span>${v.folder ? ` <button class="ib" data-copy="${esc(v.folder)}" title="Copy đường dẫn folder Sua_loi"><svg class="i"><use href="#i-folder"/></svg></button>` : ''}</span></div>`).join('')}</div>` : ''}
-    ${msg ? `<p class="hint">${esc(msg)}</p>` : ''}${waitHtml}${propHtml}${updHtml}${upsHtml}</div>${qaStatsHtml()}`;
+    ${msg ? `<p class="hint">${esc(msg)}</p>` : ''}${kqHtml}${waitHtml}${propHtml}${updHtml}${upsHtml}</div>${qaStatsHtml()}`;
   // Trang tự làm mới mỗi 15 giây: không vẽ lại khi nội dung không đổi hoặc khi người dùng đang bôi đen chữ trong khung này,
   // và giữ trạng thái mở/đóng của từng đề xuất và ô chọn (không đưa vào HTML, áp dụng sau khi vẽ).
   const sel = window.getSelection && window.getSelection();

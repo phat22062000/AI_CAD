@@ -2,7 +2,7 @@
 name: "dxf-check"
 description: "Kiểm DXF đầu ra (26-xxxxxx.dxf, file ALL) sau dxf-sheetmetal: chỉ kiểm hình dạng, không kiểm Template; báo cáo chỉ nêu lỗi sai."
 metadata:
-  version: "2026.11.13-1"
+  version: "2026.11.25-3"
 ---
 
 Chỉ dùng khi người dùng yêu cầu "check" một file DXF đã có; KHÔNG tự chạy sau khi tạo file bằng skill `dxf-sheetmetal`. Tiêu chí lấy từ `dxf-sheetmetal` (mục 2–12), `Quy_Tac_Laser.md`, `Ghi_Chu_Loi_Tao_DXF.md` (`knowledge/Context_Laser/`). **Chỉ kiểm hình dạng, không kiểm cấu trúc Template** (file lưu từ CAD có header/owner khác Template là bình thường, không báo); muốn so Template thì thêm `--template`.
@@ -71,9 +71,10 @@ Chỉ dùng khi người dùng yêu cầu "check" một file DXF đã có; KHÔN
 - Tấm uốn: file vẽ mặt ngoài, hình chiếu trên bản vẽ có thể nhìn từ phía đối diện. Xác định mặt vẽ trước, rồi mới báo LỖI vị trí theo hướng trên/dưới (Y). Hướng chỉ suy từ việc hai hình thẳng hàng thì ghi CẢNH BÁO, không ghi LỖI. Hình tay dưới/trên hình chiếu đứng theo 三角法 (hình dưới = nhìn từ dưới). Check tự xác định loại hình và mặt vẽ từ vị trí hình, không bỏ qua với lý do đọc mù không kiểm được mặt ngoài.
 - Cặp gương: lỗ, kegaki, cánh ngắn của bản 対称 đúng là ảnh gương (script chỉ báo phép biến hình, không biết bên nào đúng).
 - Biên: mỗi đoạn biên ứng với một số/nét trên bản vẽ hoặc DXF khách; không tự thêm đoạn; tấm đặt trong hộp phải dò từng đoạn mép ở hình bằng (064175 có lưỡi 84 x 1.5); số nhỏ trong chuỗi (5, 9, 10) đều đã gán.
-- Kích thước: tính theo chuỗi kích thước, không giả định số tròn/giữa/đối xứng (064040, 064045); dung sai vẽ giá trị giữa (55 +0.2/0 → 55.1); số trong ngoặc chỉ tham khảo; DXF khách theo đúng tỉ lệ khung tên.
+- Kích thước: tính theo chuỗi kích thước, không giả định số tròn/giữa/đối xứng (064040, 064045); kích thước thiếu hoặc không chắc thì kỳ vọng là chi tiết vẫn được vẽ theo tỉ lệ PDF kèm Flag 3 (bỏ chi tiết vì thiếu kích thước là sai; vẽ theo tỉ lệ mà không có Flag 3 là CẢNH BÁO); dung sai vẽ giá trị giữa (55 +0.2/0 → 55.1); số trong ngoặc chỉ tham khảo; DXF khách theo đúng tỉ lệ khung tên.
 - Chuỗi không cộng đủ tổng, cặp gương: so từng tấm theo pixel, không suy tấm này từ tấm kia (065504: số 60 đo tới tâm lỗ, không phải tới mép ô khoét).
 - Chỗ uốn: phải biết mỗi kích thước là trong hay ngoài (blind_table ghi); là kích thước trong mà phôi chưa đổi sang ngoài là LỖI; không xác định được thì cảnh báo.
+- Nét đứt trên PDF chỉ là đường uốn khi có dấu hiệu uốn rõ (`dxf-sheetmetal` mục 5, dòng "Nhận diện đường uốn"); nét khuất/đường hỗ trợ kích thước thì kỳ vọng file KHÔNG có DASHED và KHÔNG có Flag vì nét đó. Không lấy nét đứt không có dấu hiệu uốn làm căn cứ báo thiếu đường uốn hay thiếu độ giãn dài. File có DASHED hoặc Flag (5, 16...) cho nét như vậy, hoặc nét đứt không phân loại được: chỉ báo ngắn gọn để người dùng xác nhận, không tự sửa.
 - Tra bảng giãn: đúng khoảng chiều dài uốn của mã trước khi lấy số.
 - Độ giãn: nguồn đúng (tay viết > bảng Asahi/AICOKU 646 cho 90°; góc khác 90° do người dùng cho); vị trí 2 đường uốn tính từ 2 mép; tổng phôi = ngoài + ngoài - giãn. Giãn lấy từ công thức/K/nội suy bảng 90° cho góc ≠ 90° mà không có số tay hay số người dùng cho là SAI độ giãn dài (mục 5.4). Khách có quy định riêng (ví dụ ×2 một phía) thì đối chiếu theo quy định đó.
 - Màu POINT: có dấu THROUGH HOLE/đột xuyên hoặc khách quy định piercing xuyên mà POINT trắng là LỖI (Sai màu PIERCING).
@@ -83,7 +84,7 @@ Chỉ dùng khi người dùng yêu cầu "check" một file DXF đã có; KHÔN
 - Kegaki: có ヨ khoanh tròn / ケガキ / khách 851 thì mọi tấm nhận hàn có kegaki; chi tiết hàn sát mép ngoài thì không kegaki (521029-08); ống tròn vạch đủ đường kính; kegaki vẽ trên đúng mặt; tấm nghi có kegaki mà không chắc phải có Flag 12.
 - Rạch Green: mọi góc lõm vách–tấm, hộp đã có rạch; điểm đầu cách mép khoét = Piercing ngoài, sâu t + 0.2.
 - Phôi uốn nhiều mặt: so biên dạng ngoài từng mặt với nét trên hình chiếu của mặt đó, không chỉ so kích thước tổng. Rạch Green có khi và chỉ khi mép tại góc lõm ngang bằng kích thước uốn ngoài; rạch thừa hay thiếu đều báo.
-- Flag: mọi điểm thuộc 20 trường hợp đã ghi, cũng có trong báo cáo; không Flag chỉ thị riêng hay lệch số trong ngoặc/依頼.
+- Flag: mọi điểm thuộc 20 trường hợp đã ghi, cũng có trong báo cáo; không Flag chỉ thị riêng hay lệch số trong ngoặc/依頼, không Flag nét đứt không phải đường uốn.
 - Thứ tự: đúng thứ tự trang PDF, mã bị gạch đã bỏ, không thiếu mã.
 
 ## 5. Các trường hợp tính là LỖI|

@@ -81,5 +81,90 @@
   ],
   "scriptAt": "2026-11-19T03:38:16Z",
   "at": "2026-11-19T03:50:02Z"
+ },
+ "521126-23": {
+  "items": [
+   {
+    "code": "26-071803",
+    "level": "canhbao",
+    "text": "Thừa lỗ: 2 lỗ tại (7.5; 7.5), (117.5; 7.5): φ7 không có vòng tròn nào cùng tâm trong DXF khách",
+    "src": "script",
+    "tool": "doi_chieu_khach"
+   },
+   {
+    "code": "26-071803",
+    "level": "canhbao",
+    "text": "Sai biên dạng ngoài: cạnh (2; 0)-(123; 0) không nằm trên nét của DXF khách, lệch ≥ 8 (56% chiều dài)",
+    "src": "script",
+    "tool": "doi_chieu_khach"
+   },
+   {
+    "code": "26-071803",
+    "level": "canhbao",
+    "text": "Sai biên dạng ngoài: cạnh (123; 15)-(2; 15) không nằm trên nét của DXF khách, lệch ≥ 8 (56% chiều dài)",
+    "src": "script",
+    "tool": "doi_chieu_khach"
+   },
+   {
+    "code": "26-071803",
+    "level": "canhbao",
+    "text": "Sai biên dạng ngoài: cạnh (125; 2)-(125; 13) không nằm trên nét của DXF khách, lệch 5.375 (100% chiều dài)",
+    "src": "script",
+    "tool": "doi_chieu_khach"
+   },
+   {
+    "code": "26-071803",
+    "level": "canhbao",
+    "text": "Sai biên dạng ngoài: cạnh (123; 0)-(125; 2) không nằm trên nét của DXF khách, lệch 2 (89% chiều dài)",
+    "src": "script",
+    "tool": "doi_chieu_khach"
+   },
+   {
+    "code": "26-071803",
+    "level": "canhbao",
+    "text": "Sai biên dạng ngoài: cạnh (125; 13)-(123; 15) không nằm trên nét của DXF khách, lệch 1.75 (89% chiều dài)",
+    "src": "script",
+    "tool": "doi_chieu_khach"
+   },
+   {
+    "code": "26-071803",
+    "level": "canhbao",
+    "text": "Sai biên dạng ngoài: cạnh (0; 2)-(2; 0) không nằm trên nét của DXF khách, lệch 1 (78% chiều dài)",
+    "src": "script",
+    "tool": "doi_chieu_khach"
+   },
+   {
+    "code": "26-071803",
+    "level": "canhbao",
+    "text": "Sai biên dạng ngoài: cạnh (2; 15)-(0; 13) không nằm trên nét của DXF khách, lệch 1 (78% chiều dài)",
+    "src": "script",
+    "tool": "doi_chieu_khach"
+   },
+   {
+    "code": "26-071803",
+    "level": "canhbao",
+    "text": "Thiếu Flag: Hình khác DXF khách nhưng mã không có Flag 1 (\"Kích thước PDF và DXF khác nhau\")",
+    "src": "script",
+    "tool": "doi_chieu_khach"
+   },
+   {
+    "code": "26-071804",
+    "level": "canhbao",
+    "text": "hai cánh ngoài cùng bằng nhau (60 mm) nhưng lỗ không đối xứng (1 lỗ φ14 so 2 lỗ φ0); chi tiết chữ コ mặc định mỗi cánh đủ lỗ (dxf-sheetmetal mục 10), kiểm lại ghi chú/bản vẽ, không có thì Flag",
+    "src": "script",
+    "tool": "dxf_check"
+   }
+  ],
+  "info": {
+   "26-071800": "Đối chiếu DXF khách: không đối chiếu được",
+   "26-071803": "Đối chiếu DXF khách -07.DXF (hình phẳng, xoay 90° ngược chiều kim đồng hồ): biên khớp 65%, lỗ trùng tâm 0/2",
+   "26-071804": "Đối chiếu DXF khách: không đối chiếu được"
+  },
+  "scriptErr": [],
+  "scriptRan": [
+   "doi_chieu_khach",
+   "dxf_check"
+  ],
+  "scriptAt": "2026-11-26T09:44:51Z"
  }
 }

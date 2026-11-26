@@ -482,7 +482,7 @@ function orderDrawer(o){
 function rutKQ(li){
   const loi = li.loi || [];
   if (!loi.length) return '';
-  const row = (h, v) => `<div class="rk-r"><b>${h}</b><div>${v}</div></div>`;
+  const row = (h, v) => `<div class="rk-r"><b>${h}:</b> ${v}</div>`;
   return `<div class="rk">${row('Sai ở chỗ nào', loi.length === 1 ? esc(loi[0]) : '<ul>' + loi.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>')}${row('Nguyên nhân', esc(li.nguyen_nhan || 'Chưa xác định'))}${row('Cần update', esc(li.update || 'Chưa ghi'))}</div>`;
 }
 /* khung chi tiết 1 mã bản vẽ (mục Đánh giá AI): xem thông tin + đổi Chờ check / Đúng / Sai */
@@ -644,7 +644,7 @@ function renderQA(){
     : jb.status === 'xong' ? 'Lần gần nhất xong ' + hm(jb.doneAt || jb.at) + (jb.result ? ': ' + jb.result : '.') : 'Lần gần nhất bị lỗi' + (jb.result ? ': ' + jb.result : '.');
   // kết quả lần rút gần nhất: mỗi mã chỉ 3 mục (Sai ở chỗ nào, Nguyên nhân, Cần update)
   const kq = jb && jb.status === 'xong' ? (jb.items || []).map(it => [it.key, (S.loi || {})[it.key]]).filter(([k, v]) => v && (v.loi || []).length) : [];
-  const kqHtml = kq.length ? `<h3>Kết quả rút kinh nghiệm <span class="n">${kq.length}</span> <span class="t3" style="font-weight:400">${hm(jb.doneAt || jb.at)}</span></h3>${kq.map(([k, v]) => `<div class="rk-m"><b class="mono"><span style="color:var(--tx)">${esc(k.split('_')[0])}</span> · ${esc(k.split('_')[1] || k)}</b>${rutKQ(v)}</div>`).join('')}` : '';
+  const kqHtml = kq.length ? `<h3>Kết quả rút kinh nghiệm <span class="n">${kq.length}</span> <span class="t3" style="font-weight:400">${hm(jb.doneAt || jb.at)}</span></h3>${kq.map(([k, v]) => `<div class="rk-m"><div class="rk-c"><b class="mono">${esc(k.split('_')[1] || k)}</b> <span class="t3">(đơn ${esc(k.split('_')[0])})</span></div>${rutKQ(v)}</div>`).join('')}` : '';
   const why = busy ? 'Đang có việc rút kinh nghiệm' : !ready.length ? 'Chưa có mã Sai nào đủ file T và F' : '';
   const state = v => !v.folder ? 'chưa có folder Sua_loi' : !v.hasF ? 'chưa có file F' : 'đã có F, chờ file T';
   const ordInfo = k => { const o = (S.data.orders || []).find(x => x.order === (k.split('_')[0])); return o ? ' <span class="t3">· ' + dm(o.date) + (o.customer ? ' · ' + esc(o.customer) : '') + '</span>' : ''; };
@@ -994,7 +994,7 @@ document.addEventListener('click', e => {
     api('/api/jobs/check', {order, codes}).then(r => {
       const sc = r.script || {}, n = (r.risky || []).length;
       const head = (sc.ran || []).length ? 'Script: ' + (sc.loi || 0) + ' lỗi, ' + (sc.canhbao || 0) + ' cảnh báo. ' : 'Script không chạy được' + ((sc.err || []).length ? ' (' + sc.err[0] + ')' : '') + '. ';
-      toast(head + (r.job ? (r.why === 'rui_ro' ? 'Đã giao agent đọc mù ' + n + ' mã rủi ro.' : r.why === 'ma' ? 'Đã giao agent đọc mù mã này.' : 'Đã giao agent check cả đơn.') : 'Không có mã đáng ngờ nên không cần đọc mù (0 token).'));
+      toast(head + (r.job ? (r.why === 'rui_ro' ? 'Đã giao agent: đọc mù ' + n + ' mã script báo' + (((r.skim || []).length) ? ', đọc lướt ' + r.skim.length + ' mã script báo sạch.' : '.') : r.why === 'ma' ? 'Đã giao agent đọc mù mã này.' : 'Đã giao agent check cả đơn.') : 'Không có mã đáng ngờ nên không cần đọc mù (0 token).'));
       load(true); }, e2 => { b.disabled = false; toast(e2.message); });
     return;
   }

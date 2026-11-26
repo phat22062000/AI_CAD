@@ -84,16 +84,19 @@ def script_check(repo, order_dir, order, known):
     return out
 
 
-def pick_risky(items, known, cap=0.3):
-    """Mã rủi ro để đọc mù: mã có LỖI của dxf_check hoặc có chỗ khác DXF khách (doi_chieu_khach); nhiều điểm trước;
-    tối đa cap (30%) số mã của đơn, ít nhất 1. CẢNH BÁO riêng của dxf_check (hay gặp cả ở mã đúng) chỉ hiện trên trang, không kéo theo đọc mù."""
+def pick_risky(items, known, cap=None):
+    """Mã rủi ro để đọc mù ĐẦY ĐỦ (Phát chốt 26/11/2026): mã có LỖI hoặc CẢNH BÁO của script (dxf_check, doi_chieu_khach), tức cả mã khác DXF khách;
+    nhiều điểm trước. Không giới hạn số mã (cap=None); truyền cap (vd 0.3) nếu cần giới hạn lại. Mã còn lại (script báo sạch) do add_check_job
+    giao đọc lướt (skim) các hạng mục script không phủ: kích thước, vị trí lỗ, mặt ngoài, relief."""
     sc = {}
     for it in items:
-        w = 10 if it.get('level') == 'loi' else 3 if it.get('tool') == 'doi_chieu_khach' else 0
+        w = 10 if it.get('level') == 'loi' else 3 if it.get('tool') == 'doi_chieu_khach' else 1 if it.get('level') == 'canhbao' else 0
         if w and it.get('code') in known:
             sc[it['code']] = sc.get(it['code'], 0) + w
-    n = max(1, int(math.ceil(cap * len(known))))
-    return [c for c, _ in sorted(sc.items(), key=lambda z: (-z[1], known.index(z[0])))][:n]
+    out = [c for c, _ in sorted(sc.items(), key=lambda z: (-z[1], known.index(z[0])))]
+    if cap:
+        out = out[:max(1, int(math.ceil(cap * len(known))))]
+    return out
 
 
 def norm_loai(s):

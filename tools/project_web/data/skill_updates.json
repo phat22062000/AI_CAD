@@ -256,5 +256,28 @@
    }
   ],
   "skipped": []
+ },
+ {
+  "id": "20261126155242_updskill",
+  "archived": [],
+  "at": "2026-11-26T08:53:04Z",
+  "before": "2026.11.26-1",
+  "after": "2026.11.26-2",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261126155242_updskill",
+  "changes": [
+   {
+    "proposal": "071828-phoi-dai-tren-2500-JLJ.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "179",
+    "old": "- Phôi dài hẹp (Oy ≤ 100 và Ox ≥ 1000): thêm POINT trên mép trên (y = Oy lớn nhất), mỗi điểm 1 TEXT cao 10 đặt đúng tại điểm (layer 0, style Standard). Theo chiều dài L (Ox): 1000 ≤ L ≤ 1500 → 1 J + 1 LJ; 1500 < L ≤ 2000 → 2 J + 1 LJ; 2000 < L ≤ 2500 → 3 J + 1 LJ.",
+    "new": "- Phôi dài hẹp (Oy ≤ 100 và Ox ≥ 1000): thêm POINT trên mép trên (y = Oy lớn nhất), mỗi điểm 1 TEXT cao 10 đặt đúng tại điểm (layer 0, style Standard). Theo chiều dài L (Ox): 1000 ≤ L ≤ 1500 → 1 J + 1 LJ; 1500 < L ≤ 2000 → 2 J + 1 LJ; 2000 < L ≤ 2500 → 3 J + 1 LJ; 2500 < L ≤ 3000 → 4 J + 1 LJ (cứ thêm 500 thì thêm 1 J). Phôi dài hẹp ngoài các khoảng trên hoặc không chắc số J: vẫn vẽ theo quy luật gần nhất và ghi Flag, không được bỏ trống J/LJ mà không báo."
+   }
+  ],
+  "skipped": [
+   {
+    "proposal": "071828-phoi-dai-tren-2500-JLJ.md (phần a)",
+    "why": "đích là script, cần người làm"
+   }
+  ]
  }
 ]

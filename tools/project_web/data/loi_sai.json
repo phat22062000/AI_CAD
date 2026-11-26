@@ -417,5 +417,60 @@
   "update": "Script: thêm kiểm khe cụt ≤2t và nét rạch khách vào dxf_check/doi_chieu_khach; SKILL chưa sửa (1 mẫu)",
   "nguon": "T/F",
   "khop": 86.7
+ },
+ "521126-06_26-070807": {
+  "loi": [
+   "4 chỗ khoét góc hộp (vd đỉnh dưới trái, lõm 72–75.86): F bo thêm 12 ARC R1 ở 3 góc lõm mỗi chỗ (vd tâm (73; 74.86), (74.86; 74.86), (74.86; 73)); T và DXF khách để cả 3 góc lõm sắc, không có cung nào."
+  ],
+  "loai": [
+   "Sai biên dạng ngoài"
+  ],
+  "at": "2026-11-26T04:43:23Z",
+  "nguyen_nhan": "F không bóc entity DXF khách (RX-138514-C1-02.dxf): ở góc relief DXF chỉ có LINE vuông, không ARC; R1 trong DXF chỉ là R uốn (hình bằng, tỉ lệ 1:3). Agent xem PDF (ghi chú R1 ở hình 3D, 曲げR) rồi tự bo theo mẫu SKILL dòng 136-137.",
+  "update": "dxf-sheetmetal dòng 81 thêm và dòng 136, 138 sửa: “Mọi cung bo trên phôi phải truy được về entity ARC của DXF khách (hoặc ghi chú n-R1 trỏ đúng góc); DXF không có cung ở góc lõm thì để sắc. Ghi chú R1 ở hình 3D và (曲げR) không phải bo góc phôi.” Chờ Phát duyệt.",
+  "nguon": "T/F",
+  "khop": 77.6
+ },
+ "521126-06_26-071142": {
+  "loi": [
+   "Toàn bộ chi tiết lệch dồn theo chỗ uốn: tấm giữa F lệch +0.039 (lỗ φ4.2 x 196.58, T 196.541), cánh phải +0.078 (lỗ φ7 x 444.099, T 444.021), 4 đường DASHED +0.039; phôi F 513.16, T 513.08. Hình dạng, cung, số entity giống nhau."
+  ],
+  "loai": [
+   "Sai độ giãn dài"
+  ],
+  "at": "2026-11-26T04:43:26Z",
+  "nguyen_nhan": "Suy đoán: T dùng giãn ≈ 4.66 mỗi chỗ uốn, F dùng 4.62 theo ghi tay PDF trang 7 (183.9+154.6+183.9-(4.62×2)=513.16) và bảng AICOKU 2.3t; không có nguồn nào cho 4.66.",
+  "update": "Không cần sửa skill, đã ghi bài học feedback_gian-lech-0-04-moi-cho-uon-khac-ghi-tay-071142 (F đúng theo ghi tay; chưa đề xuất sửa vì không có bằng chứng cho 4.66).",
+  "nguon": "T/F",
+  "khop": 59.3
+ },
+ "521126-22_26-071828": {
+  "loi": [
+   "Mép trên (y = 25) thiếu 5 cặp POINT + TEXT: 4 TEXT J tại x = 30, 650, 1270, 1890 và 1 TEXT LJ tại x = 2510 (T có, F không có entity nào).",
+   "Mã không có Flag nào (flags rỗng) dù phôi dài hẹp 2540 x 25 vượt bảng J/LJ của skill (≤ 2500), nên không báo thiếu."
+  ],
+  "loai": [
+   "Thiếu J/LJ",
+   "Thiếu Flag"
+  ],
+  "at": "2026-11-26T08:32:08Z",
+  "nguyen_nhan": "SKILL.md dòng 179 chỉ có J/LJ tới L = 2500, phôi 2540 ngoài bảng; F không vẽ J/LJ và không Flag. Suy đoán: agent coi ngoài bảng là không cần J/LJ.",
+  "update": "dxf-sheetmetal dòng 179 thêm: “2500 < L ≤ 3000 → 4 J + 1 LJ (cứ thêm 500 thì thêm 1 J); ngoài các khoảng trên hoặc không chắc số J thì vẫn vẽ theo quy luật gần nhất và ghi Flag, không bỏ trống.” Script: dxf_check.py dòng 416/434 mở nJ = 4 tới 3000, báo LỖI khi phôi dài hẹp thiếu J/LJ mà không có Flag.",
+  "nguon": "T/F",
+  "khop": 90.6
+ },
+ "521126-23_26-071800": {
+  "loi": [
+   "4 rãnh rộng 7 ở đầu phẳng vẽ tâm cung y=22 và 58 (tâm-tâm 36), đúng ra y=18.5 và 61.5 (tâm-tâm 43): ngắn hơn 7 mỗi rãnh.",
+   "4 rãnh ở cánh nghiêng vẽ tâm cung y=85.52 và 126.52 (tâm-tâm 41), đúng ra y=82.02 và 130.02 (tâm-tâm 48); 16 cung R3.5 lệch tâm."
+  ],
+  "loai": [
+   "Sai kích thước lỗ"
+  ],
+  "at": "2026-11-26T09:45:58Z",
+  "nguyen_nhan": "Agent coi 18.5/43/48 là mép ngoài/tổng dài rãnh, trong khi DXF khách có đoạn thẳng rãnh dừng đúng ở 202.5 và 245.5 (tâm cung đầu rãnh) nên 43/48 là tâm-tâm. Suy đoán: bỏ sót quy tắc dòng 33 SKILL, không có log.",
+  "update": "Chờ hồi quy, chưa sửa; đã ghi bài học feedback_ranh-kich-thuoc-den-tam-cung-dau-ranh-071800.md (dxf-sheetmetal dòng 33 đã có quy tắc gióng rãnh dừng ở tâm cung).",
+  "nguon": "T/F",
+  "khop": 38.5
  }
 }

@@ -2,7 +2,7 @@
 name: "dxf-sheetmetal"
 description: "Tạo bản vẽ triển khai kim loại tấm từ hình vẽ trong file PDF hay dữ liệu DXF."
 metadata:
-  version: "2026.11.25-3"
+  version: "2026.11.26-2"
 ---
 
 Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_Laser.md`, `DS_Khach_Hang.md`, `Quy_Tac_Lo_Moi.md`, `Bang_Do_Gian_Asahi.xlsx`, `Bang_Do_Gian_AICOKU ALPHA.xlsx`, `Template.dxf`.
@@ -78,7 +78,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 ### 4.2 Từ DXF khách
 - Có DXF thì LẤY DXF LÀM NỀN rồi chỉnh theo chỉ thị riêng (DXF không phải lúc nào cũng đúng). Dựng từ DXF TRƯỚC rồi mới so PDF.
 - Trích hình: layer 0, đưa về tỉ lệ 1:1 (DXF vẽ theo tỉ lệ khung tên 1:2, 1:3... thì nhân hệ số), nối LINE/ARC thành vòng kín; bỏ hình chiếu khác (vẫn đọc để biết đặc điểm xuyên hay không), kích thước, đường tâm. Hình có thể nằm trong BLOCK (INSERT JZB_xxxx): đọc cả nội dung block, không chỉ modelspace. Ví dụ 100-09.dxf (26-063640/641): hình trong JZB_0003/0004/0005; cánh rộng 61 kéo tới 29 tính từ mép tự do (cung R3 tâm (58; 26)), không dừng ở đường uốn 27.34.
-- DXF chỉ có hình chiếu (không có phôi) vẫn phải trích số liệu (chiều dài mép tự do, chân cánh, tọa độ lỗ) từ đó.
+- DXF chỉ có hình chiếu (không có phôi) vẫn phải trích số liệu (chiều dài mép tự do, chân cánh, tọa độ lỗ) từ đó: bóc từng entity (LINE/ARC/CIRCLE, kể cả trong BLOCK) của từng hình chiếu, quy về 1:1, ghép từng mặt (mặt chính, từng cánh) rồi mới dựng phôi; ở mọi chỗ có góc (relief, khe, đầu cánh) đọc entity thực tế tại đúng góc đó. Mọi cung bo trên phôi phải truy được về entity ARC của DXF khách (hoặc ghi chú n-R trỏ đúng góc trên PDF khi không có DXF); DXF cho thấy góc sắc thì để sắc. Ví dụ trong skill chỉ minh họa cách vẽ, không phải nguồn bo góc; chữ R1 ở hình 3D và (曲げR) không phải bo góc phôi. Chỉ so PDF sau khi đã dựng xong theo DXF.
 - Áp chỉ thị PDF lên nền DXF: ghi chú laser (062682 'laser: φ11.6' → vẽ φ11.6 thay φ12 H7 của DXF), độ giãn và chiều dài tay viết. Kích thước PDF khác DXF (kể cả φ lỗ) mà không có chỉ thị riêng: dựng theo DXF rồi Flag 1. Mọi chỗ lệch DXF–PDF phải có Flag (mục 11.4); khách có quy định riêng (PDF chuẩn/DXF chuẩn) theo `Quy_Tac_Theo_Ma_Khach_AnDanh.md`.
 - Phôi tham khảo (展開図 参考) của khách: hiệu chỉnh chiều dài theo độ giãn tay viết / 旭金属の展開: giữ vị trí tính từ mép tự do của cánh, phần bên kia đường uốn tính từ mép đối diện (dịch cả phần đó), vẽ lại 2 đường DASHED.
 - Bản vẽ phẳng có cánh uốn chỉ hiện ở hình chiếu cạnh : mở cánh ra; đầu tự do cánh = đường uốn phía cánh - (ngoài cánh - giãn). Slit chân cánh của khách nằm đúng vùng uốn là dấu hiệu đúng.
@@ -120,7 +120,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Vách bên (2 vách đối nhau uốn từ hai mép tấm, mỗi vách ngắn hơn tấm): rạch ở 4 góc nối vách–tấm, cùng cấu trúc; LINE cuối vào tấm sâu t + 0.2 theo phương ngang của mép vách. Ví dụ 26-060234 (t3.2): góc (137.7; 37.7): LINE (140.7; 34.7) → (137.846; 37.554), ARC tâm (137.493; 37.2) R0.5 từ 45° đến 90°, LINE (137.493; 37.7) → (134.3; 37.7).
 - Vách đơn (1 vách uốn từ một mép, ngắn hơn tấm): cũng PHẢI rạch ở 2 góc lõm, LINE cuối dọc mép bên của vách (không nhất thiết theo Ox). Ví dụ 26-060393 (SUS t2, vách 630 trên tấm 700, cách 2 đầu 35): góc (35; 60): LINE (29; 66) → (34.854; 60.146), ARC tâm (34.5; 59.793) R0.5 từ 0° đến 45°, LINE (35; 59.793) → (35; 57.8); góc (665; 60) đối xứng gương. Mọi góc lõm vách–tấm đều phải kiểm theo điều kiện rạch bên dưới.
 - Điều kiện rạch tại góc lõm giữa mép khe/khoét và mép bên của cánh uốn. Đường uốn phía cánh là đường DASHED gần mép tự do của cánh hơn; d = khoảng từ đường này tới mép khe, đo về phía tấm chính.
-  - Mép khe nằm ngoài đường uốn phía cánh (về phía mép tự do) hoặc trùng đường đó: rạch.
+  - Mép khe nằm ngoài đường uốn phía cánh (về phía mép tự do) hoặc trùng đường đó: rạch. Ghi chú スリット/slit của khách ở góc lõm là chỗ rạch: vẽ đủ 3 entity Green, không chép làm biên.
   - Mép khe nằm trong đường uốn phía cánh với d < t: rạch. d ≥ t: không rạch.
   - Khi rạch: LINE đầu và ARC R0.5 như các ví dụ trên; LINE cuối chạy dọc mép bên khe tới điểm cách đường uốn phía cánh t + 0.2 về phía tấm chính. Điểm cuối tính từ đường uốn, không tính từ góc khe (mép khe nằm ngoài thì rạch dài thêm đúng khoảng từ mép khe tới đường uốn).
   - Đường uốn DASHED ở cánh có khe: mép khe nằm ngoài đường uốn phía cánh thì 2 đường chạy hết bề rộng, kể cả đoạn ngang khe; mép khe trùng hoặc nằm trong đường đó thì cả 2 đường ngắt trong phạm vi bề rộng khe, chỉ vẽ trên phần cánh còn lại.
@@ -133,9 +133,9 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Ngoại lệ: relief góc của khách (bản đúng 26-063377, khách 646, đơn 521027-11, SPCC t1.2, cánh 73, giãn 2.14, a = 70.86): mỗi đỉnh hộp bị cắt khối vuông s (ghi "3.5 外寸" ở hình bằng, hình cạnh, hình từ dưới; hình 3D thấy lỗ ở chỗ giao 3 mặt), cắt cả mặt chính và 2 cánh; góc lõm có ghi chú R (4-R1 ở mặt chính, 2×2-R1 ở cánh). KHÔNG khoét kiểu hộp thường, KHÔNG rạch Green.
   - Quy đổi s: trên cánh cách mép tự do (ngoài cánh - s) = 73 - 3.5 = 69.5; trên mặt chính cách mép phôi a + s = 74.36. Mỗi góc khoét vuông từ 69.5 đến 74.36 theo cả X và Y, nối với phần khoét ngoài các cánh.
   - Cánh lùi: cánh lọt giữa 2 cánh kia (ghi 内寸, ví dụ 277.6 = 280 - 2t) có mép ở a + t = 72.06; cánh che đầu cánh kia giữ mép ở a = 70.86. Xác định cánh nào lùi theo hình chiếu, không chép theo 26-057140.
-  - 3 góc lõm bo theo ghi chú (R1), 2 góc lồi bo R0.5 laser. Đường uốn DASHED chỉ chạy giữa 2 mép relief (từ a + s đến cạnh - a - s).
+  - 3 góc lõm của chỗ khoét chỉ bo khi DXF khách có ARC ở đúng các góc lõm đó (hoặc ghi chú n-R1 trỏ đúng các góc đó); không có thì để góc lõm sắc, không bo theo ví dụ ở dòng 137. 2 góc lồi bo R0.5 laser. Đường uốn DASHED chỉ chạy giữa 2 mép relief (từ a + s đến cạnh - a - s).
   - Góc dưới trái (trước xoay, phôi 421.72 x 206.72, cánh dưới lùi): (72.06; 0) → (72.06; 69.5) → (74.36; 69.5) → (74.36; 74.36) → (69.5; 74.36) → (69.5; 70.86) → (0; 70.86); R0.5 tại (72.06; 69.5) và (69.5; 70.86), R1 tại 3 góc còn lại.
-  - Ghi chú "A部 球面状にR取り(R1) 手仕上げ" là hoàn thiện tay sau uốn, không vẽ. Lỗi đã gặp (29/10/2026): coi "3.5 外寸" là tiếp tuyến chỗ uốn, khoét hộp thường + rạch Green nên sai vị trí giao 4 cánh với mặt chính.
+  - Ghi chú "A部 球面状にR取り(R1)" (có hoặc không có 手仕上げ) là bo cầu 3D/hoàn thiện sau uốn và "(曲げR)" là R uốn: không vẽ, không làm căn cứ bo góc phôi. Lỗi đã gặp: (1) coi "3.5 外寸" là tiếp tuyến chỗ uốn, khoét hộp thường + rạch Green nên sai vị trí giao 4 cánh với mặt chính (1 mẫu); (2) bo R1 3 góc lõm dù DXF khách không có cung ở đó (1 mẫu).
 
 ## 7. Lỗ
 - Vị trí theo chuỗi kích thước (mục 2). Lỗ trên cánh: giữ khoảng cách đo từ mép xa (mép tự do) của cánh. Lỗ trên đáy chữ U: giữ khoảng cách so với tâm đáy.
@@ -176,7 +176,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 ## 10. Đặt hình trên phôi
 - Góc dưới trái tại (0,0), cạnh dài hơn theo X. Chỉ xoay bội 90°, không lật. Chọn hướng có cạnh thẳng của biên nằm trên cả Ox và Oy (tiếp xúc bằng cạnh, không chỉ một đỉnh). Ví dụ 26-057025: khối chữ nhật sát góc dưới trái, cánh nghiêng hướng lên phải. Hai hướng (xoay 180°) đều có cạnh áp trục thì chọn hướng có cạnh áp trục dài hơn.
 - Vật liệu Nhôm hoặc 304CSP (thép không gỉ) có chi tiết uốn: đường uốn (DASHED) LUÔN song song trục Ox; xoay bội 90° hình khai triển nếu cần (không lật). Ưu tiên hơn "cạnh dài theo X" và hơn mọi quy tắc xoay khác trong mục này, mục 3 và mục 6: chọn hướng thỏa đường uốn // Ox rồi mới xét cạnh áp Ox/Oy, và giữa 2 hướng xoay 180° thì chọn hướng theo quy tắc áp trục. Nhiều đường uốn không song song nhau (vuông góc nhau): song song Ox cho các đường dài nhất/nhóm nhiều đường nhất, nêu rõ trong báo cáo. Phẳng không uốn thì không áp dụng.
-- Phôi dài hẹp (Oy ≤ 100 và Ox ≥ 1000): thêm POINT trên mép trên (y = Oy lớn nhất), mỗi điểm 1 TEXT cao 10 đặt đúng tại điểm (layer 0, style Standard). Theo chiều dài L (Ox): 1000 ≤ L ≤ 1500 → 1 J + 1 LJ; 1500 < L ≤ 2000 → 2 J + 1 LJ; 2000 < L ≤ 2500 → 3 J + 1 LJ.
+- Phôi dài hẹp (Oy ≤ 100 và Ox ≥ 1000): thêm POINT trên mép trên (y = Oy lớn nhất), mỗi điểm 1 TEXT cao 10 đặt đúng tại điểm (layer 0, style Standard). Theo chiều dài L (Ox): 1000 ≤ L ≤ 1500 → 1 J + 1 LJ; 1500 < L ≤ 2000 → 2 J + 1 LJ; 2000 < L ≤ 2500 → 3 J + 1 LJ; 2500 < L ≤ 3000 → 4 J + 1 LJ (cứ thêm 500 thì thêm 1 J). Phôi dài hẹp ngoài các khoảng trên hoặc không chắc số J: vẫn vẽ theo quy luật gần nhất và ghi Flag, không được bỏ trống J/LJ mà không báo.
   - J đầu cách đầu mép thẳng trên 30, LJ cách cuối mép thẳng trên 30: x_đầu và x_cuối là hai đầu đoạn thẳng của mép trên, bỏ đoạn vát C và bo R ở đầu; mép trên không vát thì x_đầu = 0, x_cuối = L. N = số J + 1 điểm chia đều, bước (x_cuối - x_đầu - 60)/(N - 1). Ví dụ 2J + LJ: x_đầu + 30, giữa, x_cuối - 30.
     - Phôi có J/LJ: xoay 180° để mép thẳng nằm trên, phần tai/cánh nhô ra nằm dưới ; vẫn là bội 90°, không lật.
 
@@ -207,7 +207,7 @@ Tài liệu project (`knowledge/Context_Laser/` hoặc Project docs): `Quy_Tac_L
 - Ghi Flag tiếng Việt có dấu ngay dưới chữ mã khi gặp:
   1. Kích thước PDF và DXF khác nhau (kể cả cỡ ren lệch, ví dụ PDF M3, DXF M2.6).
   2. Kích thước giữa các hình chiếu không khớp.
-  3. Thiếu hoặc không chắc kích thước (chỉ khi không tính được qua chuỗi, mục 2; vẫn vẽ theo tỉ lệ PDF và ghi trong Flag phần vẽ theo tỉ lệ; kể cả góc bo cong thấy trên hình mà không ghi số R, mục 8).
+  3. Thiếu kích thước (chỉ khi không tính được qua chuỗi, mục 2; vẫn vẽ theo tỉ lệ PDF và ghi trong Flag phần vẽ theo tỉ lệ; kể cả góc bo cong thấy trên hình mà không ghi số R, mục 8).
   4. Kích thước và hình dạng không khớp.
   5. Ghi chú tay không đọc rõ.
   6. Kích thước ghi quá mờ, không đọc rõ.

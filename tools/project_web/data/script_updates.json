@@ -36,5 +36,24 @@
    }
   ],
   "skipped": []
+ },
+ {
+  "id": "20261126163635_updscript",
+  "archived": [
+   "071828-phoi-dai-tren-2500-JLJ.md"
+  ],
+  "at": "2026-11-26T09:39:59Z",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\script_backup\\20261126163635_updscript",
+  "changes": [
+   {
+    "proposal": "071828-phoi-dai-tren-2500-JLJ.md",
+    "file": "tools\\dxf_check.py",
+    "lines": "3-9, 16, 419-440, 662",
+    "old": "nJ = 1 if Wd <= 1500 else 2 if Wd <= 2000 else 3 if Wd <= 2500 else None; else: W('%s: phôi dài %s > 2500, quy tắc J/LJ chưa có, hỏi người dùng' ...)",
+    "new": "nJ thêm 4 if Wd <= 3000 (4 J + 1 LJ, không kiểm cao chữ ở khoảng này); L > 3000: giữ cảnh báo (mốc 3000) và ghi NO_JLJ; main báo LỖI 'thiếu J/LJ và thiếu Flag' nếu file ALL không có POINT lẫn Flag.",
+    "test": "119 file: F 071828 LỖI 0->6 (thiếu 5 POINT + TEXT), mã thoát 0->1; T không LỖI/CẢNH BÁO mới; mọi file khác không đổi; thời gian 131.2s->131.0s."
+   }
+  ],
+  "skipped": []
  }
 ]

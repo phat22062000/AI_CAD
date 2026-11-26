@@ -12,6 +12,7 @@ khít nhất lên một hình chiếu của khách, rồi so:
   - biên dạng: cạnh/cung của hình AI không nằm trên nét nào của DXF khách (kèm độ lệch);
   - hốc/rãnh/bậc không xuyên: hình chiếu cạnh của DXF khách (chữ nhật mỏng bằng chiều dày, cùng bề rộng hình phẳng) có nét ngang nằm giữa
     chiều dày mà hình AI vẽ cạnh/cung đúng đoạn đó -> CẢNH BÁO (phần không xuyên hết chiều dày không vẽ làm biên cắt); bỏ qua khoét đầu vít/ザグリ.
+  - rạch Green ở góc lõm: DXF khách có nét đỏ (màu 1) ngắn 0.3 đến 3 mà hình AI chép đúng nét đó thành LINE biên có một đầu cụt, quanh góc không có Green (bán kính 1.5) -> CẢNH BÁO "Sai rạch Green".
 Chỗ khác mà mã đó không có Flag 1 ("Kích thước PDF và DXF khác nhau") thì báo CẢNH BÁO (thiếu Flag 1 hoặc vẽ sai).
 Giới hạn: chi tiết uốn chỉ đối chiếu được cụm lỗ (hình trải không trùng hình chiếu); DXF khách vẽ khác tỉ lệ 1:1 thì bỏ qua;
 không biết nét bị gạch tay trên PDF, không biết mặt ngoài/kegaki. Kết quả là gợi ý để xem lại, không phải kết luận.
@@ -66,7 +67,7 @@ def arc_pt(c, r, a):
 def load_ai(path):
     """Trả về [(mã, [entity], [câu Flag])]. entity: ('L', p1, p2) | ('A', tâm, R, a0, quét) | ('C', tâm, R); chỉ nét cắt trắng."""
     doc = ezdxf.readfile(path)
-    ents, codes, flags = [], [], []
+    ents, codes, flags, gre = [], [], [], []
     for e in doc.modelspace():
         t = e.dxftype()
         if t == 'TEXT':
@@ -77,6 +78,12 @@ def load_ai(path):
                 flags.append((e.dxf.insert.y, decode_u(tx)))
             continue
         lt = (e.dxf.linetype if e.dxf.hasattr('linetype') else '').upper()
+        if col_of(e) == 3 and lt != 'DASHED' and t in ('LINE', 'ARC'):
+            if t == 'LINE':
+                gre.append(('G', (e.dxf.start.x, e.dxf.start.y), (e.dxf.end.x, e.dxf.end.y)))   # rạch Green: chỉ để biết quanh góc có rạch hay không
+            else:
+                gre.append(('G', arc_pt((e.dxf.center.x, e.dxf.center.y), e.dxf.radius, e.dxf.start_angle), arc_pt((e.dxf.center.x, e.dxf.center.y), e.dxf.radius, e.dxf.end_angle)))
+            continue
         if col_of(e) != 7 or lt == 'DASHED':
             if lt == 'DASHED' and t == 'LINE':
                 ents.append(('B', (e.dxf.start.x, e.dxf.start.y), (e.dxf.end.x, e.dxf.end.y)))   # đường uốn: chỉ để biết chi tiết có uốn
@@ -89,7 +96,7 @@ def load_ai(path):
             ents.append(('A', (e.dxf.center.x, e.dxf.center.y), e.dxf.radius, e.dxf.start_angle, (e.dxf.end_angle - e.dxf.start_angle) % 360))
     if not codes:
         m = re.search(r'(\d{6})', os.path.basename(path))
-        return [(m.group(1) if m else os.path.basename(path), ents, None)]      # file riêng: không có Flag để xét
+        return [(m.group(1) if m else os.path.basename(path), ents + gre, None)]      # file riêng: không có Flag để xét
 
     def yr(e):
         if e[0] in ('L', 'B'):
@@ -114,6 +121,7 @@ def load_ai(path):
         cy = next(y for y, c in codes if c == cd[0])
         nxt = max([y for y, c in codes if y < cy] or [-1e18])
         fl = ' '.join(t for y, t in sorted(flags, reverse=True) if nxt < y < cy)
+        es = es + [g for g in gre if y0 - 1 <= min(g[1][1], g[2][1]) and max(g[1][1], g[2][1]) <= y1 + 1]       # Green không tham gia chia nhóm theo Y
         out.append((cd[0], es, [x.strip() for x in re.split(r'(?:^|\s)\d+\.\s', fl) if x.strip()]))
     return out
 
@@ -136,6 +144,7 @@ class Khach:
     def __init__(self, path):
         self.path = path
         self.lines, self.circ, self.arcs = [], [], []
+        self.red = []                         # nét đỏ (màu 1) ngắn: chỗ khách chỉ rạch ở góc lõm
         self._walk(ezdxf.readfile(path).modelspace(), 0)
         self.grid = defaultdict(list)
         for i, (x1, y1, x2, y2) in enumerate(self.lines):
@@ -174,6 +183,8 @@ class Khach:
                     self._walk(e.virtual_entities(), depth + 1)
                 elif t == 'LINE':
                     self.lines.append((e.dxf.start.x, e.dxf.start.y, e.dxf.end.x, e.dxf.end.y))
+                    if e.dxf.color == 1 and 0.3 <= math.hypot(e.dxf.end.x - e.dxf.start.x, e.dxf.end.y - e.dxf.start.y) <= 3.0:
+                        self.red.append((e.dxf.start.x, e.dxf.start.y, e.dxf.end.x, e.dxf.end.y))
                 elif t == 'CIRCLE':
                     flip = e.dxf.extrusion.z < 0          # BLOCK chèn lật (extrusion -Z): toạ độ đang ở OCS, đổi về WCS
                     self.circ.append((-e.dxf.center.x if flip else e.dxf.center.x, e.dxf.center.y, e.dxf.radius))
@@ -390,7 +401,7 @@ def best_fit(part, K):
 
 
 # ---------------------------------------------------------------- so chi tiết
-def compare(code, part, flags, K, fit, flat):
+def compare(code, part, flags, K, fit, flat, greens=()):
     val, so, hh, oname, d, ents = fit
     nh = sum(1 for e in part if e[0] == 'C')
     xs = [p[0] for e in part for p in (samples(e, 3) if e[0] != 'C' else [(e[1][0] - e[2], e[1][1] - e[2]), (e[1][0] + e[2], e[1][1] + e[2])])]
@@ -506,6 +517,29 @@ def compare(code, part, flags, K, fit, flat):
                 if hit:
                     where = ', '.join(('%s-%s' % (loc(h[1]), loc(h[2])) if h[0] == 'L' else 'cung R%s tâm %s' % (f(h[2]), loc(h[1]))) for h in hit[:3])
                     add('Sai biên dạng ngoài', 'canhbao', 'Hình chiếu cạnh DXF khách (dày %s) có hốc/bậc KHÔNG xuyên ở đoạn %s %s đến %s (rộng %s%s) nhưng hình AI vẽ %d cạnh/cung nằm trọn trong đoạn đó (%s): phần không xuyên hết chiều dày thì không vẽ làm biên cắt; kiểm PDF xem có phải nét gạch/hốc nửa chiều dày' % (f(t), 'x' if ax == 0 else 'y', f(u), f(v), f(v - u), ', sâu %s từ mặt %s' % (f(dep), side) if dep is not None else '', len(hit), where), True)
+        # nét đỏ ngắn của khách (rạch ở góc lõm): hình AI chép đúng nét đó thành LINE biên có một đầu cụt, quanh góc không có rạch Green
+        if K.red:
+            fn = dict(ORI)[oname]
+            gp = [(fn(*q)[0] + d[0], fn(*q)[1] + d[1]) for g in greens for q in (g[1], g[2])]
+            ends = [(q[0] + d[0], q[1] + d[1]) for e in ents if e[0] != 'C' for q in ((e[1], e[2]) if e[0] == 'L' else (arc_pt(e[1], e[2], e[3]), arc_pt(e[1], e[2], e[3] + e[4])))]
+            same = lambda p, q: abs(p[0] - q[0]) <= TOL and abs(p[1] - q[1]) <= TOL
+            rach = []
+            for e0, e in zip(part, ents):
+                if e[0] != 'L':
+                    continue
+                a, b = (e[1][0] + d[0], e[1][1] + d[1]), (e[2][0] + d[0], e[2][1] + d[1])
+                if not any((same(a, (r[0], r[1])) and same(b, (r[2], r[3]))) or (same(a, (r[2], r[3])) and same(b, (r[0], r[1]))) for r in K.red):
+                    continue
+                na, nb = sum(1 for q in ends if same(q, a)) - 1, sum(1 for q in ends if same(q, b)) - 1
+                if (na == 0) == (nb == 0):
+                    continue                                   # cả hai đầu nối hoặc cả hai cụt: không phải khe cụt ở góc
+                cor = a if na else b
+                if not any(math.hypot(q[0] - cor[0], q[1] - cor[1]) <= 1.5 for q in gp):
+                    rach.append(e0)
+        else:
+            rach = []
+        if rach:
+            add('Sai rạch Green', 'canhbao', '%d nét đỏ ngắn của DXF khách (≈ %s) bị chép thành LINE biên có một đầu cụt (%s) mà quanh góc không có rạch Green: đó là chỗ rạch ở góc lõm, vẽ rạch Green 3 entity (LINE, ARC R0.5, LINE) thay vì chép nét khách làm biên' % (len(rach), f(length(rach[0])), ', '.join('%s-%s' % (loc(h[1]), loc(h[2])) for h in rach[:4])), True)
     if any(x['muc'] == 'canhbao' and not x.get('khong_xet_flag') for x in res['khac_biet']) and not has1 and not noflag:
         add('Thiếu Flag', 'canhbao', 'Hình khác DXF khách nhưng mã không có Flag 1 ("%s")' % FLAG1)
     return res
@@ -521,7 +555,7 @@ def src_dxf(src):
 
 
 def run(path, src, only=None):
-    parts = [(c, [e for e in es if e[0] != 'B'], fl, any(e[0] == 'B' for e in es)) for c, es, fl in load_ai(path)]
+    parts = [(c, [e for e in es if e[0] not in ('B', 'G')], fl, any(e[0] == 'B' for e in es), [e for e in es if e[0] == 'G']) for c, es, fl in load_ai(path)]
     ks, errs = [], []
     for p in src_dxf(src):
         try:
@@ -529,7 +563,7 @@ def run(path, src, only=None):
         except Exception as ex:
             errs.append('Không đọc được DXF khách %s: %s' % (os.path.basename(p), ex))
     out = {'file': os.path.basename(path), 'dxf_khach': [os.path.basename(k.path) for k in ks], 'loi_doc': errs, 'ket_qua': []}
-    for code, part, flags, bent in parts:
+    for code, part, flags, bent, greens in parts:
         if only and code not in only:
             continue
         if not ks:
@@ -548,7 +582,7 @@ def run(path, src, only=None):
         so, hh = fit[1], fit[2]
         flat = so >= (0.9 if bent else 0.6)             # chi tiết uốn: hình trải hiếm khi trùng hình chiếu, chỉ so cụm lỗ
         if flat or (hh >= 2 and hh >= 0.5 * nh):
-            out['ket_qua'].append(compare(code, part, flags, K, fit, flat))
+            out['ket_qua'].append(compare(code, part, flags, K, fit, flat, greens))
         else:
             out['ket_qua'].append({'ma': code, 'kieu': 'không đối chiếu được', 'khop_bien': round(so, 3), 'lo_trung_tam': '%d/%d' % (hh, nh),
                                    'ghi_chu': 'Không hình chiếu nào của DXF khách chồng khít hình AI (chi tiết uốn, DXF khác tỉ lệ, hoặc không có DXF của mã này)', 'khac_biet': []})

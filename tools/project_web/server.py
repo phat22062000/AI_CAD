@@ -1454,8 +1454,9 @@ def run_script_check(order, info, known):
 
 
 def add_check_job(order, codes=None):
-    """Nút "Tự check": (1) chạy script dxf_check.py + doi_chieu_khach.py ngay, 0 token; (2) chỉ mã rủi ro (script có LỖI/CẢNH BÁO,
-    tối đa 30% số mã) mới giao agent đọc mù theo skill dxf-check. Bấm ở một mã cụ thể thì luôn đọc mù mã đó. Chỉ báo, không sửa file."""
+    """Nút "Tự check" (quy trình Phát chốt 26/11/2026): (1) chạy script dxf_check.py + doi_chieu_khach.py ngay, 0 token; (2) mã script có
+    LỖI/CẢNH BÁO hoặc khác DXF khách giao agent đọc mù ĐẦY ĐỦ theo skill dxf-check; (3) mã script báo sạch vẫn giao agent ĐỌC LƯỚT
+    các hạng mục script không phủ (kích thước, vị trí lỗ, mặt ngoài, relief). Bấm ở một mã cụ thể thì đọc mù đầy đủ mã đó. Chỉ báo, không sửa file."""
     o = next((x for x in snapshot(True)['orders'] if x['order'] == order), None)
     info = scan_orders().get(order or '')
     if not o or not info:
@@ -1477,16 +1478,17 @@ def add_check_job(order, codes=None):
         risky, why = known, 'khong_script'          # script không chạy được: agent tự chạy script và check cả đơn như trước
     else:
         risky, why = qa.pick_risky(res['items'], known), 'rui_ro'
+    skim = [c for c in known if c not in risky] if why == 'rui_ro' else []
     out = {'script': {'ran': res['ran'], 'err': res['err'], 'loi': sum(1 for x in res['items'] if x['level'] == 'loi'),
-                      'canhbao': sum(1 for x in res['items'] if x['level'] == 'canhbao')}, 'risky': risky, 'why': why, 'job': None}
-    if not risky:
+                      'canhbao': sum(1 for x in res['items'] if x['level'] == 'canhbao')}, 'risky': risky, 'skim': skim, 'why': why, 'job': None}
+    if not risky and not skim:
         return out
     hints = [{'code': x['code'], 'level': x['level'], 'text': x['text']} for x in res['items'] if x['code'] in risky][:40]
     with lock:
         prog = load_json(PROGRESS, {})
         jobs = prog.setdefault('jobs', {})
         jid = datetime.now().strftime('%Y%m%d%H%M%S') + '_' + order + '_check'
-        jobs[jid] = {'kind': 'check', 'path': info['dir'], 'order': order, 'codes': risky, 'hints': hints, 'scriptRan': res['ran'], 'subagents': 0, 'model': '', 'note': '',
+        jobs[jid] = {'kind': 'check', 'path': info['dir'], 'order': order, 'codes': risky + skim, 'skim': skim, 'hints': hints, 'scriptRan': res['ran'], 'subagents': 0, 'model': '', 'note': '',
                      'pdf': 0, 'xlsx': 0, 'status': 'moi', 'at': now_iso(), 'ui': True}
         save_json(PROGRESS, prog)
         _cache['t'] = 0

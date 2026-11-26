@@ -5,6 +5,8 @@ Dùng: python3 dxf_check.py FILE.dxf [--template [--tpl Template.dxf]] [--mat SS
 expect.csv: code,X,Y[,mat,t] (X/Y của CAD依頼書). Mã thoát 1 nếu có LỖI.
 Chi tiết chữ コ/U (hai cánh ngoài cùng bằng nhau): CẢNH BÁO nếu số lỗ/φ hai cánh khác nhau.
 Rãnh/lỗ dài (2 LINE song song + 2 nửa tròn): in THÔNG TIN tổng dài x rộng; --slot NxM (lặp được, ghi chú 長穴): LỖI nếu hình có rãnh mà không rãnh nào khớp (sai số 0.01).
+Khe cụt (cần --t): LINE biên dài ≤ 2t có một đầu không chạm biên/Green nào = LỖI (nét ngắn của khách ở góc lõm phải là rạch Green 3 entity).
+J/LJ phôi dài hẹp: 1000-1500 = 1J, -2000 = 2J, -2500 = 3J, -3000 = 4J (+1 LJ; mẫu T cao chữ 12 nên khoảng này không kiểm cao chữ), thiếu POINT/TEXT = LỖI; trên 3000 chỉ CẢNH BÁO, thêm LỖI nếu file ALL không có POINT J/LJ lẫn Flag.
 Mặc định chỉ kiểm hình dạng; so cấu trúc file với Template (CRLF, header, owner 6F, handle...) chỉ chạy khi có --template."""
 import sys, re, math, argparse, os, unicodedata, subprocess
 from collections import defaultdict
@@ -12,6 +14,7 @@ import ezdxf
 
 TOL = 1e-3
 SLOTS = []  # [(tổng dài, rộng)] từ --slot
+NO_JLJ = []  # mã phôi dài hẹp > 3000 không có POINT J/LJ trên mép trên (cần Flag, kiểm ở main)
 OUT = {'LỖI': [], 'CẢNH BÁO': [], 'THÔNG TIN': []}
 CNT = defaultdict(int)
 def rep(lv, msg):
@@ -363,8 +366,19 @@ def check_part(name, items, mat, t, is_all):
     nearb = lambda p: any(dseg(p, b.p, b.q) < 6 for b in bends)
     nog = [p for p, a in sharp_ccv if abs(a - 270) < 1 and nearb(p) and not any(min(math.hypot(p[0] - q[0], p[1] - q[1]) for q in s.pts()) < 1.2 for s in gs)]
     if nog: W('%s: %d góc lõm 90° sát đường uốn không có rạch Green: %s (vách–tấm/hộp phải rạch; ngoại lệ: hộp vát 135°, khoét relief, mép thân nằm giữa 2 đường uốn)' % (name, len(nog), ', '.join(P(p) for p in nog[:6])))
+    # khe cụt (đề xuất 071234): LINE biên ngắn ≤ 2t có một đầu nối biên, đầu kia cụt (không chạm biên/Green nào) = nét khách ở góc lõm bị chép làm biên
+    if t:
+        cp = [q for s in segs for q in (s.p, s.q)]; gpt = [q for s in gs for q in s.pts()]
+        for s in segs:
+            Ls = math.hypot(s.q[0] - s.p[0], s.q[1] - s.p[1])
+            if s.t != 'LINE' or Ls < 0.05 or Ls > 2 * t + TOL: continue
+            na, nb = sum(1 for q in cp if near(q, s.p, 0.01)) - 1, sum(1 for q in cp if near(q, s.q, 0.01)) - 1
+            if (na == 0) == (nb == 0): continue
+            free = s.p if na == 0 else s.q
+            if not any(near(q, free, 0.01) for q in gpt):
+                E('%s: khe cụt %s→%s dài %s (≤ 2t) có một đầu cụt tại %s: nét ngắn của khách ở góc lõm là chỗ rạch Green, thay bằng rạch Green 3 entity (LINE, ARC R0.5, LINE), không chép làm LINE biên' % (name, P(s.p), P(s.q), f(Ls), P(free)))
     # kegaki
-    obl = [(s.p, s.q) for s in segs if s.t == 'LINE']; bl = [(s.p, s.q) for s in bends]
+    obl =[(s.p, s.q) for s in segs if s.t == 'LINE']; bl = [(s.p, s.q) for s in bends]
     nk = 0
     for c, e in items:
         if c != 'keg': continue
@@ -401,7 +415,7 @@ def check_part(name, items, mat, t, is_all):
     # J/LJ phôi dài hẹp
     pts = [(e.dxf.location.x, e.dxf.location.y) for c, e in items if c == 'point' and abs(e.dxf.location.y - bb[3]) < TOL]
     if Hd <= 100 and Wd >= 1000:
-        nJ = 1 if Wd <= 1500 else 2 if Wd <= 2000 else 3 if Wd <= 2500 else None
+        nJ = 1 if Wd <= 1500 else 2 if Wd <= 2000 else 3 if Wd <= 2500 else 4 if Wd <= 3000 else None
         if nJ:
             # đầu mép trên vát C (LINE chéo nối vào): tính 30 từ đầu đoạn thẳng (30/10/2026, 521030-09); đầu bo R giữ theo khung
             top = [q for q in segs if q.t == 'LINE' and abs(q.p[1] - bb[3]) < TOL and abs(q.q[1] - bb[3]) < TOL]
@@ -418,8 +432,10 @@ def check_part(name, items, mat, t, is_all):
             tx = [(e.dxf.text, (e.dxf.insert.x, e.dxf.insert.y), e.dxf.height) for c, e in items if c == 'text' and e.dxf.text in ('J', 'LJ')]
             for k, x in enumerate(xs):
                 want = 'LJ' if k == nJ else 'J'
-                if not any(tt == want and near(p, (x, bb[3]), 0.01) and abs(h - 10) < TOL for tt, p, h in tx): E('%s: thiếu TEXT %s cao 10 tại %s' % (name, want, P((x, bb[3]))))
-        else: W('%s: phôi dài %s > 2500, quy tắc J/LJ chưa có, hỏi người dùng' % (name, f(Wd)))
+                if not any(tt == want and near(p, (x, bb[3]), 0.01) and (abs(h - 10) < TOL or nJ == 4) for tt, p, h in tx): E('%s: thiếu TEXT %s cao 10 tại %s' % (name, want, P((x, bb[3]))))
+        else:
+            W('%s: phôi dài %s > 3000, quy tắc J/LJ chưa có, hỏi người dùng' % (name, f(Wd)))
+            if not pts: NO_JLJ.append(name)  # main() báo LỖI nếu file ALL không có Flag cho mã này
     elif pts and Hd > 100: W('%s: có POINT trên mép trên nhưng phôi không thuộc loại dài hẹp' % name)
     pil = ['%dxφ%s (%s)' % (n, f(d), '/'.join(PILOT[round(d, 2)])) for d, n in sorted(holes.items()) if round(d, 2) in PILOT]
     if pil: I('%s: lỗ trùng lỗ mồi taro theo bảng: %s; đối chiếu ghi chú tay 下穴 / lỗ mồi trong PDF (ghi chú tay thắng bảng, mục 7 dxf-sheetmetal)' % (name, ', '.join(pil)))
@@ -638,6 +654,7 @@ def main():
                 if not any(s.startswith(x) for x in STD_FLAGS): W('%s: Flag %r không khớp câu chuẩn nào trong 20 trường hợp (dxf-sheetmetal mục 11.4)' % (name, s[:40]))
             if fl and k + 1 < len(parts) and fl[-1].dxf.insert.y - 4 < parts[k + 1][1] + 5: W('%s: Flag kéo xuống chạm hình bên dưới' % name)
             if fl: I('%s: %d Flag: %s' % (name, num, ' | '.join(items_txt)))
+            if name in NO_JLJ and not fl: E('%s: phôi dài hẹp %s x %s thiếu J/LJ và thiếu Flag (không được bỏ trống J/LJ mà không báo)' % (name, f(Wd), f(Hd)))
         if name in exp:
             X, Y = exp[name][:2]
             if not ((abs(Wd - X) < 0.05 and abs(Hd - Y) < 0.05) or (abs(Wd - Y) < 0.05 and abs(Hd - X) < 0.05)):

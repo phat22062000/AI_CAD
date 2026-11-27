@@ -279,5 +279,25 @@
     "why": "đích là script, cần người làm"
    }
   ]
+ },
+ {
+  "id": "20261127090542_updskill",
+  "archived": [
+   "071800-ranh-gioi-den-tam-cung-cho-hoi-quy.md"
+  ],
+  "at": "2026-11-27T02:06:13Z",
+  "before": "2026.11.26-2",
+  "after": "2026.11.27-1",
+  "backup": "C:\\Users\\DELL\\Desktop\\AI_CAD\\tools\\project_web\\data\\skill_backup\\20261127090542_updskill",
+  "changes": [
+   {
+    "proposal": "071800-ranh-gioi-den-tam-cung-cho-hoi-quy.md",
+    "file": "skills\\dxf-sheetmetal\\SKILL.md",
+    "lines": "33",
+    "old": "  - PHẢI tính từ chuỗi kích thước ghi trên bản vẽ, tính từ một mép chuẩn. Gốc của mỗi kích thước là chân đường gióng thực của nó: các kích thước song song có chung chân gióng thì cùng gốc, KHÔNG lấy gốc là mép tab/bậc nhỏ nằm gần cạnh cần định vị (kích thước riêng của tab là một đoạn khác). Xác định hai chân gióng trước khi tính; dựng xong đo ngược từ cạnh vừa vẽ về đúng đường gióng gốc. Chân gióng đầu rãnh/lỗ dài thường dừng ở TÂM cung R đầu rãnh, không phải mép ngoài: phóng ≥ 250 dpi xem gióng dừng ở mép hay tâm cung; mép ngoài = số ghi ± R; dựng xong đo ngược chiều dài rãnh. Bản vẽ lắp (lỗ ghi kích thước tới tấm khác): quy đổi qua kích thước các tấm liên quan.",
+    "new": "  - PHẢI tính từ chuỗi kích thước ghi trên bản vẽ, tính từ một mép chuẩn. Gốc của mỗi kích thước là chân đường gióng thực của nó: các kích thước song song có chung chân gióng thì cùng gốc, KHÔNG lấy gốc là mép tab/bậc nhỏ nằm gần cạnh cần định vị (kích thước riêng của tab là một đoạn khác). Xác định hai chân gióng trước khi tính; dựng xong đo ngược từ cạnh vừa vẽ về đúng đường gióng gốc. Chân gióng đầu rãnh/lỗ dài thường dừng ở TÂM cung R đầu rãnh, không phải mép ngoài: phóng ≥ 250 dpi xem gióng dừng ở mép hay tâm cung (có DXF khách thì bóc đoạn thẳng rãnh và tâm cung ARC/ELLIPSE trước để biết gióng dừng ở đâu, PDF chỉ để đọc số); mép ngoài = số ghi ± R; dựng xong đo ngược chiều dài rãnh. Bản vẽ lắp (lỗ ghi kích thước tới tấm khác): quy đổi qua kích thước các tấm liên quan."
+   }
+  ],
+  "skipped": []
  }
 ]

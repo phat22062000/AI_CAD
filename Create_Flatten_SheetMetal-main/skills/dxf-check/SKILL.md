@@ -2,7 +2,7 @@
 name: "dxf-check"
 description: "Kiểm DXF đầu ra (26-xxxxxx.dxf, file ALL) sau dxf-sheetmetal: chỉ kiểm hình dạng, không kiểm Template; báo cáo chỉ nêu lỗi sai."
 metadata:
-  version: "2026.11.26-1"
+  version: "2026.11.27-3"
 ---
 
 Chỉ dùng khi người dùng yêu cầu "check" một file DXF đã có; KHÔNG tự chạy sau khi tạo file bằng skill `dxf-sheetmetal`. Tiêu chí lấy từ `dxf-sheetmetal` (mục 2–12), `Quy_Tac_Laser.md`, `Ghi_Chu_Loi_Tao_DXF.md` (`knowledge/Context_Laser/`). **Chỉ kiểm hình dạng, không kiểm cấu trúc Template** (file lưu từ CAD có header/owner khác Template là bình thường, không báo); muốn so Template thì thêm `--template`.
@@ -50,7 +50,7 @@ Chỉ dùng khi người dùng yêu cầu "check" một file DXF đã có; KHÔN
 | Hướng uốn Nhôm/304CSP | vật liệu Nhôm hoặc 304CSP có uốn: mọi LINE DASHED đường uốn song song Ox (cùng y; nhiều đường vuông góc nhau thì nhóm dài nhất // Ox); lỗi hướng ưu tiên hơn "cạnh dài theo X" | LỖI |
 | J/LJ | phôi Oy ≤ 100 và Ox ≥ 1000: đủ POINT + TEXT J/LJ cao 10 trên mép trên tại 30, ..., L - 30 | LỖI |
 | Chữ mã (ALL) | đúng 1 TEXT 6 số mỗi hình, X = -150, Y = đáy + cao/2, cao 12, trắng, căn trái, style Standard; file riêng không có chữ mã/Flag | LỖI |
-| Flag (ALL) | cao 5, Magenta, X = -150, Y = Y mã - 12 - 7k; đánh số 1., 2. liên tục, không chữ "Flag"; ≤ 40 ký tự/dòng; ký tự ngoài ASCII dạng `\U+XXXX`; nội dung bắt đầu bằng 1 trong 20 câu chuẩn; không chạm hình dưới | LỖI/CẢNH BÁO |
+| Flag (ALL) | cao 5, Magenta, X = -150, Y = Y mã - 12 - 7k; đánh số 1., 2. liên tục, không chữ "Flag"; ≤ 40 ký tự/dòng; ký tự ngoài ASCII dạng `\U+XXXX`; nội dung bắt đầu bằng 1 trong 20 câu chuẩn; phần trong ngoặc chỉ một ý ngắn (điểm chưa rõ + cách đã vẽ), dài dòng là CẢNH BÁO; không chạm hình dưới | LỖI/CẢNH BÁO |
 | 依頼 | kích thước phôi so X/Y CAD依頼書 (chỉ tham khảo), thiếu mã | CẢNH BÁO/LỖI |
 | Nguồn (`--src`) | không có PDF/DXF khách; PDF không có lớp chữ (scan): phải có `blind_table.md` (bước 3) | CẢNH BÁO |
 | | lỗ vẽ có φ không nằm trong PDF/DXF khách/lỗ mồi M; PDF ghi n-φ mà hình thiếu hoặc lệch số lượng; 下穴φ trong PDF mà hình không có lỗ đó; 展開 PDF khác phôi | CẢNH BÁO |
@@ -73,7 +73,7 @@ Chỉ dùng khi người dùng yêu cầu "check" một file DXF đã có; KHÔN
 - Biên: mỗi đoạn biên ứng với một số/nét trên bản vẽ hoặc DXF khách; không tự thêm đoạn; tấm đặt trong hộp phải dò từng đoạn mép ở hình bằng (064175 có lưỡi 84 x 1.5); số nhỏ trong chuỗi (5, 9, 10) đều đã gán.
 - Kích thước: tính theo chuỗi kích thước, không giả định số tròn/giữa/đối xứng (064040, 064045); kích thước thiếu hoặc không chắc thì kỳ vọng là chi tiết vẫn được vẽ theo tỉ lệ PDF kèm Flag 3 (bỏ chi tiết vì thiếu kích thước là sai; vẽ theo tỉ lệ mà không có Flag 3 là CẢNH BÁO); dung sai vẽ giá trị giữa (55 +0.2/0 → 55.1); số trong ngoặc chỉ tham khảo; DXF khách theo đúng tỉ lệ khung tên.
 - Chuỗi không cộng đủ tổng, cặp gương: so từng tấm theo pixel, không suy tấm này từ tấm kia (065504: số 60 đo tới tâm lỗ, không phải tới mép ô khoét).
-- Chỗ uốn: phải biết mỗi kích thước là trong hay ngoài (blind_table ghi); là kích thước trong mà phôi chưa đổi sang ngoài là LỖI; không xác định được thì cảnh báo.
+- Chỗ uốn: phải biết mỗi kích thước là trong hay ngoài (blind_table ghi); là kích thước trong mà phôi chưa đổi sang ngoài là LỖI; không xác định được thì cảnh báo. Mọi nhóm dim ở chỗ uốn (kể cả dim song song chung chân gióng với dim ngoài) phải có kết quả phóng chân dim; không xác định được mà file không có Flag 7 là CẢNH BÁO (agent đọc, script không kiểm).
 - Nét đứt trên PDF chỉ là đường uốn khi có dấu hiệu uốn rõ (`dxf-sheetmetal` mục 5, dòng "Nhận diện đường uốn"); nét khuất/đường hỗ trợ kích thước thì kỳ vọng file KHÔNG có DASHED và KHÔNG có Flag vì nét đó. Không lấy nét đứt không có dấu hiệu uốn làm căn cứ báo thiếu đường uốn hay thiếu độ giãn dài. File có DASHED hoặc Flag (5, 16...) cho nét như vậy, hoặc nét đứt không phân loại được: chỉ báo ngắn gọn để người dùng xác nhận, không tự sửa.
 - Tra bảng giãn: đúng khoảng chiều dài uốn của mã trước khi lấy số.
 - Độ giãn: nguồn đúng (tay viết > bảng Asahi/AICOKU 646 cho 90°; góc khác 90° do người dùng cho); vị trí 2 đường uốn tính từ 2 mép; tổng phôi = ngoài + ngoài - giãn. Giãn lấy từ công thức/K/nội suy bảng 90° cho góc ≠ 90° mà không có số tay hay số người dùng cho là SAI độ giãn dài (mục 5.4). Khách có quy định riêng (ví dụ ×2 một phía) thì đối chiếu theo quy định đó.

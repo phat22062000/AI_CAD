@@ -1212,7 +1212,7 @@ def loi_history():
             st, txt = 'motphan', 'Đã update một phần'
         elif wait:
             k = proposal_kind(wait[0]['head'])
-            st, txt = 'cho', {'skill': 'Chờ Update Skill', 'script': 'Chờ Update Script', 'hq': 'Chờ đóng đề xuất'}.get(k, 'Chờ duyệt')
+            st, txt = 'cho', {'skill': 'Chờ Update Skill', 'script': 'Chờ Update Script', 'khong': 'Chờ đóng đề xuất'}.get(k, 'Chờ duyệt')
         elif v['rut']:
             st, txt = ('baihoc', 'Đã có bài học (agent đọc trước khi vẽ), không cần sửa skill') if les else ('khong', 'Đã rút KN, không có bài học hay đề xuất')
         else:
@@ -1339,15 +1339,12 @@ def proposal_kind(head):
     """Loại đề xuất để quyết định nút nào xử lý:
     'skill'  = còn phần sửa SKILL.md/rules (nút Update Skill);
     'script' = chỉ còn phần sửa script tools\\*.py (nút Update Script);
-    'hq'     = không sửa gì, chờ Chạy hồi quy rồi người dùng tự đóng;
+    'khong'  = không có phần nào cần sửa (chỉ ghi nhận), người dùng tự đóng;
     'xong'   = đã áp dụng hết."""
     h = head or ''
     if not proposal_pending(h):
         return 'xong'
     lines = h.split('\n')
-    title = next((l for l in lines if l.startswith('# ')), '')
-    if re.search(r'chờ (chạy )?hồi quy', title, re.I):
-        return 'hq'
     m = re.search(r'CÒN CHỜ:?\s*([^\n]*)', lines[0])
     if m:                                                    # đã áp dụng một phần: xem phần còn chờ là gì
         rest = m.group(1)
@@ -1368,7 +1365,7 @@ def proposal_kind(head):
         if tg and not re.search(r'không đề xuất[^.\n]{0,12}(script|sửa|SKILL|skill)', hd + '\n' + body, re.I):
             act[tg] = True
     if secs and not act['skill'] and not act['script']:
-        return 'hq'
+        return 'khong'
     if secs and act['script'] and not act['skill']:
         return 'script'
     return 'skill'
@@ -1581,14 +1578,13 @@ def qa_info():
 def add_updskill_job(files=None):
     """Nút "Update Skill" (người dùng bấm = lệnh "update skill"): agent áp dụng các đề xuất còn chờ vào SKILL.md/rules, sao lưu trước, ghi nhật ký dòng đã đổi.
     files = tên file đề xuất muốn áp dụng; không chọn thì áp dụng mọi đề xuất còn chờ."""
-    # đề xuất 'hq' (Chờ hồi quy) chỉ được áp dụng khi người dùng tick chọn rõ (Update luôn, không cần hồi quy); không chọn gì thì chỉ áp dụng đề xuất 'skill'
-    pend = {p['name']: p for p in list_proposals(50) if p['pending'] and p['kind'] in ('skill', 'hq')}
-    names = [f for f in (files or [n for n, p in pend.items() if p['kind'] == 'skill']) if f in pend]
+    pend = {p['name']: p for p in list_proposals(50) if p['pending'] and p['kind'] == 'skill'}
+    names = [f for f in (files or list(pend)) if f in pend]
     if not names:
         raise ValueError('Không có đề xuất nào còn phần sửa SKILL.md/rules để áp dụng.')
     if _dup_job('updskill') or _dup_job('updscript'):
         raise ValueError('Đã có việc update skill hoặc update script đang chờ hoặc đang chạy.')
-    items = [{'name': n, 'path': pend[n]['path'], 'orders': pend[n]['orders'], 'codes': pend[n]['codes'], **({'hq': True} if pend[n]['kind'] == 'hq' else {})} for n in names]
+    items = [{'name': n, 'path': pend[n]['path'], 'orders': pend[n]['orders'], 'codes': pend[n]['codes']} for n in names]
     with lock:
         prog = load_json(PROGRESS, {})
         jobs = prog.setdefault('jobs', {})

@@ -1,4 +1,4 @@
-CHỜ PHÁT DUYỆT, chưa sửa
+ĐÃ ÁP DỤNG vào skills\dxf-sheetmetal\SKILL.md dòng 33 (2026/11/27, job 20261127090542_updskill)
 
 # Đề xuất: rãnh có gióng dừng ở tâm cung, vẽ theo mép ngoài (chờ hồi quy)
 

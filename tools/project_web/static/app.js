@@ -7,9 +7,9 @@ const LS = {get(k, d){try{const v = localStorage.getItem(k); return v == null ? 
 
 const ST = {chua:'Chưa làm', dang:'Đang làm', xong:'Đã xong', cho:'Đang chờ khách trả lời', tay:'Tự làm', thieu:'Thiếu file'};
 const RV = {cho:'Chờ check', dung:'Đúng', sai:'Sai'};
-const FU_TPLS = ['Đã có file trả lời của khách hàng'];      // mẫu câu chọn ở phía trên ô trả lời Flag, chọn mới dán xuống ô
+const FU_TPLS = ['Đã có file trả lời của khách hàng', 'Đã có thêm DXF của khách'];      // mẫu câu chọn ở phía trên ô trả lời Flag, chọn mới dán xuống ô
 const S = {data:null, reviews:{}, oFilter:'all', oDate:(() => {const t = new Date(), p = n => String(n).padStart(2, '0'); return {d:p(t.getDate()), m:p(t.getMonth() + 1), y:String(t.getFullYear())}})(), oQ:'', sel:null, rsel:null, rOpen:new Set(), drafts:{}, plan:null, manual:null, compare:{}, packMsg:{}, oLimit:60,
-           lsl:[], lFilter:'all', lQ:'', rFilter:LS.get('pw-rf','cho'), rDate:{d:'', m:'', y:''}, rQ:'', cGroup:LS.get('pw-cg','ngay')};
+           lsl:[], lFilter:'all', lQ:'', lOpen:null, rFilter:LS.get('pw-rf','cho'), rDate:{d:'', m:'', y:''}, rQ:'', cGroup:LS.get('pw-cg','ngay')};
 
 /* ---------- tiện ích ---------- */
 const chip = (cls, txt) => `<span class="chip s-${cls}"><span class="dot"></span>${esc(txt)}</span>`;
@@ -105,7 +105,6 @@ function showUpdDone(j){
   document.addEventListener('keydown', onKey);
   el.addEventListener('click', e => {
     if (e.target === el || e.target.closest('[data-udclose]')) close();
-    else if (e.target.closest('[data-udhq]')) { close(); const h = document.getElementById('hq-loai'); if (h) h.scrollIntoView({behavior: 'smooth', block: 'center'}); }
   });
 }
 
@@ -135,7 +134,7 @@ function setOFilter(v){
   S.oFilter = v; S.oLimit = 60;
 }
 
-/* Danh sách "Thông báo" (việc người dùng giao: check, rút kinh nghiệm, hồi quy, update...): hiện ở tab Giám Sát và tab Đánh Giá AI */
+/* Danh sách "Thông báo" (việc người dùng giao: check, rút kinh nghiệm, update...): hiện ở tab Giám Sát và tab Đánh Giá AI */
 function renderJobs(){
   const JS = {moi:['check', 'Chờ agent nhận'], nhan:['dang', 'Agent đã nhận'], xong:['xong', 'Xong'], loi:['sai', 'Lỗi']};
   const jobs = (S.data.jobs || []).filter(j => j.status === 'moi' || j.status === 'nhan' || Date.now() - t(j.at) < 24 * 3600e3).slice(0, 8);
@@ -145,7 +144,7 @@ function renderJobs(){
   const jh = jobs.map(j => `<div class="qj">
       ${j.status === 'moi' && busyJ.length >= par ? chip('check', 'Chờ lượt ' + (waitQ.indexOf(j.id) + 1) + '/' + waitQ.length) : chip(...(JS[j.status] || ['chua', j.status]))}
       <span class="mono">${esc(j.order || '—')}</span>
-      <span class="t2">${j.kind === 'check' ? 'tự check ' + (j.codes || []).length + ' mã' : j.kind === 'rutkn' ? 'rút kinh nghiệm ' + (j.items || []).length + ' mã' : j.kind === 'hoiquy' ? 'hồi quy ' + (j.items || []).length + ' mã' : j.kind === 'updskill' ? 'update skill ' + (j.items || []).length + ' đề xuất' : j.kind === 'updscript' ? 'update script ' + (j.items || []).length + ' đề xuất' : j.kind === 'tiep' ? 'làm tiếp ' + Object.keys(j.answers || {}).length + ' mã' : (j.plan ? Object.entries(j.plan.agents || {}).map(([a, m]) => (a === 'main' ? 'Chính' : a) + ' ' + m).join(', ') : (j.subagents ? j.subagents + ' subagent' : 'agent chính') + (j.model ? ' · ' + j.model : ''))}</span>
+      <span class="t2">${j.kind === 'check' ? 'tự check ' + (j.codes || []).length + ' mã' : j.kind === 'rutkn' ? 'rút kinh nghiệm ' + (j.items || []).length + ' mã' : j.kind === 'updskill' ? 'update skill ' + (j.items || []).length + ' đề xuất' : j.kind === 'updscript' ? 'update script ' + (j.items || []).length + ' đề xuất' : j.kind === 'tiep' ? 'làm tiếp ' + Object.keys(j.answers || {}).length + ' mã' : (j.plan ? Object.entries(j.plan.agents || {}).map(([a, m]) => (a === 'main' ? 'Chính' : a) + ' ' + m).join(', ') : (j.subagents ? j.subagents + ' subagent' : 'agent chính') + (j.model ? ' · ' + j.model : ''))}</span>
       <span class="p" title="${esc(j.status === 'moi' && busyJ.length >= par ? 'Agent đang bận việc khác, tới lượt sẽ tự nhận. ' + j.path : j.path)}">${esc(j.result || (j.status === 'moi' && busyJ.length >= par ? 'Agent đang bận: ' + busyJ.map(b => b.order || b.kind).join(', ') : j.path))}</span>
       <span class="mono qt">${hm(j.at)}</span>
       ${j.status !== 'nhan' ? `<button class="ib" data-deljob="${esc(j.id)}" title="Xoá khỏi hàng đợi"><svg class="i"><use href="#i-x"/></svg></button>`
@@ -273,7 +272,9 @@ function runHead(r){
   return `<span class="jid">${esc(r.job)}</span>${r.status === 'RUNNING' ? '<span class="tag t-run">RUN</span>' : r.waiting ? '<span class="tag t-warn" title="Có mã PREVIEW: đang chờ khách trả lời, PREVIEW chuyển sang PASS thì đơn tự về Xong">ĐANG CHỜ KHÁCH TRẢ LỜI</span>' : '<span class="tag t-ok">XONG</span>'}
     ${sub ? `<span class="badge b-sub" title="Số subagent vẽ song song">${hasMain ? 'Chính + ' : ''}SUB×${subW.length}${model ? ' · ' + esc(model) : ''}</span>` : ''}
     <span class="meta">${esc(r.user || 'Agent')}</span>
-    <div class="act"><button class="btn btn-sec sm" data-canceljob="${esc(r.stopJob)}" ${r.stopJob ? '' : 'disabled'} title="${r.stopJob ? 'Dừng agent đang vẽ đơn này' : 'Không có agent chạy từ web để dừng'}">Dừng</button><button class="btn btn-sec sm" data-resume="${esc(r.id)}" ${r.resumeWhy ? 'disabled' : ''} title="${r.resumeWhy ? esc(r.resumeWhy) : 'Vẽ tiếp ' + r.todo + ' mã chưa xong, giữ nguyên các mã đã xong'}">Tiếp tục</button><button class="ib" data-copy="${esc(r.path.split('  ')[0])}" title="Copy thư mục đơn"><svg class="i"><use href="#i-folder"/></svg></button></div>`;
+    <div class="act">${r.stopJob || r.status === 'RUNNING'
+      ? `<button class="btn btn-sec sm ic" data-canceljob="${esc(r.stopJob)}" ${r.stopJob ? '' : 'disabled'} title="${r.stopJob ? 'Dừng' : 'Dừng (không có agent chạy từ web để dừng)'}" aria-label="Dừng"><svg class="i"><use href="#i-stop"/></svg></button>`
+      : `<button class="btn btn-sec sm ic" data-resume="${esc(r.id)}" ${r.resumeWhy ? 'disabled' : ''} title="${r.resumeWhy ? 'Tiếp tục (' + esc(r.resumeWhy) + ')' : 'Tiếp tục: vẽ tiếp ' + r.todo + ' mã chưa xong, giữ nguyên các mã đã xong'}" aria-label="Tiếp tục"><svg class="i"><use href="#i-play"/></svg></button>`}</div>`;
 }
 let runViews = new Map();
 const folded = new Set();
@@ -652,7 +653,7 @@ function renderQA(){
       ${v.folder ? `<button class="ib" data-copy="${esc(v.folder)}" title="Copy đường dẫn folder Sua_loi"><svg class="i"><use href="#i-folder"/></svg></button>` : ''}
       ${!v.hasF ? `<button class="btn btn-sec sm" data-sualoi="${esc(k)}">${v.folder ? 'Chép file F' : 'Tạo Sua_loi và chép F'}</button>` : ''}</span></div>`).join('')}</div>` : '';
   const props = (S.props || []).filter(p => p.pending).slice(0, 12);
-  const nSk = props.filter(p => p.kind === 'skill').length, nSc = props.filter(p => p.kind === 'script').length, nHq = props.filter(p => p.kind === 'hq').length;
+  const nSk = props.filter(p => p.kind === 'skill').length, nSc = props.filter(p => p.kind === 'script').length;
   const uj = (S.data.jobs || []).filter(j => j.kind === 'updskill' || j.kind === 'updscript').sort((x, y) => (y.at || '').localeCompare(x.at || ''))[0];
   const uw = uj && uj.kind === 'updscript' ? 'script' : 'skill';
   const ubusy = !!uj && (uj.status === 'moi' || uj.status === 'nhan');
@@ -671,13 +672,12 @@ function renderQA(){
       ${(ups.skipped || []).map(c => `<div class="hint">Bỏ qua ${esc(c.proposal)}: ${esc(c.why)}</div>`).join('')}
       ${ups.backup ? `<p class="hint">Bản cũ đã sao lưu: <span class="mono">${esc(ups.backup)}</span> (thư mục tools) <button class="ib" data-copy="${esc(ups.backup)}" title="Copy đường dẫn"><svg class="i"><use href="#i-folder"/></svg></button></p>` : ''}</details>` : '';
   const chips = p => (p.orders || []).length || (p.codes || []).length ? ' <span class="mono t2">' + (p.orders || []).map(esc).join(', ') + ((p.orders || []).length && (p.codes || []).length ? ' · ' : '') + (p.codes || []).map(esc).join(', ') + '</span>' : '';
-  const kindTag = p => p.kind === 'hq' ? ' <span class="tag-part" style="background:var(--run-bg);color:var(--run-tx)" title="Chưa sửa gì: chờ hồi quy. Muốn áp dụng luôn không cần hồi quy thì tick ô chọn rồi bấm Update Skill; không thì đóng khi đã xem xong">Chờ hồi quy</span>'
-    : p.kind === 'script' ? ' <span class="tag-part" title="' + esc(p.partial || 'Chỉ còn phần sửa script') + '">Chờ Update Script</span>'
+  const kindTag = p => p.kind === 'script' ? ' <span class="tag-part" title="' + esc(p.partial || 'Chỉ còn phần sửa script') + '">Chờ Update Script</span>'
     : p.partial ? ' <span class="tag-part" title="' + esc(p.partial) + '">Còn chờ: ' + esc(p.partial.slice(0, 40)) + '</span>' : '';
-  const propHtml = props.length ? `<h3>Đề xuất sửa skill chờ duyệt <span class="n">${props.length}</span></h3>` + props.map(p => `<details class="prop" data-k="${esc('p:' + p.name)}"><summary>${p.kind === 'skill' || p.kind === 'script' || p.kind === 'hq' ? `<input type="checkbox" class="up-c" data-f="${esc(p.name)}" data-kind="${esc(p.kind)}" title="${p.kind === 'script' ? 'Chọn để áp dụng khi bấm Update Script' : p.kind === 'hq' ? 'Chọn để Update Skill luôn đề xuất này, không cần chạy hồi quy' : 'Chọn để áp dụng khi bấm Update Skill'}" onclick="event.stopPropagation()"> ` : ''}<span class="mono">${esc(p.name)}</span>${chips(p)}${kindTag(p)} <span class="t3">${hm(p.at)}</span> <button class="ib" data-copy="${esc(p.path)}" title="Copy đường dẫn file"><svg class="i"><use href="#i-folder"/></svg></button> <button class="btn btn-sec sm" data-closeprop="${esc(p.name)}" title="Cất đề xuất này vào lessons\\skill-updates\\da_ap_dung (không xoá hẳn)">Đóng đề xuất</button></summary><div class="pp">${fmtProp(p.head)}</div></details>`).join('')  : '<p class="hint">Không có đề xuất nào chờ duyệt.</p>';
+  const propHtml = props.length ? `<h3>Đề xuất sửa skill chờ duyệt <span class="n">${props.length}</span></h3>` + props.map(p => `<details class="prop" data-k="${esc('p:' + p.name)}"><summary>${p.kind === 'skill' || p.kind === 'script' ? `<input type="checkbox" class="up-c" data-f="${esc(p.name)}" data-kind="${esc(p.kind)}" title="${p.kind === 'script' ? 'Chọn để áp dụng khi bấm Update Script' : 'Chọn để áp dụng khi bấm Update Skill'}" onclick="event.stopPropagation()"> ` : ''}<span class="mono">${esc(p.name)}</span>${chips(p)}${kindTag(p)} <span class="t3">${hm(p.at)}</span> <button class="ib" data-copy="${esc(p.path)}" title="Copy đường dẫn file"><svg class="i"><use href="#i-folder"/></svg></button> <button class="btn btn-sec sm" data-closeprop="${esc(p.name)}" title="Cất đề xuất này vào lessons\\skill-updates\\da_ap_dung (không xoá hẳn)">Đóng đề xuất</button></summary><div class="pp">${fmtProp(p.head)}</div></details>`).join('')  : '<p class="hint">Không có đề xuất nào chờ duyệt.</p>';
   const html = `<div class="panel"><div class="panel-h"><h2 style="margin:0">Rút kinh nghiệm</h2><div class="sp"></div>
       <button class="btn btn-sec" data-updscript ${ubusy || !nSc ? 'disabled' : ''} title="${esc(ubusy ? 'Đang có việc update skill hoặc update script' : !nSc ? 'Không có đề xuất nào còn phần sửa script' : 'Áp dụng phần script (tools) của các đề xuất đã chọn, thử trước và sau trên dữ liệu thật')}">Update Script${nSc ? ' (' + nSc + ')' : ''}</button>
-      <button class="btn btn-sec" data-updskill ${ubusy || !(nSk + nHq) ? 'disabled' : ''} title="${esc(ubusy ? 'Đang có việc update skill hoặc update script' : !(nSk + nHq) ? 'Không có đề xuất nào còn phần sửa SKILL.md/rules' : 'Áp dụng các đề xuất đã chọn vào SKILL.md và rules (gồm cả đề xuất Chờ hồi quy nếu bạn tick, không cần hồi quy)')}">Update Skill${nSk + nHq ? ' (' + (nSk + nHq) + ')' : ''}</button>
+      <button class="btn btn-sec" data-updskill ${ubusy || !nSk ? 'disabled' : ''} title="${esc(ubusy ? 'Đang có việc update skill hoặc update script' : !nSk ? 'Không có đề xuất nào còn phần sửa SKILL.md/rules' : 'Áp dụng các đề xuất đã chọn vào SKILL.md và rules')}">Update Skill${nSk ? ' (' + nSk + ')' : ''}</button>
       <button class="btn btn-pri" data-rutkn ${busy || !ready.length ? 'disabled' : ''} title="${esc(why)}"><svg class="i"><use href="#i-check"/></svg>Rút kinh nghiệm${ready.length ? ' ' + ready.length + ' mã' : ''}</button></div>
     <p class="hint" style="margin-top:0">${ready.length ? ready.length + ' mã Sai đã đủ file T và F, sẵn sàng so sánh.' : 'Chấm một mã Sai thì web tự tạo folder Sua_loi và chép file F; bạn đặt file T (bản đúng) vào, rồi bấm nút này.'} Agent chỉ ghi lỗi, bài học và nháp đề xuất, không sửa skill.</p>
     ${ready.length ? `<div class="od-flags">${ready.map(([k, v]) => `<div class="fl" style="grid-template-columns:max-content minmax(0,1fr)"><b class="mono" style="white-space:nowrap"><span style="color:var(--tx)">${esc(k.split('_')[0])}</span> · ${esc(k.split('_')[1] || k)}</b><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${ordInfo(k)} <span class="t3">có F và T</span>${v.folder ? ` <button class="ib" data-copy="${esc(v.folder)}" title="Copy đường dẫn folder Sua_loi"><svg class="i"><use href="#i-folder"/></svg></button>` : ''}</span></div>`).join('')}</div>` : ''}
@@ -735,7 +735,38 @@ function fmtProp(text){
     return out + esc(t.slice(last));
   };
   const LB = /^(Nguồn|Loại lỗi|Số mẫu|Lý do|Kết quả chạy thử trên F|Đề xuất thêm kiểm|Đề xuất|Thêm|Ghi chú|Đích|Dòng hiện tại(?: [^:]*)?|Dòng cũ|Dòng mới(?: [^:]*)?|Dòng liên quan(?:, [^:]*)?|Dòng 85 hiện tại(?: [^:]*)?|F|T)\s*(\([^)]*\))?\s*:\s*/;
-  return String(text || '').split(/\r?\n/).map(raw => {
+  // Đề xuất mới chỉ có 3 gạch đầu dòng (Lỗi sai / Nguyên nhân / Update skill): hiển thị đúng 3 mục
+  const src = String(text || '').split(/\r?\n/);
+  const B3 = {}; let cur3 = '';
+  for (const raw of src) {
+    const m3 = raw.match(/^\s*[-*•]\s*(Lỗi sai|Nguyên nhân|Update skill)\s*:\s*(.*)$/i);
+    if (m3) { cur3 = m3[1].toLowerCase(); B3[cur3] = m3[2].trim(); }
+    else if (cur3 && raw.trim() && !/^\s*#/.test(raw)) B3[cur3] += ' ' + raw.trim();
+    else if (!raw.trim()) cur3 = '';
+  }
+  if (B3['lỗi sai'] && B3['nguyên nhân'] && B3['update skill']) {
+    const stl = src.find(l => /^(CHỜ PHÁT DUYỆT|ĐÃ ÁP DỤNG)/.test(l)), ttl = src.find(l => /^#\s+/.test(l) && !/^##/.test(l));
+    return (stl ? `<div class="l"><span class="st ${/^ĐÃ/.test(stl) ? 'ok' : ''}">${esc(stl.split(/\.\s/)[0].replace(/\.$/, ''))}</span></div>` : '')
+      + (ttl ? `<div class="h1">${inl(ttl.replace(/^#\s+/, '').replace(/^Đề xuất:\s*/, ''))}</div>` : '')
+      + [['lỗi sai', '1. Lỗi sai', 'old'], ['nguyên nhân', '2. Nguyên nhân', 'why'], ['update skill', '3. Update skill', 'new']].map(([k, nm, c]) => `<div class="l"><span class="lb ${c}">${nm}:</span>${inl(B3[k], c === 'new' ? 'new' : '')}</div>`).join('');
+  }
+  // Đề xuất cũ (nhiều mục): bỏ các câu nói chuyện chạy lại/kiểm lại sau update, bỏ mục Script khi không đề xuất gì, cắt phần mô tả dài ở dòng trạng thái
+  const NOQ = /hồi quy/i;
+  const lines2 = [];
+  let skipSec = false;
+  src.forEach((raw, i) => {
+    if (/^##\s/.test(raw)) {
+      const body = src.slice(i + 1).find(l => l.trim()) || '';
+      skipSec = /script|\.py/i.test(raw) && /không đề xuất/i.test(body);
+      if (skipSec) return;
+    } else if (skipSec && !/^#/.test(raw)) return;
+    else skipSec = false;
+    if (/^(CHỜ PHÁT DUYỆT|ĐÃ ÁP DỤNG)/.test(raw)) { lines2.push(NOQ.test(raw) ? raw.split(/\.\s/)[0].replace(/\.$/, '') : raw); return; }
+    if (/^#\s/.test(raw)) { lines2.push(raw.replace(/,?\s*chờ (chạy )?hồi quy/i, '')); return; }
+    if (NOQ.test(raw)) return;
+    lines2.push(raw);
+  });
+  return lines2.join('\n').split(/\r?\n/).map(raw => {
     const ln = raw.trimEnd();
     if (!ln.trim()) return '<div class="gap"></div>';
     let m;
@@ -756,21 +787,15 @@ function fmtProp(text){
   }).join('');
 }
 
-/* Chất lượng: lỗi theo loại (M2), lỗi lặp lại (M3), khớp bài đúng (M4), hồi quy sau update skill, chi phí thật */
+/* Chất lượng: lỗi theo loại (M2), lỗi lặp lại (M3), khớp bài đúng (M4), chi phí thật */
 function qaStatsHtml(){
   const q = S.qa;
   if (!q || !q.stats) return '';
   const st = q.stats, U = q.usage || {};
   const td = 'style="padding:3px 10px 3px 0;text-align:left;vertical-align:top"';
   const rows = (st.loai || []).map(r => `<tr><td ${td}>${esc(r.loai)}</td><td ${td} class="mono">${r.n}</td><td ${td} class="mono">${r.per100}</td><td ${td} class="mono">${r.lap || 0}</td></tr>`).join('');
-  const hj = (S.data.jobs || []).filter(j => j.kind === 'hoiquy').sort((x, y) => (y.at || '').localeCompare(x.at || ''))[0];
-  const hbusy = !!hj && (hj.status === 'moi' || hj.status === 'nhan');
-  const hmsg = !hj ? '' : hj.status === 'moi' ? 'Đã gửi, đang chờ agent nhận.' : hj.status === 'nhan' ? 'Agent đang vẽ lại và so đáp án (mỗi mã vài phút).' : hj.status === 'xong' ? 'Lần gần nhất xong ' + hm(hj.doneAt || hj.at) + (hj.result ? ': ' + hj.result : '.') : 'Lần gần nhất bị lỗi' + (hj.result ? ': ' + hj.result : '.');
   const set = q.set || [], nT = set.filter(x => x.kieu === 'T').length;
   const loais = (q.loais && q.loais.length) ? q.loais : [...new Set(set.flatMap(x => x.loai || []))];
-  const runs = (q.hoiquy || []).slice().reverse().slice(0, 3).map(r => {
-    const ok = r.items.filter(i => i.kq === 'khop').length;
-    return `<details class="prop" data-k="${esc('h:' + r.id)}"><summary><span class="mono">${hm(r.at)}</span> skill ${esc(r.skill || '?')}${r.loai ? ' · ' + esc(r.loai) : ''}: <b>${ok}/${r.items.length}</b> mã khớp đáp án</summary><div class="od-flags">${r.items.map(i => `<div class="fl"><b class="mono">${i.kq === 'khop' ? '✓' : i.kq === 'khac' ? '❌' : '⚠️'}</b><span><b class="mono">${esc(i.key)}</b> <span class="t3">[đáp án ${i.kieu === 'T' ? 'T' : 'đã chấm Đúng'}${typeof i.khop === 'number' ? ', khớp ' + i.khop + '%' : ''}]</span> ${esc(i.text || '')}</span></div>`).join('')}</div></details>`; }).join('');
   return `<div class="panel"><div class="panel-h"><h2 style="margin:0">Chất lượng theo loại lỗi</h2><div class="sp"></div><span class="t3">skill ${esc(q.skill || '?')}</span></div>
     ${rows ? `<table style="border-collapse:collapse;font-size:13px"><tr><th ${td}>Loại lỗi</th><th ${td}>Số mã</th><th ${td}>Trên 100 mã</th><th ${td}>Lặp lại</th></tr>${rows}</table>` : ''}</div>`;
 }
@@ -855,6 +880,17 @@ async function setReview(items){
 
 /* ---------- Lịch sử lỗi: mỗi mã chấm Sai -> loại lỗi, file T/F, giải pháp đã update chưa ---------- */
 const LSL_ST = {da:['xong', 'Đã update'], motphan:['check', 'Update một phần'], cho:['cho', 'Chờ update'], baihoc:['xong', 'Đã có bài học'], khong:['chua', 'Không đề xuất'], chua:['sai', 'Chưa rút KN']};
+/* Nổi bật hàng của mã đang mở file (DXF/PDF): giữ đến khi mở file của mã khác; mở lỗi thì trả lại trạng thái cũ */
+const lOpenIs = (r, k) => S.lOpen && S.lOpen.order === r.order && S.lOpen.code === r.code && (!k || S.lOpen.kind === k);
+function lOpenMark(){
+  document.querySelectorAll('#lsl .lsl-r[data-order]').forEach(row => {
+    const on = !!S.lOpen && row.dataset.order === S.lOpen.order && row.dataset.code === S.lOpen.code;
+    row.classList.toggle('open', on);
+    row.querySelectorAll('.ib[data-kind]').forEach(ib => ib.classList.toggle('act', on && ib.dataset.kind === S.lOpen.kind));
+  });
+  const l = $('#lsl'); if (l) l._h = null;   // để lần vẽ lại sau lấy đúng trạng thái mới
+}
+function lOpenSet(order, code, kind){ const prev = S.lOpen; S.lOpen = {order, code, kind}; lOpenMark(); return () => { S.lOpen = prev; lOpenMark(); }; }
 function renderLSL(){
   const all = S.lsl || [];
   const DONE = ['da', 'baihoc', 'khong'];      // đã xử lý: đề xuất đã áp dụng, hoặc đã rút KN thành bài học / không cần sửa
@@ -865,17 +901,17 @@ function renderLSL(){
   $('#l-n').textContent = rows.length;
   const fbtn = (r, k) => {
     const has = k === 'T' ? r.hasT : r.hasF;
-    return `<button class="btn btn-sec sm" data-openf="${k}" data-order="${esc(r.order)}" data-code="${esc(r.code)}" ${has ? '' : 'disabled'} title="${has ? 'Mở ' + esc(r.code + k) + '.dxf' + (k === 'T' ? ' (bài đúng)' : ' (AI vẽ)') : 'Chưa có file ' + esc(r.code + k) + '.dxf trong Sua_loi'}">${k}</button>`;
+    return `<button class="btn btn-sec sm${lOpenIs(r, k) ? ' act' : ''}" data-kind="${k}" data-openf="${k}" data-order="${esc(r.order)}" data-code="${esc(r.code)}" ${has ? '' : 'disabled'} title="${has ? 'Mở ' + esc(r.code + k) + '.dxf' + (k === 'T' ? ' (bài đúng)' : ' (AI vẽ)') : 'Chưa có file ' + esc(r.code + k) + '.dxf trong Sua_loi'}">${k}</button>`;
   };
   const body = rows.map(r => {
     const [cls, lab] = LSL_ST[r.st] || ['chua', r.st];
     const refs = (r.props || []).length ? r.props.map(p => p.name) : (r.lessons || []);
     const tip = (r.props || []).map(p => p.name + ': ' + p.line).concat((r.lessons || []).map(l => 'Bài học: ' + l)).join('\n');
-    return `<div class="lsl-r">
+    return `<div class="lsl-r${lOpenIs(r) ? ' open' : ''}" data-order="${esc(r.order)}" data-code="${esc(r.code)}">
       <div><div style="display:flex;align-items:center;gap:6px;white-space:nowrap"><span class="mono"><b style="color:var(--tx)">${esc(r.order)}</b> · <b style="color:var(--warn-tx)">${esc(r.code)}</b></span><button class="ib" data-openorder="${esc(r.order)}" title="Mở thư mục đơn ${esc(r.order)}"><svg class="i"><use href="#i-folder"/></svg></button></div>${r.date ? `<div class="t3" style="font-size:12px">${esc(r.date.split("-").reverse().join("/"))}</div>` : ''}</div>
       <div title="${esc((r.loi || []).join('\n\n'))}">${r.loai.length ? `<div class="lo">${r.loai.map(l => `<span>${esc(l)}</span>`).join('')}</div>` : ((r.loi || [])[0] ? `<div class="t3" style="font-size:12.5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">Chưa phân loại: ${esc(r.loi[0])}</div>` : '<span class="t3">Chưa phân loại, chưa ghi lỗi cụ thể</span>')}</div>
-      <div class="fb"><button class="ib" data-cmp="${esc(r.code)}" data-order="${esc(r.order)}" data-hasc="${r.hasC ? 1 : 0}" ${r.hasC || (r.hasT && r.hasF) ? '' : 'disabled'} title="${r.hasC ? 'Mở file ' + esc(r.code) + 'Compare.dxf' : r.hasT && r.hasF ? 'Tạo file Compare (F trái, T phải) rồi mở' : 'Cần đủ file T và F trong Sua_loi'}"><img src="dxf-icon.png?v=3" alt="DXF" draggable="false"></button></div>
-      <div class="fb"><button class="ib" data-pdf="${esc(r.code)}" data-order="${esc(r.order)}" title="Mở PDF của đơn ${esc(r.order)} ở trang có mã ${esc(r.code)}"><img src="pdf-icon.svg?v=1" alt="PDF" draggable="false"></button></div>
+      <div class="fb"><button class="ib${lOpenIs(r, 'cmp') ? ' act' : ''}" data-kind="cmp" data-cmp="${esc(r.code)}" data-order="${esc(r.order)}" data-hasc="${r.hasC ? 1 : 0}" ${r.hasC || (r.hasT && r.hasF) ? '' : 'disabled'} title="${r.hasC ? 'Mở file ' + esc(r.code) + 'Compare.dxf' : r.hasT && r.hasF ? 'Tạo file Compare (F trái, T phải) rồi mở' : 'Cần đủ file T và F trong Sua_loi'}"><img src="dxf-icon.png?v=3" alt="DXF" draggable="false"></button></div>
+      <div class="fb"><button class="ib${lOpenIs(r, 'pdf') ? ' act' : ''}" data-kind="pdf" data-pdf="${esc(r.code)}" data-order="${esc(r.order)}" title="Mở PDF của đơn ${esc(r.order)} ở trang có mã ${esc(r.code)}"><img src="pdf-icon.svg?v=1" alt="PDF" draggable="false"></button></div>
       <div class="up" title="${esc(tip)}">${chip(cls, lab)}<span class="t3" style="font-size:12px">${esc(r.stText !== lab ? r.stText : '')}${refs.length ? (r.stText !== lab ? ' · ' : '') + esc(refs.map(n => n.replace(/\.md$/, '')).join(', ')) : ''}</span></div>
     </div>`;
   }).join('');
@@ -900,6 +936,7 @@ function render(){
 window.addEventListener('hashchange', render);
 
 document.addEventListener('click', e => {
+  if (S.lOpen && ['HTML', 'BODY', 'MAIN'].includes(e.target.tagName)) { S.lOpen = null; lOpenMark(); }   // chỉ bấm vào nền hai bên (ngoài khung nội dung): bỏ nổi bật hàng đang mở file
   const ob = e.target.closest('.rv-h [data-openorder]');    // nút Folder trên thẻ đơn (Đánh Giá AI): mở thư mục đơn, không sổ/thu gọn thẻ
   if (ob) { api('/api/openorder', {order:ob.dataset.openorder}).then(() => toast('Đã mở thư mục đơn ' + ob.dataset.openorder), e2 => toast(e2.message)); return; }
   const rh = e.target.closest('.rv-h[data-rv]');   // bấm tên đơn -> sổ ra / thu gọn các mã của đơn
@@ -935,16 +972,18 @@ document.addEventListener('click', e => {
     return;
   }
   if (b.dataset.cmp) {
-    const op = b.dataset.hasc === '1' ? 'mở' : 'tạo'; b.disabled = true; toast('Đang ' + op + ' file Compare...');      // nút là biểu tượng ảnh: không đổi chữ trong nút
-    api('/api/compare_tf', {order:b.dataset.order, code:b.dataset.cmp}).then(r => { b.disabled = false; toast((r.created ? 'Đã tạo và mở ' : 'Đã mở ') + b.dataset.cmp + 'Compare.dxf'); const l = $('#lsl'); if (l) l._h = null; load(); }, e2 => { b.disabled = false; toast(e2.message); const l = $('#lsl'); if (l) l._h = null; load(); });
+    const undo = lOpenSet(b.dataset.order, b.dataset.cmp, 'cmp'); const op = b.dataset.hasc === '1' ? 'mở' : 'tạo'; b.disabled = true; toast('Đang ' + op + ' file Compare...');      // nút là biểu tượng ảnh: không đổi chữ trong nút
+    api('/api/compare_tf', {order:b.dataset.order, code:b.dataset.cmp}).then(r => { b.disabled = false; toast((r.created ? 'Đã tạo và mở ' : 'Đã mở ') + b.dataset.cmp + 'Compare.dxf'); const l = $('#lsl'); if (l) l._h = null; load(); }, e2 => { undo(); b.disabled = false; toast(e2.message); const l = $('#lsl'); if (l) l._h = null; load(); });
     return;
   }
   if (b.dataset.pdf) {   // biểu tượng PDF (Lịch Sử Lỗi): mở PDF của đơn đúng trang chứa mã
-    api('/api/openpdf', {order:b.dataset.order, code:b.dataset.pdf}).then(r => toast('Đã mở PDF ' + b.dataset.order + ', trang ' + r.page + (r.sure ? '' : ' (đoán theo thứ tự mã, agent chưa ghi trang)')), e2 => toast(e2.message));
+    const undo = lOpenSet(b.dataset.order, b.dataset.pdf, 'pdf');
+    api('/api/openpdf', {order:b.dataset.order, code:b.dataset.pdf}).then(r => toast('Đã mở PDF ' + b.dataset.order + ', trang ' + r.page + (r.sure ? '' : ' (đoán theo thứ tự mã, agent chưa ghi trang)')), e2 => { undo(); toast(e2.message); });
     return;
   }
   if (b.dataset.openf) {
-    api('/api/openfile', {order:b.dataset.order, code:b.dataset.code, kind:b.dataset.openf}).then(() => toast('Đã mở ' + b.dataset.code + b.dataset.openf + '.dxf trên máy'), e2 => toast(e2.message));
+    const undo = lOpenSet(b.dataset.order, b.dataset.code, b.dataset.openf);
+    api('/api/openfile', {order:b.dataset.order, code:b.dataset.code, kind:b.dataset.openf}).then(() => toast('Đã mở ' + b.dataset.code + b.dataset.openf + '.dxf trên máy'), e2 => { undo(); toast(e2.message); });
     return;
   }
   if (b.dataset.resume) {
@@ -999,10 +1038,9 @@ document.addEventListener('click', e => {
     return;
   }
   if (b.dataset.updskill != null) {   // Update Skill: áp dụng các đề xuất đã chọn
-    const files = [...document.querySelectorAll('#qa .up-c[data-kind="skill"], #qa .up-c[data-kind="hq"]')].filter(c => c.checked).map(c => c.dataset.f);     // gồm cả đề xuất Chờ hồi quy được tick (update luôn, không cần hồi quy)
+    const files = [...document.querySelectorAll('#qa .up-c[data-kind="skill"]')].filter(c => c.checked).map(c => c.dataset.f);
     if (!files.length) { toast('Chưa chọn đề xuất nào'); return; }
-    const hqSel = [...document.querySelectorAll('#qa .up-c[data-kind="hq"]')].filter(c => c.checked).length;
-    if (!confirm('Update skill theo ' + files.length + ' đề xuất?\n\n' + files.join('\n') + (hqSel ? '\n\n' + hqSel + ' đề xuất đang Chờ hồi quy sẽ được áp dụng LUÔN, không chờ hồi quy.' : '') + '\n\nAgent sẽ sửa SKILL.md và rules (nâng version nếu sửa SKILL.md), sao lưu bản cũ trước, rồi ghi lại từng dòng đã đổi lên trang. Không sửa script, không ghi vào thư mục đơn.')) return;
+    if (!confirm('Update skill theo ' + files.length + ' đề xuất?\n\n' + files.join('\n') + '\n\nAgent sẽ sửa SKILL.md và rules (nâng version nếu sửa SKILL.md), sao lưu bản cũ trước, rồi ghi lại từng dòng đã đổi lên trang. Không sửa script, không ghi vào thư mục đơn.')) return;
     b.disabled = true;
     api('/api/jobs/updskill', {files}).then(() => { toast('Đã gửi việc update skill'); load(true); }, e2 => { b.disabled = false; toast(e2.message); });
     return;
@@ -1019,14 +1057,6 @@ document.addEventListener('click', e => {
     e.preventDefault();
     if (!confirm('Đóng đề xuất ' + b.dataset.closeprop + '?\n\nFile được cất vào lessons\\skill-updates\\da_ap_dung, không xoá hẳn.')) return;
     api('/api/proposal/close', {name: b.dataset.closeprop}).then(() => { toast('Đã đóng đề xuất'); load(true); }, e2 => toast(e2.message));
-    return;
-  }
-  if (b.dataset.hoiquy != null) {   // Chạy hồi quy sau khi update skill
-    const sel = $('#hq-loai'), loai = sel ? sel.value : '';
-    const n = ((S.qa || {}).set || []).length;
-    if (!confirm('Chạy hồi quy' + (loai ? ' cho loại lỗi "' + loai + '"' : ' cho bộ ' + n + ' mã') + '?\n\nAgent sẽ vẽ lại các mã này bằng skill hiện tại vào thư mục tạm rồi so với đáp án. Việc này TỐN TOKEN như vẽ lại từng mã. Không ghi gì vào thư mục đơn.')) return;
-    b.disabled = true;
-    api('/api/jobs/hoiquy', {loai}).then(r => { toast('Đã gửi việc hồi quy ' + ((r.job || {}).items || []).length + ' mã'); load(true); }, e2 => { b.disabled = false; toast(e2.message); });
     return;
   }
   if (b.dataset.rutkn != null) {   // Rút kinh nghiệm các mã Sai đã đủ T và F

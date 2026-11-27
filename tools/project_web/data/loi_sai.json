@@ -472,5 +472,48 @@
   "update": "Chờ hồi quy, chưa sửa; đã ghi bài học feedback_ranh-kich-thuoc-den-tam-cung-dau-ranh-071800.md (dxf-sheetmetal dòng 33 đã có quy tắc gióng rãnh dừng ở tâm cung).",
   "nguon": "T/F",
   "khop": 38.5
+ },
+ "521125-01_26-071140": {
+  "loi": [
+   "Khe thông gió A部詳細 (60 khe R3, 2 khối x 15, bước 9, tâm (801; 174)): F đặt khe nằm ngang, T đặt khe dọc theo Y vì hình chi tiết xoay 90° so với hình chính (trang 4); ngoài vùng khe F và T trùng 100%.",
+   "Chiều dài khe: F dài 57 (khe dài) và 42 (khe ngắn), T dài 60 và 45; gióng 60/45/6 dừng ở tâm cung R3 đầu khe, F coi 60 là mép ngoài đầu xa nhưng 6 là tâm cung đầu gần."
+  ],
+  "loai": [
+   "Sai vị trí lỗ",
+   "Sai kích thước lỗ"
+  ],
+  "at": "2026-11-25T09:40:00Z",
+  "nguyen_nhan": "Agent chép hướng hình chi tiết A部詳細 (xoay 90°) thay vì hướng hình chính, và hiểu gióng 60/45/6 không đồng nhất giữa hai đầu khe (mép ngoài một đầu, tâm cung đầu kia); xác định từ PDF trang 4-5 và T/F.",
+  "update": "Không cần sửa thêm: đã vào skill 2026.11.25-3 dòng 18 (hình chi tiết có thể xoay) và 33 (gióng đầu rãnh dừng ở tâm cung R), bài học feedback_khe-chi-tiet-xoay-gioi-tam-cung-071140.",
+  "nguon": "T/F",
+  "khop": 34.8
+ },
+ "521127-15_26-072887": {
+  "loi": [
+   "Cả biên dạng ngoài và 2 rãnh 9x16.5 bị lật trái-phải: F đặt tấm rãnh ở x 12-19.5 (đường uốn x 43.56/47.0), tab xiên 30° ở góc trên phải x 63.9-91.1; T đặt tấm rãnh ở x 79-86.6 (uốn x 51.56/55.0), tab ở góc trên trái x 7.5-34.7.",
+   "Khung bao 98.56 x 95.032 và 20/20 entity khớp T sau khi lật, nghĩa là F vẽ mặt trong thay vì mặt ngoài."
+  ],
+  "loai": [
+   "Sai mặt vẽ"
+  ],
+  "at": "2026-11-27T09:44:21Z",
+  "nguyen_nhan": "Suy đoán: hình chiếu đứng trang 7 nhìn vào mặt trong (hình phải cho cánh 55 chìa về phía trước), agent dựng từ toạ độ DXF khách 4801, chỉ xoay 90° không lật, Flag rỗng, bỏ qua ưu tiên 3 mục 3.",
+  "update": "Chờ hồi quy, chưa sửa. SKILL mục 3 dòng 58 đã có quy tắc lật mặt trong; đã ghi bài học feedback_chu-L-hinh-chieu-dung-la-mat-trong-phai-lat.",
+  "nguon": "T/F",
+  "khop": 100.0
+ },
+ "521127-15_26-072888": {
+  "loi": [
+   "Cả biên dạng ngoài và 2 rãnh 9x16.5 bị lật trái-phải: F đặt tấm rãnh ở x 79-86.6 (uốn x 51.56/55.0), tab xiên 30° ở góc trên trái x 7.5-34.7; T đặt tấm rãnh ở x 12-19.5 (uốn x 43.56/47.0), tab ở góc trên phải x 63.9-91.1.",
+   "Khung bao 98.56 x 95.032 và 20/20 entity khớp T sau khi lật, F là ảnh gương của T (mặt trong thay vì mặt ngoài)."
+  ],
+  "loai": [
+   "Sai mặt vẽ"
+  ],
+  "at": "2026-11-27T09:44:21Z",
+  "nguyen_nhan": "Suy đoán: hình chiếu đứng trang 8 nhìn vào mặt trong (hình phải cho cánh 55 chìa về phía trước), agent dựng từ DXF khách 4800 không lật, Flag rỗng, bỏ qua ưu tiên 3 mục 3.",
+  "update": "Chờ hồi quy, chưa sửa. SKILL mục 3 dòng 58 đã có quy tắc lật mặt trong; đã ghi bài học feedback_chu-L-hinh-chieu-dung-la-mat-trong-phai-lat.",
+  "nguon": "T/F",
+  "khop": 100.0
  }
 }

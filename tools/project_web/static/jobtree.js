@@ -161,7 +161,8 @@ function jtUpdate(v, r) {
   if (v.key !== jtKey(m, jtFits(v.host))) return false;
   m.ws.forEach((w, i) => {
     const wv = v.ws[i];
-    jtText(wv.mood, m.plan ? 'Lập kế hoạch' : JT_MOODS[w.face][0]);
+    // "Lập kế hoạch" chỉ khi agent đang chạy thật; đã giao/dừng/chờ thì theo trạng thái robot (vd. "Xong · cần xem")
+    jtText(wv.mood, m.plan && m.live && w.state === 'RUN' ? 'Lập kế hoạch' : JT_MOODS[w.face][0]);
     const redo = w.state === 'RUN' && (w.now || []).some((c) => w.re.has(c));
     jtText(wv.meta, [m.sub ? w.name : '', [w.model && w.model.replace(/^claude-/, ''), w.effort].filter(Boolean).join(' · '), redo ? 'kiểm lại' : ''].filter(Boolean).join(' · '));
     jtRobot(wv.rb, w.face, 64);

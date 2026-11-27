@@ -72,6 +72,9 @@ h2 .n{font:500 12px var(--mono);color:var(--tx-3)}
 /* buttons, fields */
 .btn{height:32px;padding:0 12px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:13px;white-space:nowrap;transition:background .15s}
 .btn.sm{height:30px;padding:0 8px}
+.btn.ic{width:46px;height:46px;padding:0;display:inline-grid;place-items:center;background:none;box-shadow:none;color:var(--tx-2)}
+.btn.ic:hover{background:var(--sunk);color:var(--tx)}
+.btn.ic svg.i{width:38px;height:38px}
 .btn-sec{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line-2)}
 .btn-sec:hover{background:var(--sunk)}
 .btn-ghost{color:var(--tx-2)}
